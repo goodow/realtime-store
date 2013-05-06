@@ -1,0 +1,79 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>com.goodow.realtime</groupId>
+    <artifactId>realtime-parent</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+  </parent>
+  <artifactId>realtime-model</artifactId>
+  <url>https://github.com/goodow/realtime-model/</url>
+  <inceptionYear>2013</inceptionYear>
+  
+  <repositories>
+    <repository>
+      <id>google-diff-match-patch</id>
+      <url>http://google-diff-match-patch.googlecode.com/svn/trunk/maven/</url>
+    </repository>
+    <!-- <repository>
+      <id>sonatype</id>
+      <url>http://oss.sonatype.org/content/repositories/snapshots</url>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+    </repository> -->
+  </repositories>
+  
+  <dependencies>
+    <dependency>
+      <groupId>diff_match_patch</groupId>
+      <artifactId>diff_match_patch</artifactId>
+      <version>current</version>
+    </dependency>
+    
+    <!-- Google Web Toolkit (GWT) -->
+    <dependency>
+      <groupId>com.google.gwt</groupId>
+      <artifactId>gwt-user</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.google.gwt</groupId>
+      <artifactId>gwt-elemental</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.google.gwt</groupId>
+      <artifactId>gwt-codeserver</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.timepedia.exporter</groupId>
+      <artifactId>gwtexporter</artifactId>
+      <version>2.5.0-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+    </dependency>
+    
+    <!-- Test -->
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+    </dependency>
+  </dependencies>
+  
+  <build>
+    <plugins>
+      <!-- GWT Maven Plugin -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>gwt-maven-plugin</artifactId>
+        <version>${gwt.version}</version>
+        <configuration>
+          <module>${project.groupId}.Realtime</module>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>

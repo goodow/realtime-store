@@ -1,0 +1,10 @@
+# Maven build output.
+target/
+
+# Generated for Eclipse.
+.settings/
+.project
+.classpath
+
+# Created by OS.
+.DS_Store
