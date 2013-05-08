@@ -31,11 +31,15 @@ public interface Operation<T> {
 
   Operation<T> composeWith(Operation<T> op);
 
-  String getType();
+  String getId();
+
+  int getType();
 
   Operation<T> invert();
 
   boolean isNoOp();
+
+  void setId(String id);
 
   @Override
   String toString();

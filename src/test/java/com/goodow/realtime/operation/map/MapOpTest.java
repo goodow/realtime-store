@@ -15,12 +15,12 @@ package com.goodow.realtime.operation.map;
 
 import com.goodow.realtime.operation.ComposeException;
 import com.goodow.realtime.operation.TransformException;
-import com.goodow.realtime.operation.map.MapOp;
 import com.goodow.realtime.util.Pair;
 
 import junit.framework.TestCase;
 
 import elemental.json.Json;
+import elemental.json.JsonArray;
 import elemental.json.JsonValue;
 
 public class MapOpTest extends TestCase {
@@ -116,7 +116,7 @@ public class MapOpTest extends TestCase {
         new MapOp().update("a", val("old a"), null)
             .update("b", Json.create(false), Json.create(1f)).update("c", Json.create(true),
                 Json.create(-2.2));
-    assertEquals(op, new MapOp(op.toString()));
+    assertEquals(op, new MapOp((JsonArray) Json.instance().parse(op.toString())));
   }
 
   public void testTransformDifferentKey() {

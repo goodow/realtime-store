@@ -60,7 +60,7 @@ public abstract class BaseModelEvent implements Disposable {
     this.target = target;
     this.sessionId = sessionId;
     this.userId = userId;
-    this.isLocal = target.model.document.isLocalSession(sessionId);
+    this.isLocal = target.model.bridge.isLocalSession(sessionId);
     this.bubbles = bubbles;
   }
 }

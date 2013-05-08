@@ -16,12 +16,11 @@ package com.goodow.realtime.operation.list;
 import com.goodow.realtime.operation.list.algorithm.ListHelper;
 import com.goodow.realtime.operation.list.algorithm.ListOp;
 
+import elemental.json.JsonArray;
 import elemental.json.JsonString;
 import elemental.json.JsonValue;
 
 public class StringOp extends ListOp<String> {
-  @SuppressWarnings("hiding")
-  public static final String TYPE = "s";
 
   public StringOp() {
   }
@@ -30,13 +29,8 @@ public class StringOp extends ListOp<String> {
     super(isInsert, idx, str, initLength);
   }
 
-  public StringOp(String json) {
-    super(json);
-  }
-
-  @Override
-  public String getType() {
-    return TYPE;
+  public StringOp(JsonArray serialized) {
+    super(serialized);
   }
 
   @Override

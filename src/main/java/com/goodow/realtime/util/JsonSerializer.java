@@ -38,7 +38,7 @@ public class JsonSerializer {
     }
   }
 
-  public static Object jsonToObj(JsonValue arrayOrNull, Map<String, CollaborativeObject> objects) {
+  public static Object deserializeObject(JsonValue arrayOrNull, Map<String, CollaborativeObject> objects) {
     if (isNull(arrayOrNull)) {
       return null;
     }
@@ -66,7 +66,7 @@ public class JsonSerializer {
     }
   }
 
-  public static JsonArray objToJson(Object obj) {
+  public static JsonArray serializeObject(Object obj) {
     if (obj == null) {
       return null;
     }

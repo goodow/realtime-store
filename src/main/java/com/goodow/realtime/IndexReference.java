@@ -15,6 +15,7 @@ package com.goodow.realtime;
 
 import com.goodow.realtime.operation.Operation;
 import com.goodow.realtime.operation.RealtimeOperation;
+import com.goodow.realtime.operation.ReferenceShiftedOperation;
 import com.goodow.realtime.util.NativeInterfaceFactory;
 
 import com.google.common.annotations.GwtIncompatible;
@@ -43,12 +44,18 @@ import java.util.Set;
 public class IndexReference extends CollaborativeObject {
   @GwtIncompatible(NativeInterfaceFactory.JS_REGISTER_PROPERTIES)
   @ExportAfterCreateMethod
-  public native static void __jsRunAfter__() /*-{
+  // @formatter:off
+  public native static void __jsniRunAfter__() /*-{
     var _ = $wnd.gdr.IndexReference.prototype;
     Object.defineProperties(_, {
       id : {
         get : function() {
           return this.g.@com.goodow.realtime.CollaborativeObject::id;
+        }
+      },
+      canBeDeleted : {
+        get : function() {
+          return this.g.@com.goodow.realtime.IndexReference::canBeDeleted()();
         }
       },
       index : {
@@ -58,34 +65,41 @@ public class IndexReference extends CollaborativeObject {
         set : function(index) {
           this.g.@com.goodow.realtime.IndexReference::setIndex(I)(index);
         }
+      },
+      referencedObject : {
+        get : function() {
+          var v = this.g.@com.goodow.realtime.IndexReference::referencedObject()();
+          return @org.timepedia.exporter.client.ExporterUtil::wrap(Ljava/lang/Object;)(v);
+        }
       }
     });
   }-*/;
+  // @formatter:on
 
-  /**
-   * Whether this reference can be deleted. Read-only. This property affects the behavior of the
-   * index reference when the index the reference points to is deleted. If this is true, the index
-   * reference will be deleted. If it is false, the index reference will move to point at the
-   * beginning of the deleted range.
-   */
-  public final boolean canBeDeleted;
-  /**
-   * The object this reference points to. Read-only.
-   */
-  public final CollaborativeObject referencedObject;
-  private int index;
+  private String referencedObject;
+  private int index = -1;
+  private boolean canBeDeleted;
 
   /**
    * @param model The document model.
    */
-  IndexReference(Model model, CollaborativeObject referencedObject, boolean canBeDeleted) {
+  IndexReference(Model model) {
     super(model);
-    this.canBeDeleted = canBeDeleted;
-    this.referencedObject = referencedObject;
   }
 
   public void addReferenceShiftedListener(EventHandler<ReferenceShiftedEvent> handler) {
     addEventListener(EventType.REFERENCE_SHIFTED, handler, false);
+  }
+
+  /**
+   * @return Whether this reference can be deleted. Read-only. This property affects the behavior of
+   *         the index reference when the index the reference points to is deleted. If this is true,
+   *         the index reference will be deleted. If it is false, the index reference will move to
+   *         point at the beginning of the deleted range.
+   */
+  @NoExport
+  public boolean canBeDeleted() {
+    return canBeDeleted;
   }
 
   /**
@@ -97,28 +111,45 @@ public class IndexReference extends CollaborativeObject {
     return index;
   }
 
+  /**
+   * @return The object this reference points to. Read-only.
+   */
+  @NoExport
+  public CollaborativeObject referencedObject() {
+    return model.getObject(referencedObject);
+  }
+
   public void removeReferenceShiftedListener(EventHandler<ReferenceShiftedEvent> handler) {
     removeEventListener(EventType.REFERENCE_SHIFTED, handler, false);
   }
 
+  /**
+   * Change the referenced index.
+   * 
+   * @see #index()
+   * @param index the new referenced index.
+   */
+  @NoExport
   public void setIndex(int index) {
-    ReferenceShiftedEvent event =
-        new ReferenceShiftedEvent(this, this.index, index, model.document.sessionId, Realtime
-            .getUserId());
-    this.index = index;
-    fireEvent(event);
+    if (index == this.index) {
+      return;
+    }
+    ReferenceShiftedOperation op =
+        new ReferenceShiftedOperation(referencedObject, index, canBeDeleted, this.index);
+    consumeAndSubmit(op);
   }
 
   @Override
-  protected void consume(RealtimeOperation operation) {
-    throw new UnsupportedOperationException();
-  }
-
-  void initialize(String id, int index) {
-    this.id = id;
-    this.index = index;
-    model.objects.put(id, this);
-    model.registerIndexReference(id, referencedObject.id);
+  protected void consume(RealtimeOperation<?> operation) {
+    ReferenceShiftedOperation op = (ReferenceShiftedOperation) operation.<IndexReference> getOp();
+    assert op.oldIndex == index();
+    ReferenceShiftedEvent event =
+        new ReferenceShiftedEvent(this, op.oldIndex, op.newIndex, operation.sessionId,
+            operation.userId);
+    referencedObject = op.referencedObject;
+    index = op.newIndex;
+    canBeDeleted = op.canBeDeleted;
+    fireEvent(event);
   }
 
   void setIndex(boolean isInsert, int index, int length, String sessionId, String userId) {
@@ -140,15 +171,17 @@ public class IndexReference extends CollaborativeObject {
         newIndex = cursor - length;
       }
     }
-    ReferenceShiftedEvent event =
-        new ReferenceShiftedEvent(this, cursor, newIndex, sessionId, userId);
-    this.index = newIndex;
-    fireEvent(event);
+    ReferenceShiftedOperation op =
+        new ReferenceShiftedOperation(referencedObject, newIndex, canBeDeleted, cursor);
+    op.setId(id);
+    RealtimeOperation<IndexReference> operation =
+        new RealtimeOperation<IndexReference>(op, userId, -1, sessionId);
+    consume(operation);
   }
 
   @Override
   Operation<?> toInitialization() {
-    return null;
+    return new ReferenceShiftedOperation(referencedObject, index, canBeDeleted, index);
   }
 
   @Override
@@ -160,7 +193,7 @@ public class IndexReference extends CollaborativeObject {
     seen.add(id);
     sb.append("DefaultIndexReference [");
     sb.append("id=").append(getId());
-    sb.append(", objectId=").append(referencedObject.getId());
+    sb.append(", objectId=").append(referencedObject);
     sb.append(", index=").append(index());
     sb.append(", canBeDeleted=").append(canBeDeleted);
     sb.append("]");

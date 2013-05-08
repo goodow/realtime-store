@@ -57,7 +57,6 @@ public class Document implements EventTarget {
   private static final String EVENT_HANDLER_KEY = "document";
   private static final Logger log = Logger.getLogger(Document.class.getName());
   private List<Collaborator> collaborators;
-  String sessionId;
   private final Model model;
   private Map<Pair<String, EventType>, List<EventHandler<?>>> handlers;
   private final Map<String, List<String>> parents = new HashMap<String, List<String>>();
@@ -115,7 +114,7 @@ public class Document implements EventTarget {
         if (handler instanceof EventHandler) {
           ((EventHandler<Disposable>) handler).handleEvent(event);
         } else {
-          ocniFireEvent(handler, event);
+          __ocniFireEvent__(handler, event);
         }
       }
     }
@@ -135,6 +134,7 @@ public class Document implements EventTarget {
       bubblingToAncestors(id, objectChangedEvent, seen);
     }
   };
+  final DocumentBridge bridge;
 
   /**
    * @param bridge The driver for the GWT collaborative libraries.
@@ -142,6 +142,7 @@ public class Document implements EventTarget {
    * @param errorHandlerFn The third-party error handling function.
    */
   Document(DocumentBridge bridge, Disposable commService, ErrorHandler errorHandlerFn) {
+    this.bridge = bridge;
     model = new Model(bridge, this);
   }
 
@@ -253,10 +254,6 @@ public class Document implements EventTarget {
     }
   }
 
-  boolean isLocalSession(String sessionId) {
-    return this.sessionId == null || this.sessionId.equals(sessionId);
-  }
-
   void removeEventListener(String id, EventType type, EventHandler<?> handler, boolean opt_capture) {
     if (handlers == null || handler == null) {
       return;
@@ -295,6 +292,14 @@ public class Document implements EventTarget {
     }
   }
 
+  // @formatter:off
+  private native void __ocniFireEvent__(Object handler, Object event) /*-[
+    GDREventBlock block = (GDREventBlock)handler;
+    block(event);
+  ]-*/ /*-{
+  }-*/;
+  // @formatter:on
+
   private List<EventHandler<?>> getEventHandlers(Pair<String, EventType> key,
       boolean createIfNotExist) {
     if (handlers == null) {
@@ -327,12 +332,4 @@ public class Document implements EventTarget {
     events = new ArrayList<Pair<Pair<String, EventType>, Disposable>>();
     eventsById = new HashMap<String, List<BaseModelEvent>>();
   }
-
-  // @formatter:off
-  private native void ocniFireEvent(Object handler, Object event) /*-[
-    GDREventBlock block = (GDREventBlock)handler;
-    block(event);
-  ]-*/ /*-{
-  }-*/;
-  // @formatter:on
 }

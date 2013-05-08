@@ -16,7 +16,6 @@ package com.goodow.realtime.operation.list.algorithm;
 import com.goodow.realtime.operation.Operation;
 import com.goodow.realtime.util.Pair;
 
-import elemental.json.Json;
 import elemental.json.JsonArray;
 import elemental.json.JsonObject;
 import elemental.json.JsonType;
@@ -102,10 +101,11 @@ public abstract class ListOp<T> implements Operation<ListTarget<T>>, ListTarget<
     }
   }
 
-  public static final String TYPE = "l";
+  public static final int TYPE = 5;
   private boolean frozen;
   protected final ArrayOf<Component<T>> components;
   private ListHelper<T> helper;
+  private String id;
 
   protected ListOp() {
     components = Collections.arrayOf();
@@ -135,11 +135,10 @@ public abstract class ListOp<T> implements Operation<ListTarget<T>>, ListTarget<
     frozen = true;
   }
 
-  protected ListOp(String json) {
+  protected ListOp(JsonArray serialized) {
     this();
-    JsonArray components = Json.instance().parse(json);
-    for (int i = 0, len = components.length(); i < len; i++) {
-      JsonValue component = components.get(i);
+    for (int i = 0, len = serialized.length(); i < len; i++) {
+      JsonValue component = serialized.get(i);
       if (JsonType.NUMBER == component.getType()) {
         this.components.push(new Retain((int) component.asNumber()));
       } else {
@@ -193,7 +192,12 @@ public abstract class ListOp<T> implements Operation<ListTarget<T>>, ListTarget<
   }
 
   @Override
-  public String getType() {
+  public String getId() {
+    return id;
+  }
+
+  @Override
+  public int getType() {
     return TYPE;
   }
 
@@ -221,6 +225,11 @@ public abstract class ListOp<T> implements Operation<ListTarget<T>>, ListTarget<
     assert length > 0;
     components.push(new Retain(length));
     return this;
+  }
+
+  @Override
+  public void setId(String id) {
+    this.id = id;
   }
 
   @Override

@@ -14,6 +14,14 @@
 package com.goodow.realtime;
 
 import com.goodow.realtime.id.IdGenerator;
+import com.goodow.realtime.operation.InitializeOperation;
+import com.goodow.realtime.operation.Operation;
+import com.goodow.realtime.operation.ReferenceShiftedOperation;
+import com.goodow.realtime.operation.list.ArrayOp;
+import com.goodow.realtime.operation.list.StringOp;
+import com.goodow.realtime.operation.list.algorithm.ListOp;
+import com.goodow.realtime.operation.map.MapOp;
+import com.goodow.realtime.util.JsonSerializer;
 import com.goodow.realtime.util.NativeInterfaceFactory;
 
 import com.google.common.annotations.GwtIncompatible;
@@ -30,6 +38,8 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import elemental.js.util.JsMapFromStringTo;
+import elemental.json.Json;
+import elemental.json.JsonArray;
 import elemental.util.ArrayOfString;
 
 /**
@@ -58,7 +68,8 @@ public class Model implements EventTarget {
 
   @GwtIncompatible(NativeInterfaceFactory.JS_REGISTER_PROPERTIES)
   @ExportAfterCreateMethod
-  public native static void __jsRunAfter__() /*-{
+  // @formatter:off
+  public native static void __jsniRunAfter__() /*-{
     var _ = $wnd.gdr.Model.prototype;
     Object.defineProperties(_, {
       canRedo : {
@@ -87,25 +98,28 @@ public class Model implements EventTarget {
           }
         }
       }
-      var v = this.g.@com.goodow.realtime.Model::__jsCreateMap__(Lelemental/js/util/JsMapFromStringTo;)(jsMap);
+      var v = this.g.@com.goodow.realtime.Model::__jsniCreateMap__(Lelemental/js/util/JsMapFromStringTo;)(jsMap);
       return @org.timepedia.exporter.client.ExporterUtil::wrap(Ljava/lang/Object;)(v);
     };
   }-*/;
+
+  // @formatter:on
 
   private boolean isReadOnly;
   private boolean canRedo;
   private boolean canUndo;
 
-  String id;
   final Map<String, CollaborativeObject> objects = new HashMap<String, CollaborativeObject>();
   private Map<String, List<String>> indexReferences;
   final Document document;
+  final DocumentBridge bridge;
 
   /**
    * @param bridge The driver for the GWT collaborative libraries.
    * @param document The document that this model belongs to.
    */
   Model(DocumentBridge bridge, Document document) {
+    this.bridge = bridge;
     this.document = document;
   }
 
@@ -168,11 +182,18 @@ public class Model implements EventTarget {
    * @return A collaborative list.
    */
   public CollaborativeList createList(Object... opt_initialValue) {
-    beginCreationCompoundOperation();
-    CollaborativeList obj = new CollaborativeList(this);
-    obj.initializeCreate(generateObjectId(), opt_initialValue);
-    endCompoundOperation();
-    return obj;
+    ArrayOp op = null;
+    if (opt_initialValue != null && opt_initialValue.length > 0) {
+      op = new ArrayOp();
+      JsonArray array = Json.createArray();
+      for (int i = 0, len = opt_initialValue.length; i < len; i++) {
+        JsonArray serializedValue = JsonSerializer.serializeObject(opt_initialValue[i]);
+        array.set(i, serializedValue);
+      }
+      op.insert(array);
+    }
+    String id = initializeCreate(InitializeOperation.COLLABORATIVE_LIST, op, null);
+    return getObject(id);
   }
 
   /**
@@ -183,11 +204,19 @@ public class Model implements EventTarget {
    */
   @NoExport
   public CollaborativeMap createMap(Map<String, ?> opt_initialValue) {
-    beginCreationCompoundOperation();
-    CollaborativeMap obj = new CollaborativeMap(this);
-    obj.initializeCreate(generateObjectId(), opt_initialValue);
-    endCompoundOperation();
-    return obj;
+    MapOp op = null;
+    if (opt_initialValue != null && !opt_initialValue.isEmpty()) {
+      op = new MapOp();
+      for (String key : opt_initialValue.keySet()) {
+        JsonArray serializedValue = JsonSerializer.serializeObject(opt_initialValue.get(key));
+        if (serializedValue == null) {
+          continue;
+        }
+        op.update(key, null, serializedValue);
+      }
+    }
+    String id = initializeCreate(InitializeOperation.COLLABORATIVE_MAP, op, null);
+    return getObject(id);
   }
 
   /**
@@ -197,11 +226,12 @@ public class Model implements EventTarget {
    * @return A collaborative string.
    */
   public CollaborativeString createString(String opt_initialValue) {
-    beginCreationCompoundOperation();
-    CollaborativeString obj = new CollaborativeString(this);
-    obj.initialize(generateObjectId(), opt_initialValue);
-    endCompoundOperation();
-    return obj;
+    ListOp<String> op = null;
+    if (opt_initialValue != null && !opt_initialValue.isEmpty()) {
+      op = new StringOp().insert(opt_initialValue);
+    }
+    String id = initializeCreate(InitializeOperation.COLLABORATIVE_STRING, op, null);
+    return getObject(id);
   }
 
   /**
@@ -264,37 +294,21 @@ public class Model implements EventTarget {
     beginCompoundOperation("initialize");
   }
 
-  IndexReference createIndexReference(CollaborativeObject referencedObject, int index,
-      boolean canBeDeleted) {
-    beginCreationCompoundOperation();
-    IndexReference indexReference = new IndexReference(this, referencedObject, canBeDeleted);
-    indexReference.initialize(generateObjectId(), index);
-    endCompoundOperation();
-    return indexReference;
+  IndexReference createIndexReference(String referencedObject, int index, boolean canBeDeleted) {
+    ReferenceShiftedOperation op =
+        new ReferenceShiftedOperation(referencedObject, index, canBeDeleted, -1);
+    String id = initializeCreate(InitializeOperation.INDEX_REFERENCE, op, null);
+    registerIndexReference(id, referencedObject);
+    return getObject(id);
   }
 
   void createRoot() {
-    beginCreationCompoundOperation();
-    CollaborativeMap obj = new CollaborativeMap(this);
-    obj.initializeCreate(ROOT_ID, null);
-    endCompoundOperation();
+    initializeCreate(InitializeOperation.COLLABORATIVE_MAP, null, ROOT_ID);
   }
 
   @SuppressWarnings("unchecked")
   <T extends CollaborativeObject> T getObject(String objectId) {
     return (T) objects.get(objectId);
-  }
-
-  void registerIndexReference(String indexReference, String referencedObject) {
-    if (indexReferences == null) {
-      indexReferences = new HashMap<String, List<String>>();
-    }
-    List<String> list = indexReferences.get(referencedObject);
-    if (list == null) {
-      list = new ArrayList<String>();
-      indexReferences.put(referencedObject, list);
-    }
-    list.add(indexReference);
   }
 
   void setIndexReferenceIndex(String referencedObject, boolean isInsert, int index, int length,
@@ -312,7 +326,7 @@ public class Model implements EventTarget {
   }
 
   @GwtIncompatible(NativeInterfaceFactory.JS_REGISTER_MATHODS)
-  private CollaborativeMap __jsCreateMap__(JsMapFromStringTo<?> map) {
+  private CollaborativeMap __jsniCreateMap__(JsMapFromStringTo<?> map) {
     if (map == null) {
       return createMap(null);
     }
@@ -327,5 +341,32 @@ public class Model implements EventTarget {
 
   private String generateObjectId() {
     return "gde" + new IdGenerator().next(14);
+  }
+
+  private String initializeCreate(int type, Operation<?> opt_initialValue, String id) {
+    beginCreationCompoundOperation();
+    InitializeOperation op = new InitializeOperation(type, opt_initialValue);
+    if (id == null) {
+      id = generateObjectId();
+    }
+    if (opt_initialValue != null) {
+      opt_initialValue.setId(id);
+    }
+    op.setId(id);
+    bridge.consumeAndSubmit(op);
+    endCompoundOperation();
+    return id;
+  }
+
+  private void registerIndexReference(String indexReference, String referencedObject) {
+    if (indexReferences == null) {
+      indexReferences = new HashMap<String, List<String>>();
+    }
+    List<String> list = indexReferences.get(referencedObject);
+    if (list == null) {
+      list = new ArrayList<String>();
+      indexReferences.put(referencedObject, list);
+    }
+    list.add(indexReference);
   }
 }

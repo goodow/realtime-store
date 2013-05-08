@@ -70,7 +70,7 @@ public class Realtime implements Exportable {
    */
   public static void load(String docId, DocumentLoadedHandler onLoaded,
       ModelInitializerHandler opt_initializer, ErrorHandler opt_error) {
-    Document document = new DocumentBridge().create(Json.createArray());
+    Document document = new DocumentBridge(null, 0, null, Json.createArray()).document;
     onLoaded.onLoaded(document);
   }
 }

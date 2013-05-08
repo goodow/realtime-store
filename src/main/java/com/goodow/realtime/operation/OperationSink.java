@@ -11,18 +11,11 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package com.goodow.realtime.operation.list;
+package com.goodow.realtime.operation;
 
-import com.goodow.realtime.operation.list.algorithm.ListOp;
+public interface OperationSink<T extends Operation<?>> {
+  public void consume(T op);
 
-import junit.framework.TestCase;
-
-import elemental.json.Json;
-import elemental.json.JsonArray;
-
-public class StringOpTest extends TestCase {
-  public void testParseFromJson() {
-    ListOp<String> op = new StringOp().retain(1).insert("abc").retain(2).delete("efg");
-    assertEquals(op, new StringOp((JsonArray) Json.instance().parse(op.toString())));
-  }
+  @Override
+  public String toString();
 }

@@ -119,16 +119,6 @@ mod.createList()
 ],"initialize"]]
 
 
-
-
-
-
-[[4,[0,
-	[7,"root",0],[7,"gdea8kojqhgf8w8no",2],[5,"gdea8kojqhgf8w8no",0,[1,"Edit Me!"]],[8,"root","demo_string",[2,"gdea8kojqhgf8w8no"]],[7,"gdem91atjhfhgs9wt",1],[5,"gdem91atjhfhgs9wt",0,[0,[21,"Cat"],[21,"Dog"],[21,"Sheep"],[21,"Chicken"]]],[8,"root","demo_list",[2,"gdem91atjhfhgs9wt"]],[7,"gdepghuphhg8br3do",0],[8,"gdepghuphhg8br3do","Key 1",[21,"Value 1"]],[8,"gdepghuphhg8br3do","Key 2",[21,"Value 2"]],[8,"gdepghuphhg8br3do","Key 3",[21,"Value 3"]],[8,"gdepghuphhg8br3do","Key 4",[21,"Value 4"]],[8,"gdepghuphhg8br3do","Key 1",[21,"Value 1"]],[8,"gdepghuphhg8br3do","Key 2",[21,"Value 2"]],[8,"gdepghuphhg8br3do","Key 3",[21,"Value 3"]],[8,"gdepghuphhg8br3do","Key 4",[21,"Value 4"]],[8,"root","demo_map",[2,"gdepghuphhg8br3do"]],[7,"gdeql5gwzhfveo0ck","DemoMovie"],[8,"gdeql5gwzhfveo0ck","name",[21,"Kung Fu Hustle"]],[8,"gdeql5gwzhfveo0ck","director",[21,"Stephen Chow"]],[8,"gdeql5gwzhfveo0ck","notes",[21,""]],[8,"gdeql5gwzhfveo0ck","rating",[21,""]],[8,"root","demo_custom",[2,"gdeql5gwzhfveo0ck"]]
-],null,true]]
-
-
-
 doc = rtpg.realtimeDoc;
 mod = doc.getModel();
 root = mod.getRoot();
@@ -192,6 +182,9 @@ str = mod.createString('ab');
 str.addObjectChangedListener(displayObjectChangedEvent);
 str.append('d');
 
+[4,[0,1367894092595,[[
+	[[4,[0,[4,[0,[5,"gdelfgrhjhfwnhdrl",28,[1,"x"]]]]]]],1367894137096,"101854939286968683254",70,"1f67d8b67d4fc552",0
+]]]]
 
 386
 [[0,["c","FD5E7E8508F9D931",,8]

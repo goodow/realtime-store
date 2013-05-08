@@ -54,7 +54,8 @@ import elemental.json.JsonValue;
 public class CollaborativeList extends CollaborativeObject {
   @GwtIncompatible(NativeInterfaceFactory.JS_REGISTER_PROPERTIES)
   @ExportAfterCreateMethod
-  public native static void __jsRunAfter__() /*-{
+  // @formatter:off
+  public native static void __jsniRunAfter__() /*-{
     var _ = $wnd.gdr.CollaborativeList.prototype;
     Object.defineProperties(_, {
       id : {
@@ -133,14 +134,16 @@ public class CollaborativeList extends CollaborativeObject {
       this.g.@com.goodow.realtime.CollaborativeList::set(ILjava/lang/Object;)(index,v);
     };
   }-*/;
+  // @formatter:on
 
-  private JsonArray snapshot;
+  private final JsonArray snapshot;
 
   /**
    * @param model The document model.
    */
   CollaborativeList(Model model) {
     super(model);
+    snapshot = Json.createArray();
   }
 
   public void addValuesAddedListener(EventHandler<ValuesAddedEvent> handler) {
@@ -189,7 +192,7 @@ public class CollaborativeList extends CollaborativeObject {
   @NoExport
   public <T> T get(int index) {
     checkIndex(index, false);
-    return (T) JsonSerializer.jsonToObj(snapshot.get(index), model.objects);
+    return (T) JsonSerializer.deserializeObject(snapshot.get(index), model.objects);
   }
 
   /**
@@ -202,14 +205,14 @@ public class CollaborativeList extends CollaborativeObject {
   @NoExport
   public int indexOf(Object value, Comparator<Object> opt_comparator) {
     if (opt_comparator == null) {
-      JsonArray jsonValue;
+      JsonArray serializedValue;
       try {
-        jsonValue = JsonSerializer.objToJson(value);
+        serializedValue = JsonSerializer.serializeObject(value);
       } catch (ClassCastException e) {
         return -1;
       }
       for (int i = 0, len = length(); i < len; i++) {
-        if (JsonSerializer.jsonEqual(jsonValue, snapshot.get(i))) {
+        if (JsonSerializer.jsonEqual(serializedValue, snapshot.get(i))) {
           return i;
         }
       }
@@ -251,7 +254,7 @@ public class CollaborativeList extends CollaborativeObject {
       return;
     } else {
       for (int i = 0, len = values.length; i < len; i++) {
-        array.set(i, JsonSerializer.objToJson(values[i]));
+        array.set(i, JsonSerializer.serializeObject(values[i]));
       }
     }
     ArrayOp op = new ArrayOp(true, index, array, length());
@@ -268,14 +271,14 @@ public class CollaborativeList extends CollaborativeObject {
   @NoExport
   public int lastIndexOf(Object value, Comparator<Object> opt_comparator) {
     if (opt_comparator == null) {
-      JsonArray jsonValue;
+      JsonArray serializedValue;
       try {
-        jsonValue = JsonSerializer.objToJson(value);
+        serializedValue = JsonSerializer.serializeObject(value);
       } catch (ClassCastException e) {
         return -1;
       }
       for (int i = length() - 1; i >= 0; i--) {
-        if (JsonSerializer.jsonEqual(jsonValue, snapshot.get(i))) {
+        if (JsonSerializer.jsonEqual(serializedValue, snapshot.get(i))) {
           return i;
         }
       }
@@ -333,7 +336,7 @@ public class CollaborativeList extends CollaborativeObject {
    */
   public IndexReference registerReference(int index, boolean canBeDeleted) {
     checkIndex(index, true);
-    return model.createIndexReference(this, index, canBeDeleted);
+    return model.createIndexReference(id, index, canBeDeleted);
   }
 
   /**
@@ -437,7 +440,7 @@ public class CollaborativeList extends CollaborativeObject {
   }
 
   @Override
-  protected void consume(final RealtimeOperation operation) {
+  protected void consume(final RealtimeOperation<?> operation) {
     operation.<ListTarget<JsonArray>> getOp().apply(new ListTarget<JsonArray>() {
       private int cursor;
 
@@ -445,8 +448,7 @@ public class CollaborativeList extends CollaborativeObject {
       public ListTarget<JsonArray> delete(JsonArray list) {
         assert list.length() > 0;
         assert cursor + list.length() <= length();
-        String sessionId = operation.getSessionId();
-        removeAndFireEvent(cursor, list, sessionId, operation.getUserId());
+        removeAndFireEvent(cursor, list, operation.sessionId, operation.userId);
         return null;
       }
 
@@ -454,8 +456,7 @@ public class CollaborativeList extends CollaborativeObject {
       public ListTarget<JsonArray> insert(JsonArray list) {
         assert list.length() > 0;
         assert cursor <= length();
-        String sessionId = operation.getSessionId();
-        insertAndFireEvent(cursor, list, sessionId, operation.getUserId());
+        insertAndFireEvent(cursor, list, operation.sessionId, operation.userId);
         cursor += list.length();
         return null;
       }
@@ -466,26 +467,6 @@ public class CollaborativeList extends CollaborativeObject {
         return null;
       }
     });
-  }
-
-  void initialize(String id, JsonArray snapshot) {
-    this.id = id;
-    this.snapshot = snapshot;
-    model.objects.put(id, this);
-    for (int i = 0, len = length(); i < len; i++) {
-      model.document.addOrRemoveParent(snapshot.get(i), id, true);
-    }
-  }
-
-  void initializeCreate(String id, Object... opt_initialValue) {
-    JsonArray snapshot = Json.createArray();
-    if (opt_initialValue != null) {
-      for (int i = 0, len = opt_initialValue.length; i < len; i++) {
-        JsonArray array = JsonSerializer.objToJson(opt_initialValue[i]);
-        snapshot.set(i, array);
-      }
-    }
-    initialize(id, snapshot);
   }
 
   @Override
@@ -525,6 +506,14 @@ public class CollaborativeList extends CollaborativeObject {
     sb.append("]");
   }
 
+  // @formatter:off
+  private native int __ocniCompare__(Object comparator, Object object1, Object object2) /*-[
+    GDRComparatorBlock block = (GDRComparatorBlock)comparator;
+    return block(object1, object2);
+  ]-*/ /*-{
+  }-*/;
+  // @formatter:on
+
   private void checkIndex(int index, boolean endBoundIsValid) {
     int length = length();
     if (index < 0 || (endBoundIsValid ? index > length : index >= length)) {
@@ -537,7 +526,7 @@ public class CollaborativeList extends CollaborativeObject {
     if (comparator instanceof Comparator) {
       return comparator.compare(object1, object2);
     } else {
-      return ocniCompare(comparator, object1, object2);
+      return __ocniCompare__(comparator, object1, object2);
     }
   }
 
@@ -546,7 +535,7 @@ public class CollaborativeList extends CollaborativeObject {
     Object[] objects = new Object[length];
     for (int i = 0; i < length; i++) {
       JsonValue value = array.get(i);
-      objects[i] = JsonSerializer.jsonToObj(value, model.objects);
+      objects[i] = JsonSerializer.deserializeObject(value, model.objects);
       snapshot.insert(index + i, value);
       model.document.addOrRemoveParent(value, id, true);
     }
@@ -554,14 +543,6 @@ public class CollaborativeList extends CollaborativeObject {
     fireEvent(event);
     model.setIndexReferenceIndex(id, true, index, length, sessionId, userId);
   }
-
-  // @formatter:off
-  private native int ocniCompare(Object comparator, Object object1, Object object2) /*-[
-    GDRComparatorBlock block = (GDRComparatorBlock)comparator;
-    return block(object1, object2);
-  ]-*/ /*-{
-  }-*/;
-  // @formatter:on
 
   private void removeAndFireEvent(int index, JsonArray array, String sessionId, String userId) {
     int length = array.length();

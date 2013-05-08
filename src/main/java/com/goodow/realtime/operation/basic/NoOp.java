@@ -17,7 +17,9 @@ import com.goodow.realtime.operation.Operation;
 import com.goodow.realtime.util.Pair;
 
 public class NoOp implements Operation<Void> {
+  public static final int TYPE = -1;
   public static final NoOp INSTANCE = new NoOp();
+  private String id;
 
   private NoOp() {
   }
@@ -37,8 +39,13 @@ public class NoOp implements Operation<Void> {
   }
 
   @Override
-  public String getType() {
-    return "NoOp";
+  public String getId() {
+    return id;
+  }
+
+  @Override
+  public int getType() {
+    return TYPE;
   }
 
   @Override
@@ -52,8 +59,13 @@ public class NoOp implements Operation<Void> {
   }
 
   @Override
+  public void setId(String id) {
+    this.id = id;
+  }
+
+  @Override
   public String toString() {
-    return "NoOp";
+    return "\"noop\"";
   }
 
   @Override

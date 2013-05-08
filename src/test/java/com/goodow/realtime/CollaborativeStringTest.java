@@ -230,8 +230,7 @@ public class CollaborativeStringTest extends TestCase {
 
   @Override
   protected void setUp() throws Exception {
-    DocumentBridge bridge = new DocumentBridge();
-    Document doc = bridge.create(Json.createArray());
+    Document doc = new DocumentBridge(null, 0, null, Json.createArray()).document;
     mod = doc.getModel();
     str = mod.createString(null);
   }

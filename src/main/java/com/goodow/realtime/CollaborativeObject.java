@@ -80,12 +80,11 @@ public abstract class CollaborativeObject implements EventTarget {
     return sb.toString();
   }
 
-  abstract void consume(RealtimeOperation operation);
+  abstract void consume(RealtimeOperation<?> operation);
 
-  void consumeAndSubmit(Operation<?> op) {
-    RealtimeOperation operation = new RealtimeOperation(id, model.document.sessionId, Realtime.getUserId(), op);
-    consume(operation);
-    submit(operation);
+  <T> void consumeAndSubmit(Operation<T> op) {
+    op.setId(id);
+    model.bridge.consumeAndSubmit(op);
   }
 
   void fireEvent(BaseModelEvent event) {
@@ -95,7 +94,4 @@ public abstract class CollaborativeObject implements EventTarget {
   abstract Operation<?> toInitialization();
 
   abstract void toString(Set<String> seen, StringBuilder sb);
-
-  private void submit(RealtimeOperation operation) {
-  }
 }

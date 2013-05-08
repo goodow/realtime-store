@@ -49,7 +49,8 @@ import java.util.Set;
 public class CollaborativeString extends CollaborativeObject {
   @GwtIncompatible(NativeInterfaceFactory.JS_REGISTER_PROPERTIES)
   @ExportAfterCreateMethod
-  public native static void __jsRunAfter__() /*-{
+  // @formatter:off
+  public native static void __jsniRunAfter__() /*-{
     var _ = $wnd.gdr.CollaborativeString.prototype;
     Object.defineProperties(_, {
       id : {
@@ -64,11 +65,13 @@ public class CollaborativeString extends CollaborativeObject {
       }
     });
   }-*/;
+  // @formatter:on
 
-  private StringBuilder snapshot;
+  private final StringBuilder snapshot;
 
   CollaborativeString(Model model) {
     super(model);
+    snapshot = new StringBuilder();
   }
 
   public void addTextDeletedListener(EventHandler<TextDeletedEvent> handler) {
@@ -136,7 +139,7 @@ public class CollaborativeString extends CollaborativeObject {
    */
   public IndexReference registerReference(int index, boolean canBeDeleted) {
     checkIndex(index);
-    return model.createIndexReference(this, index, canBeDeleted);
+    return model.createIndexReference(id, index, canBeDeleted);
   }
 
   /**
@@ -179,22 +182,20 @@ public class CollaborativeString extends CollaborativeObject {
   }
 
   @Override
-  protected void consume(final RealtimeOperation operation) {
+  protected void consume(final RealtimeOperation<?> operation) {
     operation.<ListTarget<String>> getOp().apply(new ListTarget<String>() {
       private int cursor;
 
       @Override
       public ListTarget<String> delete(String str) {
         assert snapshot.substring(cursor, cursor + str.length()).equals(str);
-        String sessionId = operation.getSessionId();
-        deleteAndFireEvent(cursor, cursor + str.length(), sessionId, operation.getUserId());
+        deleteAndFireEvent(cursor, cursor + str.length(), operation.sessionId, operation.userId);
         return null;
       }
 
       @Override
       public ListTarget<String> insert(String str) {
-        String sessionId = operation.getSessionId();
-        insertAndFireEvent(cursor, str, sessionId, operation.getUserId());
+        insertAndFireEvent(cursor, str, operation.sessionId, operation.userId);
         cursor += str.length();
         return null;
       }
@@ -205,12 +206,6 @@ public class CollaborativeString extends CollaborativeObject {
         return null;
       }
     });
-  }
-
-  void initialize(String id, String opt_initialValue) {
-    this.id = id;
-    snapshot = new StringBuilder(opt_initialValue == null ? "" : opt_initialValue);
-    model.objects.put(id, this);
   }
 
   @Override

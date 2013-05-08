@@ -15,8 +15,8 @@ package com.goodow.realtime.operation.list;
 
 import com.goodow.realtime.operation.list.algorithm.ListHelper;
 import com.goodow.realtime.operation.list.algorithm.ListNormalizer;
-import com.goodow.realtime.operation.list.algorithm.ListOp;
 import com.goodow.realtime.operation.list.algorithm.ListNormalizer.Appender;
+import com.goodow.realtime.operation.list.algorithm.ListOp;
 
 import elemental.json.Json;
 import elemental.json.JsonArray;
@@ -103,8 +103,8 @@ public class ArrayOp extends ListOp<JsonArray> {
     super(isInsert, idx, list, initLength);
   }
 
-  ArrayOp(String json) {
-    super(json);
+  public ArrayOp(JsonArray serialized) {
+    super(serialized);
   }
 
   @Override

@@ -19,7 +19,6 @@ import com.goodow.realtime.operation.TransformException;
 import com.goodow.realtime.util.JsonSerializer;
 import com.goodow.realtime.util.Pair;
 
-import elemental.json.Json;
 import elemental.json.JsonArray;
 import elemental.json.JsonObject;
 import elemental.json.JsonValue;
@@ -28,21 +27,21 @@ import elemental.util.Collections;
 import elemental.util.MapFromStringTo;
 
 public class MapOp implements Operation<MapTarget>, MapTarget {
-  public static final String TYPE = "o";
+  public static final int TYPE = 8;
   private static final String INSERT = "i";
   private static final String DELETE = "d";
 
   protected final MapFromStringTo<Pair<JsonValue, JsonValue>> components;
+  private String id;
 
   public MapOp() {
     components = Collections.mapFromStringTo();
   }
 
-  public MapOp(String json) {
+  public MapOp(JsonArray serialized) {
     this();
-    JsonArray components = Json.instance().parse(json);
-    for (int i = 0, len = components.length(); i < len; i++) {
-      JsonArray component = components.getArray(i);
+    for (int i = 0, len = serialized.length(); i < len; i++) {
+      JsonArray component = serialized.getArray(i);
       if (component.length() == 3) {
         update(component.getString(0), component.get(1), component.get(2));
       } else {
@@ -90,7 +89,12 @@ public class MapOp implements Operation<MapTarget>, MapTarget {
   }
 
   @Override
-  public String getType() {
+  public String getId() {
+    return id;
+  }
+
+  @Override
+  public int getType() {
     return TYPE;
   }
 
@@ -108,6 +112,11 @@ public class MapOp implements Operation<MapTarget>, MapTarget {
   @Override
   public boolean isNoOp() {
     return components.keys().isEmpty();
+  }
+
+  @Override
+  public void setId(String id) {
+    this.id = id;
   }
 
   @Override

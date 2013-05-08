@@ -29,7 +29,6 @@ import org.timepedia.exporter.client.NoExport;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import elemental.json.Json;
@@ -54,7 +53,8 @@ import elemental.json.JsonValue;
 public class CollaborativeMap extends CollaborativeObject {
   @GwtIncompatible(NativeInterfaceFactory.JS_REGISTER_PROPERTIES)
   @ExportAfterCreateMethod
-  public native static void __jsRunAfter__() /*-{
+  // @formatter:off
+  public native static void __jsniRunAfter__() /*-{
     var _ = $wnd.gdr.CollaborativeMap.prototype;
     Object.defineProperties(_, {
       id : {
@@ -108,11 +108,13 @@ public class CollaborativeMap extends CollaborativeObject {
       return old;
     };
   }-*/;
+  // @formatter:on
 
-  private JsonObject snapshot;
+  private final JsonObject snapshot;
 
   CollaborativeMap(Model model) {
     super(model);
+    snapshot = Json.createObject();
   }
 
   public void addValueChangedListener(EventHandler<ValueChangedEvent> handler) {
@@ -141,7 +143,7 @@ public class CollaborativeMap extends CollaborativeObject {
   @NoExport
   public <T> T get(String key) {
     checkKey(key);
-    return (T) JsonSerializer.jsonToObj(snapshot.getArray(key), model.objects);
+    return (T) JsonSerializer.deserializeObject(snapshot.getArray(key), model.objects);
   }
 
   /**
@@ -230,12 +232,12 @@ public class CollaborativeMap extends CollaborativeObject {
   public Object set(String key, Object value) {
     checkKey(key);
     MapOp op = new MapOp();
-    JsonArray newValue = JsonSerializer.objToJson(value);
-    if (newValue == null && !has(key)) {
+    JsonArray serializedValue = JsonSerializer.serializeObject(value);
+    if (serializedValue == null && !has(key)) {
       return null;
     }
     Object oldObject = get(key);
-    op.update(key, snapshot.getArray(key), newValue);
+    op.update(key, snapshot.getArray(key), serializedValue);
     consumeAndSubmit(op);
     return oldObject;
   }
@@ -264,42 +266,19 @@ public class CollaborativeMap extends CollaborativeObject {
   }
 
   @Override
-  protected void consume(final RealtimeOperation operation) {
+  protected void consume(final RealtimeOperation<?> operation) {
     operation.<MapTarget> getOp().apply(new MapTarget() {
       @Override
       public MapTarget update(String key, JsonValue oldValue, JsonValue newValue) {
         assert oldValue == null || JsonSerializer.jsonEqual(snapshot.get(key), oldValue);
         if (newValue == null) {
-          removeAndFireEvent(key, operation.getSessionId(), operation.getUserId());
+          removeAndFireEvent(key, operation.sessionId, operation.userId);
         } else {
-          putAndFireEvent(key, newValue, operation.getSessionId(), operation.getUserId());
+          putAndFireEvent(key, newValue, operation.sessionId, operation.userId);
         }
         return null;
       }
     });
-  }
-
-  void initialize(String id, JsonObject snapshot) {
-    this.id = id;
-    this.snapshot = snapshot;
-    model.objects.put(id, this);
-    for (String key : keys()) {
-      model.document.addOrRemoveParent(snapshot.getArray(key), id, true);
-    }
-  }
-
-  void initializeCreate(String id, Map<String, ?> opt_initialValue) {
-    JsonObject snapshot = Json.createObject();
-    if (opt_initialValue != null) {
-      for (Map.Entry<String, ?> entry : opt_initialValue.entrySet()) {
-        JsonArray array = JsonSerializer.objToJson(entry.getValue());
-        if (array == null) {
-          continue;
-        }
-        snapshot.put(entry.getKey(), array);
-      }
-    }
-    initialize(id, snapshot);
   }
 
   @Override
@@ -349,7 +328,7 @@ public class CollaborativeMap extends CollaborativeObject {
   private void putAndFireEvent(String key, JsonValue newValue, String sessionId, String userId) {
     assert null != newValue && Json.createNull() != newValue;
     JsonArray oldValue = snapshot.getArray(key);
-    Object newObject = JsonSerializer.jsonToObj(newValue, model.objects);
+    Object newObject = JsonSerializer.deserializeObject(newValue, model.objects);
     ValueChangedEvent event =
         new ValueChangedEvent(this, sessionId, userId, key, newObject, get(key));
     snapshot.put(key, newValue);
