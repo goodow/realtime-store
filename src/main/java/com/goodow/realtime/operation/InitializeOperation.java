@@ -14,6 +14,7 @@
 package com.goodow.realtime.operation;
 
 import com.goodow.realtime.DocumentBridge;
+import com.goodow.realtime.operation.basic.NoOp;
 import com.goodow.realtime.util.Pair;
 
 import elemental.json.JsonArray;
@@ -36,14 +37,14 @@ public class InitializeOperation implements Operation<DocumentBridge> {
     this.opt_initialValue = opt_initialValue;
   }
 
-  public InitializeOperation(JsonValue serialized, DocumentBridge bridge) {
+  public InitializeOperation(JsonValue serialized, RealtimeTransformer transformer) {
     if (serialized.getType() == JsonType.NUMBER) {
       this.type = (int) ((JsonNumber) serialized).getNumber();
       this.opt_initialValue = null;
     } else {
       JsonArray json = (JsonArray) serialized;
       this.type = (int) json.getNumber(0);
-      this.opt_initialValue = bridge.createOp(json.getArray(1));
+      this.opt_initialValue = transformer.createOp(json.getArray(1));
     }
   }
 
@@ -53,7 +54,7 @@ public class InitializeOperation implements Operation<DocumentBridge> {
   }
 
   @Override
-  public Operation<DocumentBridge> composeWith(Operation<DocumentBridge> op) {
+  public InitializeOperation composeWith(Operation<DocumentBridge> op) {
     throw new UnsupportedOperationException();
   }
 
@@ -122,6 +123,9 @@ public class InitializeOperation implements Operation<DocumentBridge> {
   @Override
   public void setId(String id) {
     this.id = id;
+    if (opt_initialValue != null) {
+      opt_initialValue.setId(id);
+    }
   }
 
   @Override
@@ -141,6 +145,6 @@ public class InitializeOperation implements Operation<DocumentBridge> {
   public Pair<? extends Operation<DocumentBridge>, ? extends Operation<?>> transformWith(
       Operation<?> clientOp) {
     assert equals(clientOp);
-    return Pair.of(this, clientOp);
+    return Pair.of(NoOp.<DocumentBridge> get(), NoOp.get());
   }
 }

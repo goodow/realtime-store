@@ -24,6 +24,8 @@ public interface NativeInterfaceFactory {
   String JS_REGISTER_PROPERTIES = "J2ObjC blocked by JSNI";
   String JS_REGISTER_MATHODS = "J2ObjC blocked by JSNI";
 
+  // Rpc getRpc();
+
   /**
    * A deferred command is executed after the event loop returns.
    */

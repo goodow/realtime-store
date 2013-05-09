@@ -13,7 +13,6 @@
  */
 package com.goodow.realtime.operation;
 
-import com.goodow.realtime.operation.list.algorithm.ListOp;
 import com.goodow.realtime.util.Pair;
 
 public class RealtimeOperation<T> implements Operation<T> {
@@ -37,13 +36,15 @@ public class RealtimeOperation<T> implements Operation<T> {
   }
 
   @Override
-  public Operation<T> composeWith(Operation<T> operation) {
+  public RealtimeOperation<T> composeWith(Operation<T> operation) {
     assert operation instanceof RealtimeOperation;
-    assert !(operation instanceof ListOp);
     assert !isNoOp() && !operation.isNoOp();
     RealtimeOperation<T> op = (RealtimeOperation<T>) operation;
-    return new RealtimeOperation<T>(this.op.composeWith(op.<T> getOp()), userId, revision,
-        sessionId);
+    assert getType() == op.getType() && getId().equals(op.getId())
+        && sessionId.equals(op.sessionId) && userId.equals(op.userId);
+    Operation<T> composition = this.op.composeWith(op.<T> getOp());
+    composition.setId(getId());
+    return new RealtimeOperation<T>(composition, userId, revision, sessionId);
   }
 
   @Override
@@ -91,9 +92,9 @@ public class RealtimeOperation<T> implements Operation<T> {
     return op.getId();
   }
 
-  @SuppressWarnings("unchecked")
-  public <O> Operation<O> getOp() {
-    return (Operation<O>) op;
+  @SuppressWarnings({"unchecked", "hiding"})
+  public <T> Operation<T> getOp() {
+    return (Operation<T>) op;
   }
 
   @Override
@@ -152,8 +153,10 @@ public class RealtimeOperation<T> implements Operation<T> {
     if (!getId().equals(op.getId())) {
       return Pair.of(this, op);
     }
-    assert getType() == op.getType();
+    assert getType() == op.getType() && getId().equals(op.getId());
     Pair<? extends Operation<T>, ? extends Operation<?>> pair = this.op.transformWith(op.getOp());
+    pair.first.setId(getId());
+    pair.second.setId(getId());
     RealtimeOperation<T> transformedServerOp =
         new RealtimeOperation<T>(pair.first, userId, revision, sessionId);
     @SuppressWarnings("rawtypes")

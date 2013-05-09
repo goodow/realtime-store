@@ -349,9 +349,6 @@ public class Model implements EventTarget {
     if (id == null) {
       id = generateObjectId();
     }
-    if (opt_initialValue != null) {
-      opt_initialValue.setId(id);
-    }
     op.setId(id);
     bridge.consumeAndSubmit(op);
     endCompoundOperation();

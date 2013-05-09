@@ -54,7 +54,7 @@ import elemental.json.JsonValue;
 @ExportPackage(NativeInterfaceFactory.PACKAGE_PREFIX_REALTIME)
 @Export(all = true)
 public class Document implements EventTarget {
-  private static final String EVENT_HANDLER_KEY = "document";
+  static final String EVENT_HANDLER_KEY = "document";
   private static final Logger log = Logger.getLogger(Document.class.getName());
   private List<Collaborator> collaborators;
   private final Model model;

@@ -15,8 +15,6 @@ package com.goodow.realtime;
 
 import junit.framework.TestCase;
 
-import elemental.json.Json;
-
 public class CollaborativeStringTest extends TestCase {
   CollaborativeString str;
   Model mod;
@@ -230,7 +228,7 @@ public class CollaborativeStringTest extends TestCase {
 
   @Override
   protected void setUp() throws Exception {
-    Document doc = new DocumentBridge(null, 0, null, Json.createArray()).document;
+    Document doc = new DocumentBridge().document;
     mod = doc.getModel();
     str = mod.createString(null);
   }

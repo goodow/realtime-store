@@ -14,6 +14,7 @@
 package com.goodow.realtime.operation;
 
 import com.goodow.realtime.IndexReference;
+import com.goodow.realtime.operation.basic.NoOp;
 import com.goodow.realtime.util.Pair;
 
 import elemental.json.JsonArray;
@@ -45,7 +46,7 @@ public class ReferenceShiftedOperation implements Operation<IndexReference> {
   }
 
   @Override
-  public Operation<IndexReference> composeWith(Operation<IndexReference> op) {
+  public ReferenceShiftedOperation composeWith(Operation<IndexReference> op) {
     assert op instanceof ReferenceShiftedOperation;
     ReferenceShiftedOperation o = (ReferenceShiftedOperation) op;
     assert referencedObject.equals(o.referencedObject);
@@ -142,8 +143,7 @@ public class ReferenceShiftedOperation implements Operation<IndexReference> {
       throw new TransformException("Mismatched initial value: attempt to transform " + toString()
           + " with " + op.toString());
     }
-    return Pair.of(new ReferenceShiftedOperation(referencedObject, op.newIndex, canBeDeleted,
-        op.newIndex), new ReferenceShiftedOperation(referencedObject, op.newIndex, canBeDeleted,
-        newIndex));
+    return Pair.of(NoOp.<IndexReference> get(), new ReferenceShiftedOperation(referencedObject,
+        op.newIndex, canBeDeleted, newIndex));
   }
 }

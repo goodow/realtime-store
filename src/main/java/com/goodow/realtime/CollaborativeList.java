@@ -13,7 +13,7 @@
  */
 package com.goodow.realtime;
 
-import com.goodow.realtime.operation.Operation;
+import com.goodow.realtime.operation.InitializeOperation;
 import com.goodow.realtime.operation.RealtimeOperation;
 import com.goodow.realtime.operation.list.ArrayOp;
 import com.goodow.realtime.operation.list.algorithm.ListTarget;
@@ -470,13 +470,13 @@ public class CollaborativeList extends CollaborativeObject {
   }
 
   @Override
-  Operation<?> toInitialization() {
-    if (length() == 0) {
-      return null;
+  InitializeOperation toInitialization() {
+    ArrayOp op = null;
+    if (length() != 0) {
+      op = new ArrayOp();
+      op.insert(snapshot);
     }
-    ArrayOp op = new ArrayOp();
-    op.insert(snapshot);
-    return op;
+    return new InitializeOperation(InitializeOperation.COLLABORATIVE_LIST, op);
   }
 
   @Override
@@ -508,7 +508,7 @@ public class CollaborativeList extends CollaborativeObject {
 
   // @formatter:off
   private native int __ocniCompare__(Object comparator, Object object1, Object object2) /*-[
-    GDRComparatorBlock block = (GDRComparatorBlock)comparator;
+    NSComparator block = (NSComparator)comparator;
     return block(object1, object2);
   ]-*/ /*-{
   }-*/;

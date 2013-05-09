@@ -96,6 +96,9 @@ public class ArrayOp extends ListOp<JsonArray> {
     }
   }
 
+  @SuppressWarnings("hiding")
+  public static final int TYPE = 11;
+
   public ArrayOp() {
   }
 
@@ -105,6 +108,11 @@ public class ArrayOp extends ListOp<JsonArray> {
 
   public ArrayOp(JsonArray serialized) {
     super(serialized);
+  }
+
+  @Override
+  public int getType() {
+    return TYPE;
   }
 
   @Override

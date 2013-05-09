@@ -16,26 +16,30 @@ package com.goodow.realtime.operation.basic;
 import com.goodow.realtime.operation.Operation;
 import com.goodow.realtime.util.Pair;
 
-public class NoOp implements Operation<Void> {
+public class NoOp<T> implements Operation<T> {
   public static final int TYPE = -1;
-  public static final NoOp INSTANCE = new NoOp();
+
+  public static <T> NoOp<T> get() {
+    return new NoOp<T>();
+  }
+
   private String id;
 
   private NoOp() {
   }
 
   @Override
-  public void apply(Void target) {
+  public void apply(T target) {
   }
 
   @Override
-  public Operation<Void> composeWith(Operation<Void> op) {
+  public Operation<T> composeWith(Operation<T> op) {
     throw new IllegalStateException();
   }
 
   @Override
   public boolean equals(Object obj) {
-    return obj == INSTANCE;
+    return obj instanceof NoOp;
   }
 
   @Override
@@ -49,8 +53,8 @@ public class NoOp implements Operation<Void> {
   }
 
   @Override
-  public Operation<Void> invert() {
-    return INSTANCE;
+  public Operation<T> invert() {
+    return get();
   }
 
   @Override
@@ -69,7 +73,7 @@ public class NoOp implements Operation<Void> {
   }
 
   @Override
-  public Pair<NoOp, ? extends Operation<?>> transformWith(Operation<?> clientOp) {
+  public Pair<NoOp<T>, ? extends Operation<?>> transformWith(Operation<?> clientOp) {
     throw new IllegalStateException();
   }
 }

@@ -46,7 +46,7 @@ public class JsNativeInterfaceFactory implements NativeInterfaceFactory, EntryPo
   @Override
   public void onModuleLoad() {
     ExporterUtil.exportAll();
-    onLoadImpl();
+    __jsniOnLoad__();
   }
 
   @Override
@@ -60,6 +60,7 @@ public class JsNativeInterfaceFactory implements NativeInterfaceFactory, EntryPo
   }
 
   @Override
+  // @formatter:off
   public native void setText(CollaborativeString str, String text) /*-{
 		var dmp = new $wnd.diff_match_patch();
 		var text1 = str.@com.goodow.realtime.CollaborativeString::getText()();
@@ -84,9 +85,12 @@ public class JsNativeInterfaceFactory implements NativeInterfaceFactory, EntryPo
 			}
 		}
   }-*/;
+  // @formatter:on
 
-  private native void onLoadImpl() /*-{
+  // @formatter:off
+  private native void __jsniOnLoad__() /*-{
 		if ($wnd.gdr.onLoad && typeof $wnd.gdr.onLoad == 'function')
 			$wnd.gdr.onLoad();
   }-*/;
+  // @formatter:on
 }

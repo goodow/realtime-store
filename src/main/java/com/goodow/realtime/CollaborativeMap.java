@@ -13,7 +13,7 @@
  */
 package com.goodow.realtime;
 
-import com.goodow.realtime.operation.Operation;
+import com.goodow.realtime.operation.InitializeOperation;
 import com.goodow.realtime.operation.RealtimeOperation;
 import com.goodow.realtime.operation.map.MapOp;
 import com.goodow.realtime.operation.map.MapTarget;
@@ -282,15 +282,15 @@ public class CollaborativeMap extends CollaborativeObject {
   }
 
   @Override
-  Operation<?> toInitialization() {
-    if (isEmpty()) {
-      return null;
+  InitializeOperation toInitialization() {
+    MapOp op = null;
+    if (!isEmpty()) {
+      op = new MapOp();
+      for (String key : keys()) {
+        op.update(key, null, snapshot.get(key));
+      }
     }
-    MapOp op = new MapOp();
-    for (String key : keys()) {
-      op.update(key, null, snapshot.get(key));
-    }
-    return op;
+    return new InitializeOperation(InitializeOperation.COLLABORATIVE_MAP, op);
   }
 
   @Override
