@@ -18,34 +18,23 @@ import com.goodow.realtime.operation.basic.NoOp;
 import com.goodow.realtime.util.Pair;
 
 import elemental.json.JsonArray;
-import elemental.json.JsonNumber;
-import elemental.json.JsonType;
-import elemental.json.JsonValue;
 
-public class InitializeOperation implements Operation<DocumentBridge> {
+public class CreateOperation implements Operation<DocumentBridge> {
   public static final int TYPE = 7;
   public static final int COLLABORATIVE_MAP = 0;
   public static final int COLLABORATIVE_LIST = 1;
   public static final int COLLABORATIVE_STRING = 2;
   public static final int INDEX_REFERENCE = 4;
   public final int type;
-  public final Operation<?> opt_initialValue;
   private String id;
 
-  public InitializeOperation(int type, Operation<?> opt_initialValue) {
+  public CreateOperation(int type, String id) {
     this.type = type;
-    this.opt_initialValue = opt_initialValue;
+    this.id = id;
   }
 
-  public InitializeOperation(JsonValue serialized, RealtimeTransformer transformer) {
-    if (serialized.getType() == JsonType.NUMBER) {
-      this.type = (int) ((JsonNumber) serialized).getNumber();
-      this.opt_initialValue = null;
-    } else {
-      JsonArray json = (JsonArray) serialized;
-      this.type = (int) json.getNumber(0);
-      this.opt_initialValue = transformer.createOp(json.getArray(1));
-    }
+  public CreateOperation(JsonArray serialized) {
+    this((int) serialized.getNumber(2), serialized.getString(1));
   }
 
   @Override
@@ -54,7 +43,7 @@ public class InitializeOperation implements Operation<DocumentBridge> {
   }
 
   @Override
-  public InitializeOperation composeWith(Operation<DocumentBridge> op) {
+  public CreateOperation composeWith(Operation<DocumentBridge> op) {
     throw new UnsupportedOperationException();
   }
 
@@ -66,22 +55,15 @@ public class InitializeOperation implements Operation<DocumentBridge> {
     if (obj == null) {
       return false;
     }
-    if (!(obj instanceof InitializeOperation)) {
+    if (!(obj instanceof CreateOperation)) {
       return false;
     }
-    InitializeOperation other = (InitializeOperation) obj;
+    CreateOperation other = (CreateOperation) obj;
     if (id == null) {
       if (other.id != null) {
         return false;
       }
     } else if (!id.equals(other.id)) {
-      return false;
-    }
-    if (opt_initialValue == null) {
-      if (other.opt_initialValue != null) {
-        return false;
-      }
-    } else if (!opt_initialValue.equals(other.opt_initialValue)) {
       return false;
     }
     if (type != other.type) {
@@ -105,7 +87,6 @@ public class InitializeOperation implements Operation<DocumentBridge> {
     final int prime = 31;
     int result = 1;
     result = prime * result + ((id == null) ? 0 : id.hashCode());
-    result = prime * result + ((opt_initialValue == null) ? 0 : opt_initialValue.hashCode());
     result = prime * result + type;
     return result;
   }
@@ -123,21 +104,12 @@ public class InitializeOperation implements Operation<DocumentBridge> {
   @Override
   public void setId(String id) {
     this.id = id;
-    if (opt_initialValue != null) {
-      opt_initialValue.setId(id);
-    }
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    if (opt_initialValue != null) {
-      sb.append("[");
-    }
     sb.append(type);
-    if (opt_initialValue != null) {
-      sb.append(",").append(opt_initialValue).append("]");
-    }
     return sb.toString();
   }
 

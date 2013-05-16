@@ -13,7 +13,6 @@
  */
 package com.goodow.realtime;
 
-import com.goodow.realtime.operation.InitializeOperation;
 import com.goodow.realtime.operation.Operation;
 import com.goodow.realtime.operation.RealtimeOperation;
 import com.goodow.realtime.util.NativeInterfaceFactory;
@@ -92,7 +91,7 @@ public abstract class CollaborativeObject implements EventTarget {
     model.document.scheduleEvent(id, event.type, event);
   }
 
-  abstract InitializeOperation toInitialization();
+  abstract Operation<?>[] toInitialization();
 
   abstract void toString(Set<String> seen, StringBuilder sb);
 }

@@ -39,7 +39,7 @@
       <artifactId>gwt-user</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.google.gwt</groupId>
+      <groupId>com.goodow.gwt</groupId>
       <artifactId>gwt-elemental</artifactId>
     </dependency>
     <dependency>
@@ -47,10 +47,8 @@
       <artifactId>gwt-codeserver</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.timepedia.exporter</groupId>
-      <artifactId>gwtexporter</artifactId>
-      <version>2.5.0-SNAPSHOT</version>
-      <scope>provided</scope>
+      <groupId>com.goodow.gwt</groupId>
+      <artifactId>gwt-exporter</artifactId>
     </dependency>
     <dependency>
       <groupId>com.google.guava</groupId>
@@ -66,13 +64,17 @@
   
   <build>
     <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+      </plugin>
       <!-- GWT Maven Plugin -->
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>gwt-maven-plugin</artifactId>
         <version>${gwt.version}</version>
         <configuration>
-          <module>${project.groupId}.Realtime</module>
+          <module>${project.groupId}.Model</module>
         </configuration>
       </plugin>
     </plugins>

@@ -13,7 +13,8 @@
  */
 package com.goodow.realtime;
 
-import com.goodow.realtime.operation.InitializeOperation;
+import com.goodow.realtime.operation.CreateOperation;
+import com.goodow.realtime.operation.Operation;
 import com.goodow.realtime.operation.RealtimeOperation;
 import com.goodow.realtime.operation.ReferenceShiftedOperation;
 import com.goodow.realtime.util.NativeInterfaceFactory;
@@ -175,15 +176,15 @@ public class IndexReference extends CollaborativeObject {
         new ReferenceShiftedOperation(referencedObject, newIndex, canBeDeleted, cursor);
     op.setId(id);
     RealtimeOperation<IndexReference> operation =
-        new RealtimeOperation<IndexReference>(op, userId, -1, sessionId);
+        new RealtimeOperation<IndexReference>(op, userId, sessionId);
     consume(operation);
   }
 
   @Override
-  InitializeOperation toInitialization() {
+  Operation<?>[] toInitialization() {
     ReferenceShiftedOperation op =
         new ReferenceShiftedOperation(referencedObject, index, canBeDeleted, index);
-    return new InitializeOperation(InitializeOperation.INDEX_REFERENCE, op);
+    return new Operation[] {new CreateOperation(CreateOperation.INDEX_REFERENCE, id), op};
   }
 
   @Override

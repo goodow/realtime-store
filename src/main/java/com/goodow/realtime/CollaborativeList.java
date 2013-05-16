@@ -13,7 +13,8 @@
  */
 package com.goodow.realtime;
 
-import com.goodow.realtime.operation.InitializeOperation;
+import com.goodow.realtime.operation.CreateOperation;
+import com.goodow.realtime.operation.Operation;
 import com.goodow.realtime.operation.RealtimeOperation;
 import com.goodow.realtime.operation.list.ArrayOp;
 import com.goodow.realtime.operation.list.algorithm.ListTarget;
@@ -470,13 +471,13 @@ public class CollaborativeList extends CollaborativeObject {
   }
 
   @Override
-  InitializeOperation toInitialization() {
+  Operation<?>[] toInitialization() {
     ArrayOp op = null;
     if (length() != 0) {
       op = new ArrayOp();
       op.insert(snapshot);
     }
-    return new InitializeOperation(InitializeOperation.COLLABORATIVE_LIST, op);
+    return new Operation[] {new CreateOperation(CreateOperation.COLLABORATIVE_LIST, id), op};
   }
 
   @Override

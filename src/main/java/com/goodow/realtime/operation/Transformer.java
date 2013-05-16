@@ -21,7 +21,7 @@ import elemental.util.ArrayOf;
 public interface Transformer<O extends Operation<?>> {
   ArrayOf<O> compose(ArrayOf<O> ops);
 
-  O createOperation(JsonValue serialized);
+  O createOperation(JsonValue serialized, String userId, String sessionId);
 
   OperationSink<O> createSnapshot(JsonValue serialized);
 

@@ -182,6 +182,7 @@ str = mod.createString('ab');
 str.addObjectChangedListener(displayObjectChangedEvent);
 str.append('d');
 
+{"revision":92,"requestNumber":0,"changes":[[4,[0,[4,[0,[5,"gdelfgrhjhfwnhdrl",8,[1,"!"]]]]]]]}:
 [4,[0,1367894092595,[[
 	[[4,[0,[4,[0,[5,"gdelfgrhjhfwnhdrl",28,[1,"x"]]]]]]],1367894137096,"101854939286968683254",70,"1f67d8b67d4fc552",0
 ]]]]

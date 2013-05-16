@@ -19,14 +19,15 @@ public class RealtimeOperation<T> implements Operation<T> {
 
   public final Operation<T> op;
   public final String userId;
-  public final int revision;
-
   public final String sessionId;
 
-  public RealtimeOperation(Operation<T> op, String userId, int revision, String sessionId) {
+  public RealtimeOperation(Operation<T> op) {
+    this(op, null, null);
+  }
+
+  public RealtimeOperation(Operation<T> op, String userId, String sessionId) {
     this.op = op;
     this.userId = userId;
-    this.revision = revision;
     this.sessionId = sessionId;
   }
 
@@ -44,7 +45,7 @@ public class RealtimeOperation<T> implements Operation<T> {
         && sessionId.equals(op.sessionId) && userId.equals(op.userId);
     Operation<T> composition = this.op.composeWith(op.<T> getOp());
     composition.setId(getId());
-    return new RealtimeOperation<T>(composition, userId, revision, sessionId);
+    return new RealtimeOperation<T>(composition, userId, sessionId);
   }
 
   @Override
@@ -65,9 +66,6 @@ public class RealtimeOperation<T> implements Operation<T> {
         return false;
       }
     } else if (!op.equals(other.op)) {
-      return false;
-    }
-    if (revision != other.revision) {
       return false;
     }
     if (sessionId == null) {
@@ -107,7 +105,6 @@ public class RealtimeOperation<T> implements Operation<T> {
     final int prime = 31;
     int result = 1;
     result = prime * result + ((op == null) ? 0 : op.hashCode());
-    result = prime * result + revision;
     result = prime * result + ((sessionId == null) ? 0 : sessionId.hashCode());
     result = prime * result + ((userId == null) ? 0 : userId.hashCode());
     return result;
@@ -115,7 +112,7 @@ public class RealtimeOperation<T> implements Operation<T> {
 
   @Override
   public Operation<T> invert() {
-    return new RealtimeOperation<T>(op.invert(), userId, revision, sessionId);
+    return new RealtimeOperation<T>(op.invert(), userId, sessionId);
   }
 
   @Override
@@ -131,15 +128,8 @@ public class RealtimeOperation<T> implements Operation<T> {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    if (revision != -1) {
-      sb.append("[");
-    }
     sb.append("[").append(op.getType()).append(",\"").append(getId()).append("\",").append(
         op.toString()).append("]");
-    if (revision != -1) {
-      sb.append(",").append("\"").append(userId).append("\",").append(revision).append(",\"")
-          .append(sessionId).append("\"").append("]");
-    }
     return sb.toString();
   }
 
@@ -158,10 +148,10 @@ public class RealtimeOperation<T> implements Operation<T> {
     pair.first.setId(getId());
     pair.second.setId(getId());
     RealtimeOperation<T> transformedServerOp =
-        new RealtimeOperation<T>(pair.first, userId, revision, sessionId);
+        new RealtimeOperation<T>(pair.first, userId, sessionId);
     @SuppressWarnings("rawtypes")
     RealtimeOperation<?> transformedClientOp =
-        new RealtimeOperation(pair.second, op.userId, op.revision, op.sessionId);
+        new RealtimeOperation(pair.second, op.userId, op.sessionId);
     return Pair.of(transformedServerOp, transformedClientOp);
   }
 

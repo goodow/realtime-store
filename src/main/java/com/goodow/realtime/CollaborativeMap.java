@@ -13,7 +13,8 @@
  */
 package com.goodow.realtime;
 
-import com.goodow.realtime.operation.InitializeOperation;
+import com.goodow.realtime.operation.CreateOperation;
+import com.goodow.realtime.operation.Operation;
 import com.goodow.realtime.operation.RealtimeOperation;
 import com.goodow.realtime.operation.map.MapOp;
 import com.goodow.realtime.operation.map.MapTarget;
@@ -282,7 +283,7 @@ public class CollaborativeMap extends CollaborativeObject {
   }
 
   @Override
-  InitializeOperation toInitialization() {
+  Operation<?>[] toInitialization() {
     MapOp op = null;
     if (!isEmpty()) {
       op = new MapOp();
@@ -290,7 +291,7 @@ public class CollaborativeMap extends CollaborativeObject {
         op.update(key, null, snapshot.get(key));
       }
     }
-    return new InitializeOperation(InitializeOperation.COLLABORATIVE_MAP, op);
+    return new Operation[] {new CreateOperation(CreateOperation.COLLABORATIVE_MAP, id), op};
   }
 
   @Override

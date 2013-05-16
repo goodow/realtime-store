@@ -192,7 +192,8 @@ public class Document implements EventTarget {
    * @return A jsArray of collaborators.
    */
   public Collaborator[] getCollaborators() {
-    return collaborators.toArray(new Collaborator[0]);
+    return new Collaborator[] {new Collaborator(bridge.userId, bridge.sessionId, "fake name",
+        "#58B442", true, true, null)};
   }
 
   /**

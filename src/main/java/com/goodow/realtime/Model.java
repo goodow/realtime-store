@@ -14,7 +14,7 @@
 package com.goodow.realtime;
 
 import com.goodow.realtime.id.IdGenerator;
-import com.goodow.realtime.operation.InitializeOperation;
+import com.goodow.realtime.operation.CreateOperation;
 import com.goodow.realtime.operation.Operation;
 import com.goodow.realtime.operation.ReferenceShiftedOperation;
 import com.goodow.realtime.operation.list.ArrayOp;
@@ -192,7 +192,7 @@ public class Model implements EventTarget {
       }
       op.insert(array);
     }
-    String id = initializeCreate(InitializeOperation.COLLABORATIVE_LIST, op, null);
+    String id = initializeCreate(CreateOperation.COLLABORATIVE_LIST, op, null);
     return getObject(id);
   }
 
@@ -215,7 +215,7 @@ public class Model implements EventTarget {
         op.update(key, null, serializedValue);
       }
     }
-    String id = initializeCreate(InitializeOperation.COLLABORATIVE_MAP, op, null);
+    String id = initializeCreate(CreateOperation.COLLABORATIVE_MAP, op, null);
     return getObject(id);
   }
 
@@ -230,7 +230,7 @@ public class Model implements EventTarget {
     if (opt_initialValue != null && !opt_initialValue.isEmpty()) {
       op = new StringOp().insert(opt_initialValue);
     }
-    String id = initializeCreate(InitializeOperation.COLLABORATIVE_STRING, op, null);
+    String id = initializeCreate(CreateOperation.COLLABORATIVE_STRING, op, null);
     return getObject(id);
   }
 
@@ -297,13 +297,13 @@ public class Model implements EventTarget {
   IndexReference createIndexReference(String referencedObject, int index, boolean canBeDeleted) {
     ReferenceShiftedOperation op =
         new ReferenceShiftedOperation(referencedObject, index, canBeDeleted, -1);
-    String id = initializeCreate(InitializeOperation.INDEX_REFERENCE, op, null);
+    String id = initializeCreate(CreateOperation.INDEX_REFERENCE, op, null);
     registerIndexReference(id, referencedObject);
     return getObject(id);
   }
 
   void createRoot() {
-    initializeCreate(InitializeOperation.COLLABORATIVE_MAP, null, ROOT_ID);
+    initializeCreate(CreateOperation.COLLABORATIVE_MAP, null, ROOT_ID);
   }
 
   @SuppressWarnings("unchecked")
@@ -345,12 +345,15 @@ public class Model implements EventTarget {
 
   private String initializeCreate(int type, Operation<?> opt_initialValue, String id) {
     beginCreationCompoundOperation();
-    InitializeOperation op = new InitializeOperation(type, opt_initialValue);
     if (id == null) {
       id = generateObjectId();
     }
-    op.setId(id);
+    CreateOperation op = new CreateOperation(type, id);
     bridge.consumeAndSubmit(op);
+    if (opt_initialValue != null) {
+      opt_initialValue.setId(id);
+      bridge.consumeAndSubmit(opt_initialValue);
+    }
     endCompoundOperation();
     return id;
   }

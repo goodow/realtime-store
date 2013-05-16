@@ -14,6 +14,7 @@
 package com.goodow.realtime.operation;
 
 import com.goodow.realtime.DocumentBridge;
+import com.goodow.realtime.operation.basic.NoOp;
 import com.goodow.realtime.operation.list.ArrayOp;
 import com.goodow.realtime.operation.list.StringOp;
 import com.goodow.realtime.operation.list.algorithm.ListOp;
@@ -39,8 +40,9 @@ public class RealtimeTransformer implements Transformer<RealtimeOperation<?>> {
     for (int i = 0, len = ops.length(); i < len; i++) {
       RealtimeOperation op = ops.get(i);
       assert !op.isNoOp();
-      if (!op.getId().equals(current.getId()) || !op.sessionId.equals(current.sessionId)
-          || !op.userId.equals(current.userId)) {
+      if (current == null || !op.getId().equals(current.getId())
+          || !op.sessionId.equals(current.sessionId) || !op.userId.equals(current.userId)
+          || op.getType() != current.getType()) {
         if (collector != null) {
           composeListOps(toRtn, collector);
           collector = null;
@@ -74,8 +76,8 @@ public class RealtimeTransformer implements Transformer<RealtimeOperation<?>> {
     Operation<?> op = null;
     String id = serialized.getString(1);
     switch ((int) serialized.getNumber(0)) {
-      case InitializeOperation.TYPE:
-        op = new InitializeOperation(serialized.get(2), this);
+      case CreateOperation.TYPE:
+        op = new CreateOperation(serialized);
         break;
       case MapOp.TYPE:
         op = new MapOp(serialized.getArray(2));
@@ -89,6 +91,9 @@ public class RealtimeTransformer implements Transformer<RealtimeOperation<?>> {
       case ReferenceShiftedOperation.TYPE:
         op = new ReferenceShiftedOperation(serialized.getArray(2));
         break;
+      case NoOp.TYPE:
+        op = NoOp.get();
+        break;
       default:
         throw new UnsupportedOperationException("Unknow operation type: " + serialized.toJson());
     }
@@ -98,11 +103,9 @@ public class RealtimeTransformer implements Transformer<RealtimeOperation<?>> {
 
   @Override
   @SuppressWarnings({"rawtypes", "unchecked"})
-  public RealtimeOperation<?> createOperation(JsonValue serialized) {
-    JsonArray operation = (JsonArray) serialized;
-    Operation<?> op = createOp(operation.getArray(0));
-    return new RealtimeOperation(op, operation.getString(1), (int) operation.getNumber(2),
-        operation.getString(3));
+  public RealtimeOperation<?> createOperation(JsonValue serialized, String userId, String sessionId) {
+    Operation<?> op = createOp((JsonArray) serialized);
+    return new RealtimeOperation(op, userId, sessionId);
   }
 
   @Override
@@ -150,8 +153,7 @@ public class RealtimeTransformer implements Transformer<RealtimeOperation<?>> {
     if (!composition.isNoOp()) {
       RealtimeOperation<?> peek = ops.peek();
       composition.setId(peek.getId());
-      ops.set(ops.length() - 1, new RealtimeOperation(composition, peek.userId, peek.revision,
-          peek.sessionId));
+      ops.set(ops.length() - 1, new RealtimeOperation(composition, peek.userId, peek.sessionId));
     } else {
       ops.removeByIndex(ops.length() - 1);
     }

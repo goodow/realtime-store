@@ -13,11 +13,12 @@
  */
 package com.goodow.realtime;
 
-import com.goodow.realtime.operation.InitializeOperation;
+import com.goodow.realtime.operation.CreateOperation;
 import com.goodow.realtime.operation.Operation;
 import com.goodow.realtime.operation.OperationSink;
 import com.goodow.realtime.operation.RealtimeOperation;
 import com.goodow.realtime.operation.RealtimeTransformer;
+import com.goodow.realtime.operation.basic.NoOp;
 
 import elemental.json.JsonArray;
 
@@ -50,29 +51,32 @@ public class DocumentBridge implements OperationSink<RealtimeOperation<?>> {
         JsonArray serializedOp = snapshot.getArray(i);
         Operation<?> op = transformer.createOp(serializedOp);
         @SuppressWarnings({"rawtypes", "unchecked"})
-        RealtimeOperation<?> operation = new RealtimeOperation(op, userId, -1, sessionId);
+        RealtimeOperation<?> operation = new RealtimeOperation(op, userId, sessionId);
         consume(operation);
       }
     }
   }
 
-  @SuppressWarnings({"unchecked", "rawtypes"})
   @Override
   public void consume(RealtimeOperation<?> operation) {
-    if (operation.getType() == InitializeOperation.TYPE) {
-      InitializeOperation op = (InitializeOperation) operation.<DocumentBridge> getOp();
+    int type = operation.getType();
+    if (type == NoOp.TYPE) {
+      return;
+    }
+    if (type == CreateOperation.TYPE) {
+      CreateOperation op = (CreateOperation) operation.<DocumentBridge> getOp();
       CollaborativeObject obj;
       switch (op.type) {
-        case InitializeOperation.COLLABORATIVE_MAP:
+        case CreateOperation.COLLABORATIVE_MAP:
           obj = new CollaborativeMap(model);
           break;
-        case InitializeOperation.COLLABORATIVE_LIST:
+        case CreateOperation.COLLABORATIVE_LIST:
           obj = new CollaborativeList(model);
           break;
-        case InitializeOperation.COLLABORATIVE_STRING:
+        case CreateOperation.COLLABORATIVE_STRING:
           obj = new CollaborativeString(model);
           break;
-        case InitializeOperation.INDEX_REFERENCE:
+        case CreateOperation.INDEX_REFERENCE:
           obj = new IndexReference(model);
           break;
         default:
@@ -80,12 +84,7 @@ public class DocumentBridge implements OperationSink<RealtimeOperation<?>> {
       }
       obj.id = operation.getId();
       model.objects.put(obj.id, obj);
-      if (op.opt_initialValue == null) {
-        return;
-      }
-      operation =
-          new RealtimeOperation(op.opt_initialValue, operation.userId, operation.revision,
-              operation.sessionId);
+      return;
     }
     model.getObject(operation.getId()).consume(operation);
   }
@@ -99,19 +98,25 @@ public class DocumentBridge implements OperationSink<RealtimeOperation<?>> {
         .scheduleEvent(Document.EVENT_HANDLER_KEY, EventType.DOCUMENT_SAVE_STATE_CHANGED, event);
   }
 
+  @SuppressWarnings({"rawtypes", "unchecked"})
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder("[");
     boolean isFirst = true;
     for (String id : model.objects.keySet()) {
-      if (!isFirst) {
-        sb.append(",");
-      }
-      isFirst = false;
       CollaborativeObject collaborativeObject = model.getObject(id);
-      InitializeOperation initializeOp = collaborativeObject.toInitialization();
-      initializeOp.setId(id);
-      sb.append(initializeOp.toString());
+      Operation<?>[] initializeOp = collaborativeObject.toInitialization();
+      for (Operation<?> op : initializeOp) {
+        if (op == null) {
+          continue;
+        }
+        op.setId(id);
+        if (!isFirst) {
+          sb.append(",");
+        }
+        isFirst = false;
+        sb.append(new RealtimeOperation(op).toString());
+      }
     }
     sb.append("]");
     return sb.toString();
@@ -119,7 +124,7 @@ public class DocumentBridge implements OperationSink<RealtimeOperation<?>> {
 
   void consumeAndSubmit(Operation<?> op) {
     @SuppressWarnings({"rawtypes", "unchecked"})
-    RealtimeOperation<?> operation = new RealtimeOperation(op, userId, -1, sessionId);
+    RealtimeOperation<?> operation = new RealtimeOperation(op, userId, sessionId);
     consume(operation);
     outputSink.consume(operation);
   }

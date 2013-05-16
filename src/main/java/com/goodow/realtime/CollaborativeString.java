@@ -13,7 +13,8 @@
  */
 package com.goodow.realtime;
 
-import com.goodow.realtime.operation.InitializeOperation;
+import com.goodow.realtime.operation.CreateOperation;
+import com.goodow.realtime.operation.Operation;
 import com.goodow.realtime.operation.RealtimeOperation;
 import com.goodow.realtime.operation.list.StringOp;
 import com.goodow.realtime.operation.list.algorithm.ListOp;
@@ -209,12 +210,13 @@ public class CollaborativeString extends CollaborativeObject {
   }
 
   @Override
-  InitializeOperation toInitialization() {
+  Operation<?>[] toInitialization() {
     ListOp<String> op = null;
     if (length() != 0) {
       op = new StringOp().insert(getText());
     }
-    return new InitializeOperation(InitializeOperation.COLLABORATIVE_STRING, op);
+    return new Operation[] {
+        new CreateOperation(CreateOperation.COLLABORATIVE_STRING, id), op};
   }
 
   @Override

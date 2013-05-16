@@ -89,8 +89,8 @@ public class JsNativeInterfaceFactory implements NativeInterfaceFactory, EntryPo
 
   // @formatter:off
   private native void __jsniOnLoad__() /*-{
-		if ($wnd.gdr.onLoad && typeof $wnd.gdr.onLoad == 'function')
-			$wnd.gdr.onLoad();
+		if ($wnd.gdrOnLoad && typeof $wnd.gdrOnLoad == 'function')
+			$wnd.gdrOnLoad();
   }-*/;
   // @formatter:on
 }
