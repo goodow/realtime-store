@@ -203,3 +203,4 @@ str.append('d');
 ,[2,[5,1367819747159,{"color":"#58B442","displayName":"田传武","isActive":true,"isAnonymous":false,"isMe":false,"isNew":false,"photoUrl":"https:\/\/lh3.googleusercontent.com\/-XdUIqdMkCWA\/AAAAAAAAAAI\/AAAAAAAAAAA\/4252rscbv5M\/s128\/photo.jpg","profileId":"101854939286968683254","sid":"4d429c7c12a09ef8","userId":"101854939286968683254","userType":0}]]
 ]
 
+sessionStorage.setItem('__gwtDevModeHook:realtime', 'http://localhost:9876/realtime/realtime.nocache.js')

@@ -31,5 +31,18 @@ public interface NativeInterfaceFactory {
    */
   void scheduleDeferred(Runnable cmd);
 
+  /**
+   * Schedules a repeating command that is scheduled with a constant delay. That is, the next
+   * invocation of the command will be scheduled for <code>delayMs</code> milliseconds after the
+   * last invocation completes.
+   * <p>
+   * For example, assume that a command takes 30ms to run and a 100ms delay is provided. The second
+   * invocation of the command will occur at 130ms after the first invocation starts.
+   * 
+   * @param cmd the command to execute
+   * @param delayMs the amount of time to wait after one invocation ends before the next invocation
+   */
+  void scheduleFixedDelay(Runnable cmd, int delayMs);
+
   void setText(CollaborativeString str, String text);
 }

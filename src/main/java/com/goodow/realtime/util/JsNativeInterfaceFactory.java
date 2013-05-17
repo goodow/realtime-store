@@ -19,6 +19,7 @@ import com.goodow.realtime.EventHandler;
 
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.core.client.Scheduler.RepeatingCommand;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 
 import org.timepedia.exporter.client.ExportClosure;
@@ -57,6 +58,17 @@ public class JsNativeInterfaceFactory implements NativeInterfaceFactory, EntryPo
         cmd.run();
       }
     });
+  }
+
+  @Override
+  public void scheduleFixedDelay(final Runnable cmd, int delayMs) {
+    Scheduler.get().scheduleFixedDelay(new RepeatingCommand() {
+      @Override
+      public boolean execute() {
+        cmd.run();
+        return false;
+      }
+    }, delayMs);
   }
 
   @Override

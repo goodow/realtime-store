@@ -32,6 +32,10 @@ public class ObjcNativeInterfaceFactory implements NativeInterfaceFactory {
   ]-*/;
 
   @Override
+  public void scheduleFixedDelay(Runnable cmd, int delayMs) {
+  }
+
+  @Override
   public native void setText(CollaborativeString str, String text) /*-[
     [self setTextImpl:str text:text];
   ]-*/;

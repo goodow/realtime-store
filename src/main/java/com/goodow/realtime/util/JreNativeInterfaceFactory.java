@@ -28,6 +28,11 @@ public class JreNativeInterfaceFactory implements NativeInterfaceFactory {
   }
 
   @Override
+  public void scheduleFixedDelay(Runnable cmd, int delayMs) {
+    // cmd.run();
+  }
+
+  @Override
   public void setText(CollaborativeString str, String text) {
     diff_match_patch dmp = new diff_match_patch();
     LinkedList<Diff> diffs = dmp.diff_main(str.getText(), text);
