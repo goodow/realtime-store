@@ -17,11 +17,11 @@
   <set-property name="gwt.logging.simpleRemoteHandler" value="DISABLED" />
   
   <source path="">
-    <!-- <exclude name="util/NativeInterface.java" /> -->
-    <exclude name="util/JreNativeInterfaceFactory.java" />
+    <exclude name="util/impl/JreModelFactory.java" />
+    <exclude name="util/impl/ObjCModelFactory.java" />
   </source>
   <super-source path="super"/>
-  <entry-point class="com.goodow.realtime.util.JsNativeInterfaceFactory"/>
+  <entry-point class="com.goodow.realtime.util.impl.JsModelFactory"/>
 
   <add-linker name="xsiframe"/>
   <!-- <add-linker name="sso"/> -->

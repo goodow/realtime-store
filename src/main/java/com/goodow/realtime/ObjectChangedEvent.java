@@ -13,7 +13,7 @@
  */
 package com.goodow.realtime;
 
-import com.goodow.realtime.util.NativeInterfaceFactory;
+import com.goodow.realtime.util.ModelFactory;
 
 import org.timepedia.exporter.client.Export;
 import org.timepedia.exporter.client.ExportPackage;
@@ -22,7 +22,7 @@ import org.timepedia.exporter.client.ExportPackage;
  * Event fired when a collaborative object changes. This event will bubble to all of the ancestors
  * of the changed object. It includes an array of events describing the specific changes.
  */
-@ExportPackage(NativeInterfaceFactory.PACKAGE_PREFIX_REALTIME)
+@ExportPackage(ModelFactory.PACKAGE_PREFIX_REALTIME)
 @Export(all = true)
 public class ObjectChangedEvent extends BaseModelEvent {
   /**

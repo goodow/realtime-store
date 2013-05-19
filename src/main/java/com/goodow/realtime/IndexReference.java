@@ -17,7 +17,7 @@ import com.goodow.realtime.operation.CreateOperation;
 import com.goodow.realtime.operation.Operation;
 import com.goodow.realtime.operation.RealtimeOperation;
 import com.goodow.realtime.operation.ReferenceShiftedOperation;
-import com.goodow.realtime.util.NativeInterfaceFactory;
+import com.goodow.realtime.util.ModelFactory;
 
 import com.google.common.annotations.GwtIncompatible;
 
@@ -40,10 +40,10 @@ import java.util.Set;
  * This class should not be instantiated directly. To create an index reference, call
  * registerReference on the appropriate string or list.
  */
-@ExportPackage(NativeInterfaceFactory.PACKAGE_PREFIX_REALTIME)
+@ExportPackage(ModelFactory.PACKAGE_PREFIX_REALTIME)
 @Export(all = true)
 public class IndexReference extends CollaborativeObject {
-  @GwtIncompatible(NativeInterfaceFactory.JS_REGISTER_PROPERTIES)
+  @GwtIncompatible(ModelFactory.JS_REGISTER_PROPERTIES)
   @ExportAfterCreateMethod
   // @formatter:off
   public native static void __jsniRunAfter__() /*-{

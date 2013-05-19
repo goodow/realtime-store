@@ -11,16 +11,17 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package com.goodow.realtime.util;
+package com.goodow.realtime.util.impl;
 
 import com.goodow.realtime.CollaborativeString;
+import com.goodow.realtime.util.ModelFactory;
 
 import java.util.LinkedList;
 
 import name.fraser.neil.plaintext.diff_match_patch;
 import name.fraser.neil.plaintext.diff_match_patch.Diff;
 
-public class JreNativeInterfaceFactory implements NativeInterfaceFactory {
+public class JreModelFactory implements ModelFactory {
 
   @Override
   public void scheduleDeferred(Runnable cmd) {

@@ -13,7 +13,7 @@
  */
 package com.goodow.realtime;
 
-import com.goodow.realtime.util.NativeInterfaceFactory;
+import com.goodow.realtime.util.ModelFactory;
 
 import org.timepedia.exporter.client.Export;
 import org.timepedia.exporter.client.ExportClosure;
@@ -23,10 +23,10 @@ import org.timepedia.exporter.client.Exportable;
 /**
  * An error affecting the realtime document.
  */
-@ExportPackage(NativeInterfaceFactory.PACKAGE_PREFIX_REALTIME)
+@ExportPackage(ModelFactory.PACKAGE_PREFIX_REALTIME)
 @Export
 public class Error implements Exportable {
-  @ExportPackage(NativeInterfaceFactory.PACKAGE_PREFIX_OVERLAY)
+  @ExportPackage(ModelFactory.PACKAGE_PREFIX_OVERLAY)
   @ExportClosure
   public static interface ErrorHandler extends Exportable {
     void handleError(Error error);

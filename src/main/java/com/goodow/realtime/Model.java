@@ -22,7 +22,7 @@ import com.goodow.realtime.operation.list.StringOp;
 import com.goodow.realtime.operation.list.algorithm.ListOp;
 import com.goodow.realtime.operation.map.MapOp;
 import com.goodow.realtime.util.JsonSerializer;
-import com.goodow.realtime.util.NativeInterfaceFactory;
+import com.goodow.realtime.util.ModelFactory;
 
 import com.google.common.annotations.GwtIncompatible;
 
@@ -59,14 +59,14 @@ import elemental.util.ArrayOfString;
  * document load process. The model can be initialized by passing an initializer function to
  * com.goodow.realtime.load.
  */
-@ExportPackage(NativeInterfaceFactory.PACKAGE_PREFIX_REALTIME)
+@ExportPackage(ModelFactory.PACKAGE_PREFIX_REALTIME)
 @Export(all = true)
 public class Model implements EventTarget {
   private static final String ROOT_ID = "root";
   private static final String EVENT_HANDLER_KEY = "model";
   private static final Logger log = Logger.getLogger(Model.class.getName());
 
-  @GwtIncompatible(NativeInterfaceFactory.JS_REGISTER_PROPERTIES)
+  @GwtIncompatible(ModelFactory.JS_REGISTER_PROPERTIES)
   @ExportAfterCreateMethod
   // @formatter:off
   public native static void __jsniRunAfter__() /*-{
@@ -325,7 +325,7 @@ public class Model implements EventTarget {
     }
   }
 
-  @GwtIncompatible(NativeInterfaceFactory.JS_REGISTER_MATHODS)
+  @GwtIncompatible(ModelFactory.JS_REGISTER_MATHODS)
   private CollaborativeMap __jsniCreateMap__(JsMapFromStringTo<?> map) {
     if (map == null) {
       return createMap(null);

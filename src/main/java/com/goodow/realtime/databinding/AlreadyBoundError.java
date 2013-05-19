@@ -13,7 +13,7 @@
  */
 package com.goodow.realtime.databinding;
 
-import com.goodow.realtime.util.NativeInterfaceFactory;
+import com.goodow.realtime.util.ModelFactory;
 
 import org.timepedia.exporter.client.Export;
 import org.timepedia.exporter.client.ExportPackage;
@@ -23,7 +23,7 @@ import org.timepedia.exporter.client.Exportable;
  * An error that is thrown when attempting to bind a DOM element which has already been bound to a
  * collaborative value.
  */
-@ExportPackage(NativeInterfaceFactory.PACKAGE_PREFIX_DATABINDING)
+@ExportPackage(ModelFactory.PACKAGE_PREFIX_DATABINDING)
 @Export
 public class AlreadyBoundError extends Error implements Exportable {
   private final Object domElement;

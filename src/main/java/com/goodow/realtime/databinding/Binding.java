@@ -15,7 +15,7 @@ package com.goodow.realtime.databinding;
 
 import com.goodow.realtime.CollaborativeObject;
 import com.goodow.realtime.Disposable;
-import com.goodow.realtime.util.NativeInterfaceFactory;
+import com.goodow.realtime.util.ModelFactory;
 
 import org.timepedia.exporter.client.Export;
 import org.timepedia.exporter.client.ExportPackage;
@@ -23,7 +23,7 @@ import org.timepedia.exporter.client.ExportPackage;
 /**
  * A binding between a collaborative object in the data model and a DOM element.
  */
-@ExportPackage(NativeInterfaceFactory.PACKAGE_PREFIX_DATABINDING)
+@ExportPackage(ModelFactory.PACKAGE_PREFIX_DATABINDING)
 @Export
 public class Binding implements Disposable {
   private final CollaborativeObject collaborativeObject;

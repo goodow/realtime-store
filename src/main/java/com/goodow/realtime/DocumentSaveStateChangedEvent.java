@@ -13,7 +13,7 @@
  */
 package com.goodow.realtime;
 
-import com.goodow.realtime.util.NativeInterfaceFactory;
+import com.goodow.realtime.util.ModelFactory;
 
 import org.timepedia.exporter.client.Export;
 import org.timepedia.exporter.client.ExportPackage;
@@ -22,7 +22,7 @@ import org.timepedia.exporter.client.ExportPackage;
  * An event that indicates that the save state of a document has changed. If both isSaving and
  * isPending are false, the document is completely saved and up to date.
  */
-@ExportPackage(NativeInterfaceFactory.PACKAGE_PREFIX_REALTIME)
+@ExportPackage(ModelFactory.PACKAGE_PREFIX_REALTIME)
 @Export
 public class DocumentSaveStateChangedEvent implements Disposable {
   /**

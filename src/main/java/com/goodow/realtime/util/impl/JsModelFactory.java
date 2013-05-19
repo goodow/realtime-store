@@ -11,11 +11,12 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package com.goodow.realtime.util;
+package com.goodow.realtime.util.impl;
 
 import com.goodow.realtime.CollaborativeString;
 import com.goodow.realtime.Disposable;
 import com.goodow.realtime.EventHandler;
+import com.goodow.realtime.util.ModelFactory;
 
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.Scheduler;
@@ -30,19 +31,19 @@ import org.timepedia.exporter.client.ExporterUtil;
 import java.util.Comparator;
 import java.util.logging.Logger;
 
-public class JsNativeInterfaceFactory implements NativeInterfaceFactory, EntryPoint {
-  @ExportPackage(NativeInterfaceFactory.PACKAGE_PREFIX_OVERLAY)
+public class JsModelFactory implements ModelFactory, EntryPoint {
+  @ExportPackage(ModelFactory.PACKAGE_PREFIX_OVERLAY)
   @ExportClosure
   public interface __ComparatorExportOverlay__ extends ExportOverlay<Comparator<Object>> {
     int compare(Object o1, Object o2);
   }
-  @ExportPackage(NativeInterfaceFactory.PACKAGE_PREFIX_OVERLAY)
+  @ExportPackage(ModelFactory.PACKAGE_PREFIX_OVERLAY)
   @ExportClosure
   public interface __EventHandlerExportOverlay__ extends ExportOverlay<EventHandler<Disposable>> {
     void handleEvent(Disposable event);
   }
 
-  private static final Logger log = Logger.getLogger(JsNativeInterfaceFactory.class.getName());
+  private static final Logger log = Logger.getLogger(JsModelFactory.class.getName());
 
   @Override
   public void onModuleLoad() {

@@ -15,8 +15,8 @@ package com.goodow.realtime;
 
 import com.goodow.realtime.Error.ErrorHandler;
 import com.goodow.realtime.util.JsonSerializer;
-import com.goodow.realtime.util.NativeInterface;
-import com.goodow.realtime.util.NativeInterfaceFactory;
+import com.goodow.realtime.util.ModelFactory;
+import com.goodow.realtime.util.ModelNative;
 import com.goodow.realtime.util.Pair;
 
 import org.timepedia.exporter.client.Export;
@@ -51,7 +51,7 @@ import elemental.json.JsonValue;
  * This class should not be instantiated directly. The document object is generated during the
  * document load process.
  */
-@ExportPackage(NativeInterfaceFactory.PACKAGE_PREFIX_REALTIME)
+@ExportPackage(ModelFactory.PACKAGE_PREFIX_REALTIME)
 @Export(all = true)
 public class Document implements EventTarget {
   static final String EVENT_HANDLER_KEY = "document";
@@ -289,7 +289,7 @@ public class Document implements EventTarget {
     }
     if (!isEventsScheduled) {
       isEventsScheduled = true;
-      NativeInterface.get().scheduleDeferred(eventsTask);
+      ModelNative.get().scheduleDeferred(eventsTask);
     }
   }
 

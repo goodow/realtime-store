@@ -19,8 +19,8 @@ import com.goodow.realtime.operation.RealtimeOperation;
 import com.goodow.realtime.operation.list.StringOp;
 import com.goodow.realtime.operation.list.algorithm.ListOp;
 import com.goodow.realtime.operation.list.algorithm.ListTarget;
-import com.goodow.realtime.util.NativeInterface;
-import com.goodow.realtime.util.NativeInterfaceFactory;
+import com.goodow.realtime.util.ModelFactory;
+import com.goodow.realtime.util.ModelNative;
 
 import com.google.common.annotations.GwtIncompatible;
 
@@ -45,10 +45,10 @@ import java.util.Set;
  * This class should not be instantiated directly. To create a new collaborative string, use
  * {@link com.goodow.realtime.Model#createString(String)}
  */
-@ExportPackage(NativeInterfaceFactory.PACKAGE_PREFIX_REALTIME)
+@ExportPackage(ModelFactory.PACKAGE_PREFIX_REALTIME)
 @Export(all = true)
 public class CollaborativeString extends CollaborativeObject {
-  @GwtIncompatible(NativeInterfaceFactory.JS_REGISTER_PROPERTIES)
+  @GwtIncompatible(ModelFactory.JS_REGISTER_PROPERTIES)
   @ExportAfterCreateMethod
   // @formatter:off
   public native static void __jsniRunAfter__() /*-{
@@ -178,7 +178,7 @@ public class CollaborativeString extends CollaborativeObject {
       throw new IllegalArgumentException("Expected string for text, but was: null");
     }
     model.beginCompoundOperation("replaceText");
-    NativeInterface.get().setText(this, text);
+    ModelNative.get().setText(this, text);
     model.endCompoundOperation();
   }
 

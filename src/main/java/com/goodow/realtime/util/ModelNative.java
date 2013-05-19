@@ -13,8 +13,10 @@
  */
 package com.goodow.realtime.util;
 
-public class NativeInterface {
-  public static NativeInterfaceFactory get() {
-    return new JreNativeInterfaceFactory();
+import com.goodow.realtime.util.impl.JreModelFactory;
+
+public class ModelNative {
+  public static ModelFactory get() {
+    return new JreModelFactory();
   }
 }

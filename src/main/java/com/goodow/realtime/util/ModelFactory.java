@@ -15,16 +15,14 @@ package com.goodow.realtime.util;
 
 import com.goodow.realtime.CollaborativeString;
 
-public interface NativeInterfaceFactory {
+public interface ModelFactory {
   String PACKAGE_PREFIX_REALTIME = "gdr";
-  String PACKAGE_PREFIX_CUSTOM = "gdr.custom";
-  String PACKAGE_PREFIX_DATABINDING = "gdr.databinding";
-  String PACKAGE_PREFIX_OVERLAY = "gdr._ExportOverlay_";
+  String PACKAGE_PREFIX_CUSTOM = PACKAGE_PREFIX_REALTIME + ".custom";
+  String PACKAGE_PREFIX_DATABINDING = PACKAGE_PREFIX_REALTIME + ".databinding";
+  String PACKAGE_PREFIX_OVERLAY = PACKAGE_PREFIX_REALTIME + "._ExportOverlay_";
 
   String JS_REGISTER_PROPERTIES = "J2ObjC blocked by JSNI";
   String JS_REGISTER_MATHODS = "J2ObjC blocked by JSNI";
-
-  // Rpc getRpc();
 
   /**
    * A deferred command is executed after the event loop returns.

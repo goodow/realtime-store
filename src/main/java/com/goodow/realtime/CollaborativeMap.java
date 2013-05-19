@@ -19,7 +19,7 @@ import com.goodow.realtime.operation.RealtimeOperation;
 import com.goodow.realtime.operation.map.MapOp;
 import com.goodow.realtime.operation.map.MapTarget;
 import com.goodow.realtime.util.JsonSerializer;
-import com.goodow.realtime.util.NativeInterfaceFactory;
+import com.goodow.realtime.util.ModelFactory;
 
 import com.google.common.annotations.GwtIncompatible;
 
@@ -49,10 +49,10 @@ import elemental.json.JsonValue;
  * This class should not be instantiated directly. To create a new map, use
  * {@link com.goodow.realtime.Model#createMap(Object...)}.
  */
-@ExportPackage(NativeInterfaceFactory.PACKAGE_PREFIX_REALTIME)
+@ExportPackage(ModelFactory.PACKAGE_PREFIX_REALTIME)
 @Export(all = true)
 public class CollaborativeMap extends CollaborativeObject {
-  @GwtIncompatible(NativeInterfaceFactory.JS_REGISTER_PROPERTIES)
+  @GwtIncompatible(ModelFactory.JS_REGISTER_PROPERTIES)
   @ExportAfterCreateMethod
   // @formatter:off
   public native static void __jsniRunAfter__() /*-{

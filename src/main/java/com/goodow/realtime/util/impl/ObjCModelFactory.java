@@ -11,16 +11,17 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package com.goodow.realtime.util;
+package com.goodow.realtime.util.impl;
 
 /*-[
  #import "GDR.h"
- #import "ObjcNativeInterfaceFactory+OCNI.h"
+ #import "ObjCModelFactory+OCNI.h"
  ]-*/
 import com.goodow.realtime.CollaborativeString;
+import com.goodow.realtime.util.ModelFactory;
 
-//@formatter:off
-public class ObjcNativeInterfaceFactory implements NativeInterfaceFactory {
+// @formatter:off
+public class ObjCModelFactory implements ModelFactory {
 
   @Override
   public native void scheduleDeferred(Runnable cmd) /*-[
@@ -32,8 +33,13 @@ public class ObjcNativeInterfaceFactory implements NativeInterfaceFactory {
   ]-*/;
 
   @Override
-  public void scheduleFixedDelay(Runnable cmd, int delayMs) {
-  }
+  public native void scheduleFixedDelay(Runnable cmd, int delayMs) /*-[
+    [NSTimer scheduledTimerWithTimeInterval:delayMs 
+                                     target:cmd
+                                   selector:@selector(run)
+                                   userInfo:nil
+                                    repeats:NO];
+  ]-*/;
 
   @Override
   public native void setText(CollaborativeString str, String text) /*-[

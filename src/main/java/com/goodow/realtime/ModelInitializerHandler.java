@@ -15,13 +15,13 @@
  */
 package com.goodow.realtime;
 
-import com.goodow.realtime.util.NativeInterfaceFactory;
+import com.goodow.realtime.util.ModelFactory;
 
 import org.timepedia.exporter.client.ExportClosure;
 import org.timepedia.exporter.client.ExportPackage;
 import org.timepedia.exporter.client.Exportable;
 
-@ExportPackage(NativeInterfaceFactory.PACKAGE_PREFIX_OVERLAY)
+@ExportPackage(ModelFactory.PACKAGE_PREFIX_OVERLAY)
 @ExportClosure
 public interface ModelInitializerHandler extends Exportable {
   void onInitializer(Model model);

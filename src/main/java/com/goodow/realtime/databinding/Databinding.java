@@ -14,7 +14,7 @@
 package com.goodow.realtime.databinding;
 
 import com.goodow.realtime.CollaborativeString;
-import com.goodow.realtime.util.NativeInterfaceFactory;
+import com.goodow.realtime.util.ModelFactory;
 
 import org.timepedia.exporter.client.Export;
 import org.timepedia.exporter.client.ExportPackage;
@@ -24,7 +24,7 @@ import org.timepedia.exporter.client.Exportable;
  * A namespace that includes classes and methods for binding collaborative objects to UI elements.
  */
 @ExportPackage("")
-@Export(NativeInterfaceFactory.PACKAGE_PREFIX_DATABINDING)
+@Export(ModelFactory.PACKAGE_PREFIX_DATABINDING)
 public class Databinding implements Exportable {
   /**
    * Binds a text input element to an collaborative string. Once bound, any change to the
