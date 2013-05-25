@@ -14,7 +14,7 @@ MAIN_SOURCES = $(shell find $(MAIN_SRC_DIR) -name *.java ! -name ModelNative.jav
   ! -name JreModelFactory.java ! -name JsModelFactory.java | sed '/operation/d')
 MAIN_TEMP_SOURCES = $(subst $(MAIN_SRC_DIR), $(MAIN_GEN_DIR), $(MAIN_SOURCES))
 MAIN_GEN_SOURCES = $(MAIN_TEMP_SOURCES:.java=.m)
-OVERRIDE_GEN_DIR = $(GDREALTIME_DIR)/Classes/override_generated
+OVERRIDE_GEN_DIR = $(GDREALTIME_DIR)/Classes/override_generated/model
 
 OCNI_SRC_DIR = src/main/objectivec
 OCNI_SOURCES = $(shell find $(OCNI_SRC_DIR) -name *.java)

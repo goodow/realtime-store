@@ -34,7 +34,7 @@ public class ObjCModelFactory implements ModelFactory {
 
   @Override
   public native void scheduleFixedDelay(Runnable cmd, int delayMs) /*-[
-    [NSTimer scheduledTimerWithTimeInterval:delayMs 
+    [NSTimer scheduledTimerWithTimeInterval:delayMs/1000 
                                      target:cmd
                                    selector:@selector(run)
                                    userInfo:nil

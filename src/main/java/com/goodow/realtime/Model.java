@@ -192,7 +192,8 @@ public class Model implements EventTarget {
       }
       op.insert(array);
     }
-    String id = initializeCreate(CreateOperation.COLLABORATIVE_LIST, op, null);
+    String id = generateObjectId();
+    initializeCreate(CreateOperation.COLLABORATIVE_LIST, op, id);
     return getObject(id);
   }
 
@@ -215,7 +216,8 @@ public class Model implements EventTarget {
         op.update(key, null, serializedValue);
       }
     }
-    String id = initializeCreate(CreateOperation.COLLABORATIVE_MAP, op, null);
+    String id = generateObjectId();
+    initializeCreate(CreateOperation.COLLABORATIVE_MAP, op, id);
     return getObject(id);
   }
 
@@ -230,7 +232,8 @@ public class Model implements EventTarget {
     if (opt_initialValue != null && !opt_initialValue.isEmpty()) {
       op = new StringOp().insert(opt_initialValue);
     }
-    String id = initializeCreate(CreateOperation.COLLABORATIVE_STRING, op, null);
+    String id = generateObjectId();
+    initializeCreate(CreateOperation.COLLABORATIVE_STRING, op, id);
     return getObject(id);
   }
 
@@ -297,7 +300,8 @@ public class Model implements EventTarget {
   IndexReference createIndexReference(String referencedObject, int index, boolean canBeDeleted) {
     ReferenceShiftedOperation op =
         new ReferenceShiftedOperation(referencedObject, index, canBeDeleted, -1);
-    String id = initializeCreate(CreateOperation.INDEX_REFERENCE, op, null);
+    String id = generateObjectId();
+    initializeCreate(CreateOperation.INDEX_REFERENCE, op, id);
     registerIndexReference(id, referencedObject);
     return getObject(id);
   }
@@ -343,11 +347,8 @@ public class Model implements EventTarget {
     return "gde" + new IdGenerator().next(14);
   }
 
-  private String initializeCreate(int type, Operation<?> opt_initialValue, String id) {
+  private void initializeCreate(int type, Operation<?> opt_initialValue, String id) {
     beginCreationCompoundOperation();
-    if (id == null) {
-      id = generateObjectId();
-    }
     CreateOperation op = new CreateOperation(type, id);
     bridge.consumeAndSubmit(op);
     if (opt_initialValue != null) {
@@ -355,7 +356,6 @@ public class Model implements EventTarget {
       bridge.consumeAndSubmit(opt_initialValue);
     }
     endCompoundOperation();
-    return id;
   }
 
   private void registerIndexReference(String indexReference, String referencedObject) {
