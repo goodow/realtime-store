@@ -51,7 +51,7 @@ public class DocumentBridge implements OperationSink<RealtimeOperation<?>> {
         JsonArray serializedOp = snapshot.getArray(i);
         Operation<?> op = transformer.createOp(serializedOp);
         @SuppressWarnings({"rawtypes", "unchecked"})
-        RealtimeOperation<?> operation = new RealtimeOperation(op, userId, sessionId);
+        RealtimeOperation<?> operation = new RealtimeOperation(op, null, null);
         consume(operation);
       }
     }
@@ -130,6 +130,6 @@ public class DocumentBridge implements OperationSink<RealtimeOperation<?>> {
   }
 
   boolean isLocalSession(String sessionId) {
-    return this.sessionId == null || this.sessionId.equals(sessionId);
+    return sessionId != null && sessionId.equals(this.sessionId);
   }
 }
