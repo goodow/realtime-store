@@ -13,17 +13,10 @@
     <repository>
       <id>google-diff-match-patch</id>
       <url>http://google-diff-match-patch.googlecode.com/svn/trunk/maven/</url>
-    </repository>
-    <!-- <repository>
-      <id>sonatype</id>
-      <url>http://oss.sonatype.org/content/repositories/snapshots</url>
       <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-      <releases>
         <enabled>false</enabled>
-      </releases>
-    </repository> -->
+      </snapshots>
+    </repository>
   </repositories>
   
   <dependencies>
