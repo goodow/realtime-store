@@ -15,8 +15,13 @@ package com.goodow.realtime.util;
 
 import com.goodow.realtime.util.impl.JreModelFactory;
 
+import com.google.inject.Inject;
+
 public class ModelNative {
+  @Inject(optional = true)
+  private static ModelFactory instance = new JreModelFactory();
+
   public static ModelFactory get() {
-    return new JreModelFactory();
+    return instance;
   }
 }

@@ -21,6 +21,12 @@
   
   <dependencies>
     <dependency>
+      <groupId>com.google.inject</groupId>
+      <artifactId>guice</artifactId>
+      <optional>true</optional>
+    </dependency>
+    
+    <dependency>
       <groupId>diff_match_patch</groupId>
       <artifactId>diff_match_patch</artifactId>
       <version>current</version>

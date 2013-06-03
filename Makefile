@@ -73,7 +73,7 @@ translate_main: pre_translate_main $(MAIN_GEN_SOURCES) $(OCNI_GEN_SOURCES)
 	    `cat $(MAIN_SOURCE_LIST)` ; \
 	fi
 	@cp -r $(OVERRIDE_GEN_DIR)/ $(MAIN_GEN_DIR)
-	@cd $(MAIN_GEN_DIR);tar -c . | tar -x -C ../include --include=*.h
+	@cd $(MAIN_GEN_DIR);mkdir -p ../include;tar -c . | tar -x -C ../include --include=*.h
 
 pre_translate_op: $(OP_GEN_DIR)
 	@rm -f $(OP_SOURCE_LIST)
@@ -89,7 +89,7 @@ translate_op: pre_translate_op $(OP_GEN_SOURCES)
 	    -classpath $(CLASSPATH) \
 	    `cat $(OP_SOURCE_LIST)` ; \
 	fi
-	@cd $(OP_GEN_DIR);tar -c . | tar -x -C ../include --include=*.h
+	@cd $(OP_GEN_DIR);mkdir -p ../include;tar -c . | tar -x -C ../include --include=*.h
 
 pre_translate_test: $(TEST_GEN_DIR)
 	@rm -f $(TEST_SOURCE_LIST)
