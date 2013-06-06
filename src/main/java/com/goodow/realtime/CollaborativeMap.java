@@ -13,13 +13,14 @@
  */
 package com.goodow.realtime;
 
+import com.goodow.realtime.model.util.JsonSerializer;
+import com.goodow.realtime.model.util.ModelFactory;
 import com.goodow.realtime.operation.CreateOperation;
 import com.goodow.realtime.operation.Operation;
 import com.goodow.realtime.operation.RealtimeOperation;
 import com.goodow.realtime.operation.map.MapOp;
 import com.goodow.realtime.operation.map.MapTarget;
-import com.goodow.realtime.util.JsonSerializer;
-import com.goodow.realtime.util.ModelFactory;
+import com.goodow.realtime.operation.util.JsonUtility;
 
 import com.google.common.annotations.GwtIncompatible;
 
@@ -74,7 +75,7 @@ public class CollaborativeMap extends CollaborativeObject {
       var p = this.g.@com.goodow.realtime.CollaborativeMap::snapshot[key];
       if (p === undefined) {
         return undefined;
-      } else if (p[0] != @com.goodow.realtime.util.JsonSerializer::REFERENCE_TYPE) {
+      } else if (p[0] != @com.goodow.realtime.model.util.JsonSerializer::REFERENCE_TYPE) {
         return p[1];
       } else {
         var v = this.g.@com.goodow.realtime.CollaborativeMap::get(Ljava/lang/String;)(key);
@@ -271,7 +272,7 @@ public class CollaborativeMap extends CollaborativeObject {
     operation.<MapTarget> getOp().apply(new MapTarget() {
       @Override
       public MapTarget update(String key, JsonValue oldValue, JsonValue newValue) {
-        assert oldValue == null || JsonSerializer.jsonEqual(snapshot.get(key), oldValue);
+        assert oldValue == null || JsonUtility.jsonEqual(snapshot.get(key), oldValue);
         if (newValue == null) {
           removeAndFireEvent(key, operation.sessionId, operation.userId);
         } else {

@@ -20,6 +20,13 @@
   </repositories>
   
   <dependencies>
+      <!-- Internal modules -->
+    <dependency>
+      <groupId>com.goodow.realtime</groupId>
+      <artifactId>realtime-channel</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    
     <dependency>
       <groupId>com.google.inject</groupId>
       <artifactId>guice</artifactId>
@@ -33,14 +40,6 @@
     </dependency>
     
     <!-- Google Web Toolkit (GWT) -->
-    <dependency>
-      <groupId>com.google.gwt</groupId>
-      <artifactId>gwt-user</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.goodow.gwt</groupId>
-      <artifactId>gwt-elemental</artifactId>
-    </dependency>
     <dependency>
       <groupId>com.google.gwt</groupId>
       <artifactId>gwt-codeserver</artifactId>
@@ -63,17 +62,17 @@
   
   <build>
     <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-source-plugin</artifactId>
-      </plugin>
       <!-- GWT Maven Plugin -->
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>gwt-maven-plugin</artifactId>
         <version>${gwt.version}</version>
         <configuration>
-          <module>${project.groupId}.Model</module>
+          <compileSourcesArtifacts>
+            <compileSourcesArtifact>com.goodow.realtime:realtime-operation</compileSourcesArtifact>
+            <compileSourcesArtifact>com.goodow.realtime:realtime-channel</compileSourcesArtifact>
+          </compileSourcesArtifacts>
+          <module>${project.groupId}.Realtime</module>
         </configuration>
       </plugin>
     </plugins>

@@ -1,29 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<module rename-to='model'>
-  <inherits name="elemental.Elemental"/>
-  <inherits name='org.timepedia.exporter.Exporter'/>
-  <set-property name="export" value="yes"/>
-  
-  <!-- Logging -->
-  <inherits name="com.google.gwt.logging.Logging" />
-  <set-property name="gwt.logging.enabled" value="TRUE" />
-  <set-property name="gwt.logging.logLevel" value="ALL" />
-  <set-property name="gwt.logging.consoleHandler" value="ENABLED" />
-  <set-property name="gwt.logging.developmentModeHandler" value="DISABLED" />
-  <set-property name="gwt.logging.firebugHandler" value="DISABLED" />
-  <set-property name="gwt.logging.hasWidgetsHandler" value="DISABLED" />
-  <set-property name="gwt.logging.popupHandler" value="DISABLED" />
-  <set-property name="gwt.logging.systemHandler" value="ENABLED" />
-  <set-property name="gwt.logging.simpleRemoteHandler" value="DISABLED" />
+<module>
+  <inherits name='com.goodow.realtime.channel.Channel'/>
   
   <source path="">
-    <exclude name="util/impl/JreModelFactory.java" />
-    <exclude name="util/impl/ObjCModelFactory.java" />
+    <exclude name="model/util/impl/JreModelFactory.java" />
+    <exclude name="model/util/impl/ObjCModelFactory.java" />
   </source>
   <super-source path="super"/>
-  <entry-point class="com.goodow.realtime.util.impl.JsModelFactory"/>
-
-  <add-linker name="xsiframe"/>
-  <!-- <add-linker name="sso"/> -->
-  <set-configuration-property name="devModeRedirectEnabled" value="true"/>
 </module>

@@ -16,7 +16,7 @@ package com.goodow.realtime.custom;
 import com.goodow.realtime.DocumentLoadedHandler;
 import com.goodow.realtime.Model;
 import com.goodow.realtime.ModelInitializerHandler;
-import com.goodow.realtime.util.ModelFactory;
+import com.goodow.realtime.model.util.ModelFactory;
 
 import org.timepedia.exporter.client.Export;
 import org.timepedia.exporter.client.ExportPackage;

@@ -11,13 +11,22 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package com.goodow.realtime;
+package com.goodow.realtime.model.util.impl;
 
+/*-[
+ #import "GDR.h"
+ #import "ObjCModelFactory+OCNI.h"
+ ]-*/
+import com.goodow.realtime.CollaborativeString;
 import com.goodow.realtime.model.util.ModelFactory;
 
-import org.timepedia.exporter.client.ExportPackage;
-import org.timepedia.exporter.client.Exportable;
+// @formatter:off
+public class ObjCModelFactory implements ModelFactory {
 
-@ExportPackage(ModelFactory.PACKAGE_PREFIX_OVERLAY)
-public interface Disposable extends Exportable {
+  @Override
+  public native void setText(CollaborativeString str, String text) /*-[
+    [self setTextImpl:str text:text];
+  ]-*/;
+
 }
+   

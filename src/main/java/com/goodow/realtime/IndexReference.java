@@ -13,11 +13,11 @@
  */
 package com.goodow.realtime;
 
+import com.goodow.realtime.model.util.ModelFactory;
 import com.goodow.realtime.operation.CreateOperation;
 import com.goodow.realtime.operation.Operation;
 import com.goodow.realtime.operation.RealtimeOperation;
 import com.goodow.realtime.operation.ReferenceShiftedOperation;
-import com.goodow.realtime.util.ModelFactory;
 
 import com.google.common.annotations.GwtIncompatible;
 
@@ -142,7 +142,7 @@ public class IndexReference extends CollaborativeObject {
 
   @Override
   protected void consume(RealtimeOperation<?> operation) {
-    ReferenceShiftedOperation op = (ReferenceShiftedOperation) operation.<IndexReference> getOp();
+    ReferenceShiftedOperation op = (ReferenceShiftedOperation) operation.<Void> getOp();
     assert op.oldIndex == index();
     ReferenceShiftedEvent event =
         new ReferenceShiftedEvent(this, op.oldIndex, op.newIndex, operation.sessionId,
@@ -175,8 +175,7 @@ public class IndexReference extends CollaborativeObject {
     ReferenceShiftedOperation op =
         new ReferenceShiftedOperation(referencedObject, newIndex, canBeDeleted, cursor);
     op.setId(id);
-    RealtimeOperation<IndexReference> operation =
-        new RealtimeOperation<IndexReference>(op, userId, sessionId);
+    RealtimeOperation<Void> operation = new RealtimeOperation<Void>(op, userId, sessionId);
     consume(operation);
   }
 

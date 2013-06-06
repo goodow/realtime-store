@@ -11,13 +11,18 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package com.goodow.realtime;
+package com.goodow.realtime.model.util;
 
-import com.goodow.realtime.model.util.ModelFactory;
+import com.goodow.realtime.CollaborativeString;
 
-import org.timepedia.exporter.client.ExportPackage;
-import org.timepedia.exporter.client.Exportable;
+public interface ModelFactory {
+  String PACKAGE_PREFIX_REALTIME = "gdr";
+  String PACKAGE_PREFIX_CUSTOM = PACKAGE_PREFIX_REALTIME + ".custom";
+  String PACKAGE_PREFIX_DATABINDING = PACKAGE_PREFIX_REALTIME + ".databinding";
+  String PACKAGE_PREFIX_OVERLAY = PACKAGE_PREFIX_REALTIME + "._ExportOverlay_";
 
-@ExportPackage(ModelFactory.PACKAGE_PREFIX_OVERLAY)
-public interface Disposable extends Exportable {
+  String JS_REGISTER_PROPERTIES = "J2ObjC blocked by JSNI";
+  String JS_REGISTER_MATHODS = "J2ObjC blocked by JSNI";
+
+  void setText(CollaborativeString str, String text);
 }

@@ -11,13 +11,12 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package com.goodow.realtime;
+package com.goodow.realtime.model.util;
 
-import com.goodow.realtime.model.util.ModelFactory;
+import com.goodow.realtime.model.util.impl.JsModelFactory;
 
-import org.timepedia.exporter.client.ExportPackage;
-import org.timepedia.exporter.client.Exportable;
-
-@ExportPackage(ModelFactory.PACKAGE_PREFIX_OVERLAY)
-public interface Disposable extends Exportable {
+public class ModelNative {
+  public static ModelFactory get() {
+    return new JsModelFactory();
+  }
 }

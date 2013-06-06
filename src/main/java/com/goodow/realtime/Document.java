@@ -14,10 +14,11 @@
 package com.goodow.realtime;
 
 import com.goodow.realtime.Error.ErrorHandler;
-import com.goodow.realtime.util.JsonSerializer;
-import com.goodow.realtime.util.ModelFactory;
-import com.goodow.realtime.util.ModelNative;
-import com.goodow.realtime.util.Pair;
+import com.goodow.realtime.channel.util.ChannelNative;
+import com.goodow.realtime.model.util.JsonSerializer;
+import com.goodow.realtime.model.util.ModelFactory;
+import com.goodow.realtime.operation.util.JsonUtility;
+import com.goodow.realtime.operation.util.Pair;
 
 import org.timepedia.exporter.client.Export;
 import org.timepedia.exporter.client.ExportPackage;
@@ -192,7 +193,7 @@ public class Document implements EventTarget {
    * @return A jsArray of collaborators.
    */
   public Collaborator[] getCollaborators() {
-    return new Collaborator[] {new Collaborator(bridge.userId, bridge.sessionId, "fake name",
+    return new Collaborator[] {new Collaborator(Realtime.USERID, bridge.sessionId, "fake name",
         "#58B442", true, true, null)};
   }
 
@@ -232,7 +233,7 @@ public class Document implements EventTarget {
   }
 
   void addOrRemoveParent(JsonValue childOrNull, String parentId, boolean isAdd) {
-    if (JsonSerializer.isNull(childOrNull)) {
+    if (JsonUtility.isNull(childOrNull)) {
       return;
     }
     JsonArray child = (JsonArray) childOrNull;
@@ -289,7 +290,7 @@ public class Document implements EventTarget {
     }
     if (!isEventsScheduled) {
       isEventsScheduled = true;
-      ModelNative.get().scheduleDeferred(eventsTask);
+      ChannelNative.get().scheduleDeferred(eventsTask);
     }
   }
 

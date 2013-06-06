@@ -222,7 +222,7 @@ public class CollaborativeMapTest extends TestCase {
 
   @Override
   protected void setUp() throws Exception {
-    Document doc = new DocumentBridge().document;
+    Document doc = new DocumentBridge(null).getDocument();
     mod = doc.getModel();
     map = mod.createMap(null);
   }

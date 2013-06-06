@@ -131,7 +131,7 @@ public class CollaborativeListTest extends TestCase {
 
   @Override
   protected void setUp() throws Exception {
-    Document doc = new DocumentBridge().document;
+    Document doc = new DocumentBridge(null).getDocument();
     mod = doc.getModel();
     list = mod.createList();
   }

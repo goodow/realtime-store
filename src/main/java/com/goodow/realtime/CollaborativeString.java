@@ -13,14 +13,14 @@
  */
 package com.goodow.realtime;
 
+import com.goodow.realtime.model.util.ModelFactory;
+import com.goodow.realtime.model.util.ModelNative;
 import com.goodow.realtime.operation.CreateOperation;
 import com.goodow.realtime.operation.Operation;
 import com.goodow.realtime.operation.RealtimeOperation;
 import com.goodow.realtime.operation.list.StringOp;
 import com.goodow.realtime.operation.list.algorithm.ListOp;
 import com.goodow.realtime.operation.list.algorithm.ListTarget;
-import com.goodow.realtime.util.ModelFactory;
-import com.goodow.realtime.util.ModelNative;
 
 import com.google.common.annotations.GwtIncompatible;
 

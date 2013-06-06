@@ -15,7 +15,7 @@ package com.goodow.realtime.databinding;
 
 import com.goodow.realtime.CollaborativeObject;
 import com.goodow.realtime.Disposable;
-import com.goodow.realtime.util.ModelFactory;
+import com.goodow.realtime.model.util.ModelFactory;
 
 import org.timepedia.exporter.client.Export;
 import org.timepedia.exporter.client.ExportPackage;

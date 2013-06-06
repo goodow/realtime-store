@@ -15,7 +15,7 @@
  */
 package com.goodow.realtime;
 
-import com.goodow.realtime.util.ModelFactory;
+import com.goodow.realtime.model.util.ModelFactory;
 
 import org.timepedia.exporter.client.ExportClosure;
 import org.timepedia.exporter.client.ExportPackage;

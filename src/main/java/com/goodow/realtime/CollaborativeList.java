@@ -13,13 +13,14 @@
  */
 package com.goodow.realtime;
 
+import com.goodow.realtime.model.util.JsonSerializer;
+import com.goodow.realtime.model.util.ModelFactory;
 import com.goodow.realtime.operation.CreateOperation;
 import com.goodow.realtime.operation.Operation;
 import com.goodow.realtime.operation.RealtimeOperation;
 import com.goodow.realtime.operation.list.ArrayOp;
 import com.goodow.realtime.operation.list.algorithm.ListTarget;
-import com.goodow.realtime.util.JsonSerializer;
-import com.goodow.realtime.util.ModelFactory;
+import com.goodow.realtime.operation.util.JsonUtility;
 
 import com.google.common.annotations.GwtIncompatible;
 
@@ -85,7 +86,7 @@ public class CollaborativeList extends CollaborativeObject {
       var p = this.g.@com.goodow.realtime.CollaborativeList::snapshot[index];
       if (p === undefined) {
         return undefined;
-      } else if (p[0] != @com.goodow.realtime.util.JsonSerializer::REFERENCE_TYPE) {
+      } else if (p[0] != @com.goodow.realtime.model.util.JsonSerializer::REFERENCE_TYPE) {
         return p[1];
       } else {
         var v = this.g.@com.goodow.realtime.CollaborativeList::get(I)(index);
@@ -213,7 +214,7 @@ public class CollaborativeList extends CollaborativeObject {
         return -1;
       }
       for (int i = 0, len = length(); i < len; i++) {
-        if (JsonSerializer.jsonEqual(serializedValue, snapshot.get(i))) {
+        if (JsonUtility.jsonEqual(serializedValue, snapshot.get(i))) {
           return i;
         }
       }
@@ -279,7 +280,7 @@ public class CollaborativeList extends CollaborativeObject {
         return -1;
       }
       for (int i = length() - 1; i >= 0; i--) {
-        if (JsonSerializer.jsonEqual(serializedValue, snapshot.get(i))) {
+        if (JsonUtility.jsonEqual(serializedValue, snapshot.get(i))) {
           return i;
         }
       }
@@ -549,7 +550,7 @@ public class CollaborativeList extends CollaborativeObject {
     int length = array.length();
     Object[] objects = new Object[length];
     for (int i = 0; i < length; i++) {
-      assert JsonSerializer.jsonEqual(snapshot.get(index), array.get(i));
+      assert JsonUtility.jsonEqual(snapshot.get(index), array.get(i));
       objects[i] = get(index);
       snapshot.remove(index);
       model.document.addOrRemoveParent(array.get(i), id, false);

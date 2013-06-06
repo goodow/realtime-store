@@ -13,6 +13,8 @@
  */
 package com.goodow.realtime;
 
+import com.goodow.realtime.Error.ErrorHandler;
+import com.goodow.realtime.channel.operation.RealtimeOperationSucker;
 import com.goodow.realtime.operation.CreateOperation;
 import com.goodow.realtime.operation.Operation;
 import com.goodow.realtime.operation.OperationSink;
@@ -21,40 +23,75 @@ import com.goodow.realtime.operation.RealtimeTransformer;
 import com.goodow.realtime.operation.basic.NoOp;
 
 import elemental.json.JsonArray;
+import elemental.json.JsonValue;
 
-public class DocumentBridge implements OperationSink<RealtimeOperation<?>> {
+/*-[
+ #import "GDRRealtime+OCNI.h"
+ #import "GDRError+OCNI.h"
+ ]-*/
+public class DocumentBridge implements RealtimeOperationSucker.Listener {
   private static final OperationSink<RealtimeOperation<?>> VOID =
       new OperationSink<RealtimeOperation<?>>() {
         @Override
         public void consume(RealtimeOperation<?> op) {
         }
       };
-  public String sessionId;
-  public String userId;
-  public OperationSink<RealtimeOperation<?>> outputSink = VOID;
 
-  public final Document document;
-  public final Model model;
-  private final RealtimeTransformer transformer;
-
-  public DocumentBridge() {
-    this(null);
-    createRoot();
+  @SuppressWarnings("cast")
+  static void initializeModel(ModelInitializerHandler opt_initializer, Model model) {
+    if (opt_initializer instanceof ModelInitializerHandler) {
+      opt_initializer.onInitializer(model);
+    } else {
+      __ocniInitializeModel__(opt_initializer, model);
+    }
   }
 
-  public DocumentBridge(JsonArray snapshot) {
-    transformer = new RealtimeTransformer();
-    document = new Document(this, null, null);
-    model = document.getModel();
-    if (snapshot != null) {
-      for (int i = 0, len = snapshot.length(); i < len; i++) {
-        JsonArray serializedOp = snapshot.getArray(i);
-        Operation<?> op = transformer.createOp(serializedOp);
-        @SuppressWarnings({"rawtypes", "unchecked"})
-        RealtimeOperation<?> operation = new RealtimeOperation(op, null, null);
-        consume(operation);
-      }
+  @SuppressWarnings("cast")
+  static void loadDoucument(final DocumentLoadedHandler onLoaded, Document document) {
+    if (onLoaded instanceof DocumentLoadedHandler) {
+      onLoaded.onLoaded(document);
+    } else {
+      __ocniLoadDoucument__(onLoaded, document);
     }
+  }
+
+  //@formatter:off
+   private static native void __ocniHandleError__(Object opt_error, Error error) /*-[
+     GDRErrorBlock block = (GDRErrorBlock) opt_error;
+     return block(error);
+   ]-*/ /*-{
+   }-*/;
+  private static native void __ocniInitializeModel__(Object opt_initializer, Model model) /*-[
+     GDRModelInitializerBlock block = (GDRModelInitializerBlock) opt_initializer;
+     return block(model);
+   ]-*/ /*-{
+   }-*/;
+   private static native void __ocniLoadDoucument__(Object onLoaded, Document document) /*-[
+     GDRDocumentLoadedBlock block = (GDRDocumentLoadedBlock) onLoaded;
+     return block(document);
+   ]-*/ /*-{
+   }-*/;
+
+  // @formatter:on
+  @SuppressWarnings("cast")
+  private static void handlerError(ErrorHandler opt_error, Error error) {
+    if (opt_error instanceof ErrorHandler) {
+      opt_error.handleError(error);
+    } else {
+      __ocniHandleError__(opt_error, error);
+    }
+  }
+
+  String sessionId;
+  OperationSink<RealtimeOperation<?>> outputSink = VOID;
+  private Document document;
+  private Model model;
+
+  public DocumentBridge(JsonArray snapshot) {
+    createSnapshot(snapshot);
+  }
+
+  DocumentBridge() {
   }
 
   @Override
@@ -64,7 +101,7 @@ public class DocumentBridge implements OperationSink<RealtimeOperation<?>> {
       return;
     }
     if (type == CreateOperation.TYPE) {
-      CreateOperation op = (CreateOperation) operation.<DocumentBridge> getOp();
+      CreateOperation op = (CreateOperation) operation.<Void> getOp();
       CollaborativeObject obj;
       switch (op.type) {
         case CreateOperation.COLLABORATIVE_MAP:
@@ -89,13 +126,16 @@ public class DocumentBridge implements OperationSink<RealtimeOperation<?>> {
     model.getObject(operation.getId()).consume(operation);
   }
 
-  public void createRoot() {
-    model.createRoot();
+  public Document getDocument() {
+    return document;
   }
 
-  public void fireDocumentSaveStateChangedEvent(DocumentSaveStateChangedEvent event) {
-    document
-        .scheduleEvent(Document.EVENT_HANDLER_KEY, EventType.DOCUMENT_SAVE_STATE_CHANGED, event);
+  @Override
+  public void onSaveStateChanged(boolean isSaving, boolean isPending) {
+    DocumentSaveStateChangedEvent event =
+        new DocumentSaveStateChangedEvent(document, isSaving, isPending);
+    getDocument().scheduleEvent(Document.EVENT_HANDLER_KEY, EventType.DOCUMENT_SAVE_STATE_CHANGED,
+        event);
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})
@@ -124,9 +164,27 @@ public class DocumentBridge implements OperationSink<RealtimeOperation<?>> {
 
   void consumeAndSubmit(Operation<?> op) {
     @SuppressWarnings({"rawtypes", "unchecked"})
-    RealtimeOperation<?> operation = new RealtimeOperation(op, userId, sessionId);
+    RealtimeOperation<?> operation = new RealtimeOperation(op, Realtime.USERID, sessionId);
     consume(operation);
     outputSink.consume(operation);
+  }
+
+  void createSnapshot(JsonValue serialized) {
+    RealtimeTransformer transformer = new RealtimeTransformer();
+    document = new Document(this, null, null);
+    model = document.getModel();
+    JsonArray snapshot = (JsonArray) serialized;
+    if (snapshot == null || snapshot.length() == 0) {
+      model.createRoot();
+    } else {
+      for (int i = 0, len = snapshot.length(); i < len; i++) {
+        JsonArray serializedOp = snapshot.getArray(i);
+        Operation<?> op = transformer.createOp(serializedOp);
+        @SuppressWarnings({"rawtypes", "unchecked"})
+        RealtimeOperation<?> operation = new RealtimeOperation(op, null, null);
+        consume(operation);
+      }
+    }
   }
 
   boolean isLocalSession(String sessionId) {
