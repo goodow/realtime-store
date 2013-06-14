@@ -27,7 +27,6 @@ import com.google.common.annotations.GwtIncompatible;
 import org.timepedia.exporter.client.Export;
 import org.timepedia.exporter.client.ExportAfterCreateMethod;
 import org.timepedia.exporter.client.ExportPackage;
-import org.timepedia.exporter.client.NoExport;
 
 import java.util.Set;
 
@@ -52,19 +51,19 @@ public class CollaborativeString extends CollaborativeObject {
   @ExportAfterCreateMethod
   // @formatter:off
   public native static void __jsniRunAfter__() /*-{
-    var _ = $wnd.gdr.CollaborativeString.prototype;
-    Object.defineProperties(_, {
-      id : {
-        get : function() {
-          return this.g.@com.goodow.realtime.CollaborativeObject::id;
-        }
-      },
-      length : {
-        get : function() {
-          return this.g.@com.goodow.realtime.CollaborativeString::length()();
-        }
-      }
-    });
+//    var _ = $wnd.good.realtime.CollaborativeString.prototype;
+//    Object.defineProperties(_, {
+//      id : {
+//        get : function() {
+//          return this.g.@com.goodow.realtime.CollaborativeObject::id;
+//        }
+//      },
+//      length : {
+//        get : function() {
+//          return this.g.@com.goodow.realtime.CollaborativeString::length()();
+//        }
+//      }
+//    });
   }-*/;
   // @formatter:on
 
@@ -123,7 +122,6 @@ public class CollaborativeString extends CollaborativeObject {
   /**
    * @return The length of the string. Read only.
    */
-  @NoExport
   public int length() {
     return snapshot.length();
   }
@@ -215,8 +213,7 @@ public class CollaborativeString extends CollaborativeObject {
     if (length() != 0) {
       op = new StringOp().insert(getText());
     }
-    return new Operation[] {
-        new CreateOperation(CreateOperation.COLLABORATIVE_STRING, id), op};
+    return new Operation[] {new CreateOperation(CreateOperation.COLLABORATIVE_STRING, id), op};
   }
 
   @Override

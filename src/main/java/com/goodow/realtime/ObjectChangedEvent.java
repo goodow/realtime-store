@@ -41,4 +41,8 @@ public class ObjectChangedEvent extends BaseModelEvent {
     super(EventType.OBJECT_CHANGED, target, sessionId, userId, true);
     this.events = events;
   }
+
+  public BaseModelEvent[] getEvents() {
+    return events;
+  }
 }

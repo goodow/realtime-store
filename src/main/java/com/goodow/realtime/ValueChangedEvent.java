@@ -52,4 +52,16 @@ public class ValueChangedEvent extends BaseModelEvent {
     this.newValue = newValue;
     this.oldValue = oldValue;
   }
+
+  public Object getNewValue() {
+    return newValue;
+  }
+
+  public Object getOldValue() {
+    return oldValue;
+  }
+
+  public String getProperty() {
+    return property;
+  }
 }

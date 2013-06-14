@@ -63,4 +63,28 @@ public abstract class BaseModelEvent implements Disposable {
     this.isLocal = target.model.bridge.isLocalSession(sessionId);
     this.bubbles = bubbles;
   }
+
+  public String getSessionId() {
+    return sessionId;
+  }
+
+  public CollaborativeObject getTarget() {
+    return target;
+  }
+
+  public EventType getType() {
+    return type;
+  }
+
+  public String getUserId() {
+    return userId;
+  }
+
+  public boolean isBubbles() {
+    return bubbles;
+  }
+
+  public boolean isLocal() {
+    return isLocal;
+  }
 }

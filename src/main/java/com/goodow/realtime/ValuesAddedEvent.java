@@ -46,4 +46,12 @@ public class ValuesAddedEvent extends BaseModelEvent {
     this.index = index;
     this.values = values;
   }
+
+  public int getIndex() {
+    return index;
+  }
+
+  public Object[] getValues() {
+    return values;
+  }
 }

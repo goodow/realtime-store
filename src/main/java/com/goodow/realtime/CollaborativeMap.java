@@ -57,19 +57,19 @@ public class CollaborativeMap extends CollaborativeObject {
   @ExportAfterCreateMethod
   // @formatter:off
   public native static void __jsniRunAfter__() /*-{
-    var _ = $wnd.gdr.CollaborativeMap.prototype;
-    Object.defineProperties(_, {
-      id : {
-        get : function() {
-          return this.g.@com.goodow.realtime.CollaborativeObject::id;
-        }
-      },
-      size : {
-        get : function() {
-          return this.g.@com.goodow.realtime.CollaborativeMap::size()();
-        }
-      }
-    });
+    var _ = $wnd.good.realtime.CollaborativeMap.prototype;
+//    Object.defineProperties(_, {
+//      id : {
+//        get : function() {
+//          return this.g.@com.goodow.realtime.CollaborativeObject::id;
+//        }
+//      },
+//      size : {
+//        get : function() {
+//          return this.g.@com.goodow.realtime.CollaborativeMap::size()();
+//        }
+//      }
+//    });
     _.get = function(key) {
       this.g.@com.goodow.realtime.CollaborativeMap::checkKey(Ljava/lang/String;)(key)
       var p = this.g.@com.goodow.realtime.CollaborativeMap::snapshot[key];

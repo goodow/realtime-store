@@ -45,4 +45,12 @@ public class DocumentSaveStateChangedEvent implements Disposable {
     this.isSaving = isSaving;
     this.isPending = isPending;
   }
+
+  public boolean isPending() {
+    return isPending;
+  }
+
+  public boolean isSaving() {
+    return isSaving;
+  }
 }

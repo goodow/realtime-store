@@ -16,7 +16,7 @@ package com.goodow.realtime.model.util;
 import com.goodow.realtime.CollaborativeString;
 
 public interface ModelFactory {
-  String PACKAGE_PREFIX_REALTIME = "gdr";
+  String PACKAGE_PREFIX_REALTIME = "good.realtime";
   String PACKAGE_PREFIX_CUSTOM = PACKAGE_PREFIX_REALTIME + ".custom";
   String PACKAGE_PREFIX_DATABINDING = PACKAGE_PREFIX_REALTIME + ".databinding";
   String PACKAGE_PREFIX_OVERLAY = PACKAGE_PREFIX_REALTIME + "._ExportOverlay_";

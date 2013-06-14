@@ -48,4 +48,8 @@ public class CollaboratorLeftEvent implements Disposable {
   public CollaboratorLeftEvent deserialize(Document source, Object serialized) {
     return null;
   }
+
+  public Collaborator getCollaborator() {
+    return collaborator;
+  }
 }

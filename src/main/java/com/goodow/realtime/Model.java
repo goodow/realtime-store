@@ -70,24 +70,24 @@ public class Model implements EventTarget {
   @ExportAfterCreateMethod
   // @formatter:off
   public native static void __jsniRunAfter__() /*-{
-    var _ = $wnd.gdr.Model.prototype;
-    Object.defineProperties(_, {
-      canRedo : {
-        get : function() {
-          return this.g.@com.goodow.realtime.Model::canRedo()();
-        }
-      },
-      canUndo : {
-        get : function() {
-          return this.g.@com.goodow.realtime.Model::canUndo()();
-        }
-      },
-      isReadOnly : {
-        get : function() {
-          return this.g.@com.goodow.realtime.Model::isReadOnly()();
-        }
-      }
-    });
+    var _ = $wnd.good.realtime.Model.prototype;
+//    Object.defineProperties(_, {
+//      canRedo : {
+//        get : function() {
+//          return this.g.@com.goodow.realtime.Model::canRedo()();
+//        }
+//      },
+//      canUndo : {
+//        get : function() {
+//          return this.g.@com.goodow.realtime.Model::canUndo()();
+//        }
+//      },
+//      isReadOnly : {
+//        get : function() {
+//          return this.g.@com.goodow.realtime.Model::isReadOnly()();
+//        }
+//      }
+//    });
     _.createMap = function(opt_initialValue) {
       var jsMap;
       if (opt_initialValue !== undefined) {
@@ -150,7 +150,6 @@ public class Model implements EventTarget {
   /**
    * @return True if the model can currently redo.
    */
-  @NoExport
   public boolean canRedo() {
     return canRedo;
   }
@@ -158,7 +157,6 @@ public class Model implements EventTarget {
   /**
    * @return True if the model can currently undo.
    */
-  @NoExport
   public boolean canUndo() {
     return canUndo;
   }
@@ -266,7 +264,6 @@ public class Model implements EventTarget {
   /**
    * @return The mode of the document. If true, the document is readonly. If false it is editable.
    */
-  @NoExport
   public boolean isReadOnly() {
     return isReadOnly;
   }

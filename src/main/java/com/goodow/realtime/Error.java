@@ -56,4 +56,16 @@ public class Error implements Exportable {
     this.message = message;
     this.isFatal = isFatal;
   }
+
+  public String getMessage() {
+    return message;
+  }
+
+  public ErrorType getType() {
+    return type;
+  }
+
+  public boolean isFatal() {
+    return isFatal;
+  }
 }

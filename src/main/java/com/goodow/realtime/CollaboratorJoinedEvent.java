@@ -47,4 +47,8 @@ public class CollaboratorJoinedEvent implements Disposable {
   public CollaboratorJoinedEvent deserialize(Document source, Object serialized) {
     return null;
   }
+
+  public Collaborator getCollaborator() {
+    return collaborator;
+  }
 }

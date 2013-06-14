@@ -46,4 +46,12 @@ public class TextInsertedEvent extends BaseModelEvent {
     this.index = index;
     this.text = text;
   }
+
+  public int getIndex() {
+    return index;
+  }
+
+  public String getText() {
+    return text;
+  }
 }

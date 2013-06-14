@@ -42,4 +42,12 @@ public class UndoRedoStateChangedEvent implements Disposable {
     this.canUndo = canUndo;
     this.canRedo = canRedo;
   }
+
+  public boolean canRedo() {
+    return canRedo;
+  }
+
+  public boolean canUndo() {
+    return canUndo;
+  }
 }

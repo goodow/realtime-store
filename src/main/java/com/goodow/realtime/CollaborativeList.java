@@ -58,25 +58,25 @@ public class CollaborativeList extends CollaborativeObject {
   @ExportAfterCreateMethod
   // @formatter:off
   public native static void __jsniRunAfter__() /*-{
-    var _ = $wnd.gdr.CollaborativeList.prototype;
-    Object.defineProperties(_, {
-      id : {
-        get : function() {
-          return this.g.@com.goodow.realtime.CollaborativeObject::id;
-        }
-      },
-      length : {
-        get : function() {
-          return this.g.@com.goodow.realtime.CollaborativeList::length()();
-        },
-        set : function(length) {
-          return this.g.@com.goodow.realtime.CollaborativeList::setLength(I)(length);
-        }
-      }
-    });
+    var _ = $wnd.good.realtime.CollaborativeList.prototype;
+//    Object.defineProperties(_, {
+//      id : {
+//        get : function() {
+//          return this.g.@com.goodow.realtime.CollaborativeObject::id;
+//        }
+//      },
+//      length : {
+//        get : function() {
+//          return this.g.@com.goodow.realtime.CollaborativeList::length()();
+//        },
+//        set : function(length) {
+//          return this.g.@com.goodow.realtime.CollaborativeList::setLength(I)(length);
+//        }
+//      }
+//    });
     _.asArray = function() {
       var values = [];
-      for ( var i = 0, len = this.length; i < len; i++) {
+      for ( var i = 0, len = this.length(); i < len; i++) {
         values[i] = this.get(i);
       }
       return values;
@@ -98,7 +98,7 @@ public class CollaborativeList extends CollaborativeObject {
         var v = @org.timepedia.exporter.client.ExporterUtil::gwtInstance(Ljava/lang/Object;)(value);
         return this.g.@com.goodow.realtime.CollaborativeList::indexOf(Ljava/lang/Object;Ljava/util/Comparator;)(v, null);
       } else {
-        for ( var i = 0, len = this.length; i < len; i++) {
+        for ( var i = 0, len = this.length(); i < len; i++) {
           if (opt_comparatorFn(value, this.get(i)) == 0) {
             return i;
           }
@@ -115,7 +115,7 @@ public class CollaborativeList extends CollaborativeObject {
         var v = @org.timepedia.exporter.client.ExporterUtil::gwtInstance(Ljava/lang/Object;)(value);
         return this.g.@com.goodow.realtime.CollaborativeList::lastIndexOf(Ljava/lang/Object;Ljava/util/Comparator;)(v, null);
       } else {
-        for ( var i = this.length - 1; i >= 0; i--) {
+        for ( var i = this.length() - 1; i >= 0; i--) {
           if (opt_comparatorFn(value, this.get(i)) == 0) {
             return i;
           }
@@ -124,8 +124,8 @@ public class CollaborativeList extends CollaborativeObject {
       }
     };
     _.push = function(value) {
-      this.insert(this.length, value);
-      return this.length;
+      this.insert(this.length(), value);
+      return this.length();
     };
     _.removeValue = function(value) {
       var v = @org.timepedia.exporter.client.ExporterUtil::gwtInstance(Ljava/lang/Object;)(value);
@@ -299,7 +299,6 @@ public class CollaborativeList extends CollaborativeObject {
    *         Note that the length given must be < or equal to the current size. The length of a list
    *         cannot be extended in this way.
    */
-  @NoExport
   public int length() {
     return snapshot.length();
   }

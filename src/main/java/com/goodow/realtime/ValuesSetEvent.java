@@ -52,4 +52,16 @@ public class ValuesSetEvent extends BaseModelEvent {
     this.oldValues = oldValues;
     this.newValues = newValues;
   }
+
+  public int getIndex() {
+    return index;
+  }
+
+  public Object[] getNewValues() {
+    return newValues;
+  }
+
+  public Object[] getOldValues() {
+    return oldValues;
+  }
 }

@@ -24,7 +24,6 @@ import com.google.common.annotations.GwtIncompatible;
 import org.timepedia.exporter.client.Export;
 import org.timepedia.exporter.client.ExportAfterCreateMethod;
 import org.timepedia.exporter.client.ExportPackage;
-import org.timepedia.exporter.client.NoExport;
 
 import java.util.Set;
 
@@ -47,33 +46,33 @@ public class IndexReference extends CollaborativeObject {
   @ExportAfterCreateMethod
   // @formatter:off
   public native static void __jsniRunAfter__() /*-{
-    var _ = $wnd.gdr.IndexReference.prototype;
-    Object.defineProperties(_, {
-      id : {
-        get : function() {
-          return this.g.@com.goodow.realtime.CollaborativeObject::id;
-        }
-      },
-      canBeDeleted : {
-        get : function() {
-          return this.g.@com.goodow.realtime.IndexReference::canBeDeleted()();
-        }
-      },
-      index : {
-        get : function() {
-          return this.g.@com.goodow.realtime.IndexReference::index()();
-        },
-        set : function(index) {
-          this.g.@com.goodow.realtime.IndexReference::setIndex(I)(index);
-        }
-      },
-      referencedObject : {
-        get : function() {
-          var v = this.g.@com.goodow.realtime.IndexReference::referencedObject()();
-          return @org.timepedia.exporter.client.ExporterUtil::wrap(Ljava/lang/Object;)(v);
-        }
-      }
-    });
+//    var _ = $wnd.good.realtime.IndexReference.prototype;
+//    Object.defineProperties(_, {
+//      id : {
+//        get : function() {
+//          return this.g.@com.goodow.realtime.CollaborativeObject::id;
+//        }
+//      },
+//      canBeDeleted : {
+//        get : function() {
+//          return this.g.@com.goodow.realtime.IndexReference::canBeDeleted()();
+//        }
+//      },
+//      index : {
+//        get : function() {
+//          return this.g.@com.goodow.realtime.IndexReference::index()();
+//        },
+//        set : function(index) {
+//          this.g.@com.goodow.realtime.IndexReference::setIndex(I)(index);
+//        }
+//      },
+//      referencedObject : {
+//        get : function() {
+//          var v = this.g.@com.goodow.realtime.IndexReference::referencedObject()();
+//          return @org.timepedia.exporter.client.ExporterUtil::wrap(Ljava/lang/Object;)(v);
+//        }
+//      }
+//    });
   }-*/;
   // @formatter:on
 
@@ -98,7 +97,6 @@ public class IndexReference extends CollaborativeObject {
    *         the index reference will be deleted. If it is false, the index reference will move to
    *         point at the beginning of the deleted range.
    */
-  @NoExport
   public boolean canBeDeleted() {
     return canBeDeleted;
   }
@@ -107,16 +105,14 @@ public class IndexReference extends CollaborativeObject {
    * @return The index of the current location the reference points to. Write to this property to
    *         change the referenced index.
    */
-  @NoExport
-  public int index() {
+  public int getIndex() {
     return index;
   }
 
   /**
    * @return The object this reference points to. Read-only.
    */
-  @NoExport
-  public CollaborativeObject referencedObject() {
+  public CollaborativeObject getReferencedObject() {
     return model.getObject(referencedObject);
   }
 
@@ -130,7 +126,6 @@ public class IndexReference extends CollaborativeObject {
    * @see #index()
    * @param index the new referenced index.
    */
-  @NoExport
   public void setIndex(int index) {
     if (index == this.index) {
       return;
@@ -143,7 +138,7 @@ public class IndexReference extends CollaborativeObject {
   @Override
   protected void consume(RealtimeOperation<?> operation) {
     ReferenceShiftedOperation op = (ReferenceShiftedOperation) operation.<Void> getOp();
-    assert op.oldIndex == index();
+    assert op.oldIndex == getIndex();
     ReferenceShiftedEvent event =
         new ReferenceShiftedEvent(this, op.oldIndex, op.newIndex, operation.sessionId,
             operation.userId);
@@ -154,7 +149,7 @@ public class IndexReference extends CollaborativeObject {
   }
 
   void setIndex(boolean isInsert, int index, int length, String sessionId, String userId) {
-    int cursor = index();
+    int cursor = getIndex();
     if (cursor < index) {
       return;
     }
@@ -196,7 +191,7 @@ public class IndexReference extends CollaborativeObject {
     sb.append("DefaultIndexReference [");
     sb.append("id=").append(getId());
     sb.append(", objectId=").append(referencedObject);
-    sb.append(", index=").append(index());
+    sb.append(", index=").append(getIndex());
     sb.append(", canBeDeleted=").append(canBeDeleted);
     sb.append("]");
   }

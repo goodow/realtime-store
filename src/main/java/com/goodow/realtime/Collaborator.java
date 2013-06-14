@@ -64,4 +64,32 @@ public class Collaborator implements Exportable {
     this.isAnonymous = isAnonymous;
     this.photoUrl = photoUrl;
   }
+
+  public String getColor() {
+    return color;
+  }
+
+  public String getDisplayName() {
+    return displayName;
+  }
+
+  public String getPhotoUrl() {
+    return photoUrl;
+  }
+
+  public String getSessionId() {
+    return sessionId;
+  }
+
+  public String getUserId() {
+    return userId;
+  }
+
+  public boolean isAnonymous() {
+    return isAnonymous;
+  }
+
+  public boolean isMe() {
+    return isMe;
+  }
 }

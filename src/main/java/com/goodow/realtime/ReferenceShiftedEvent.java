@@ -46,4 +46,12 @@ public class ReferenceShiftedEvent extends BaseModelEvent {
     this.oldIndex = oldIndex;
     this.newIndex = newIndex;
   }
+
+  public int getNewIndex() {
+    return newIndex;
+  }
+
+  public int getOldIndex() {
+    return oldIndex;
+  }
 }
