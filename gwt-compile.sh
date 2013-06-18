@@ -2,7 +2,8 @@ cd ../realtime-channel
 mvn clean install
 
 cd ../realtime-model
-mvn clean compile gwt:compile -Dgwt.draftCompile=true
+mvn clean compile gwt:compile -Dgwt.module=com.goodow.realtime.Realtime
+#-Dgwt.draftCompile=true
 
 cd ../realtime-server/src/main/webapp/good/realtime/
 rm realtime.nocache.js

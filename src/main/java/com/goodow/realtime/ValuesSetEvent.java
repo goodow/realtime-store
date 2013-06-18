@@ -15,8 +15,12 @@ package com.goodow.realtime;
 
 import com.goodow.realtime.model.util.ModelFactory;
 
+import com.google.common.annotations.GwtIncompatible;
+
 import org.timepedia.exporter.client.Export;
+import org.timepedia.exporter.client.ExportAfterCreateMethod;
 import org.timepedia.exporter.client.ExportPackage;
+import org.timepedia.exporter.client.NoExport;
 
 /**
  * Event fired when items in a collaborative list are changed in place.
@@ -24,6 +28,30 @@ import org.timepedia.exporter.client.ExportPackage;
 @ExportPackage(ModelFactory.PACKAGE_PREFIX_REALTIME)
 @Export(all = true)
 public class ValuesSetEvent extends BaseModelEvent {
+  @GwtIncompatible(ModelFactory.JS_REGISTER_PROPERTIES)
+  @ExportAfterCreateMethod
+  // @formatter:off
+  public native static void __jsniRunAfter__() /*-{
+    var _ = $wnd.good.realtime.ValuesSetEvent.prototype;
+    _.getNewValues = function() {
+      var values = this.g.@com.goodow.realtime.ValuesSetEvent::getNewValues()();
+      var toRtn = [];
+      for (var i=0, len=values.length; i<len; i++) {
+        toRtn.push(@com.goodow.realtime.model.util.impl.JsModelFactory::wrap(Ljava/lang/Object;)(values[i]));
+      }
+      return toRtn;
+    };
+    _.getOldValues = function() {
+      var values = this.g.@com.goodow.realtime.ValuesSetEvent::getOldValues()();
+      var toRtn = [];
+      for (var i=0, len=values.length; i<len; i++) {
+        toRtn.push(@com.goodow.realtime.model.util.impl.JsModelFactory::wrap(Ljava/lang/Object;)(values[i]));
+      }
+      return toRtn;
+    };
+  }-*/;
+  // @formatter:on
+
   /**
    * The index of the first value that was replaced.
    */
@@ -57,10 +85,12 @@ public class ValuesSetEvent extends BaseModelEvent {
     return index;
   }
 
+  @NoExport
   public Object[] getNewValues() {
     return newValues;
   }
 
+  @NoExport
   public Object[] getOldValues() {
     return oldValues;
   }

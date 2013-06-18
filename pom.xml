@@ -72,7 +72,7 @@
             <compileSourcesArtifact>com.goodow.realtime:realtime-operation</compileSourcesArtifact>
             <compileSourcesArtifact>com.goodow.realtime:realtime-channel</compileSourcesArtifact>
           </compileSourcesArtifacts>
-          <module>${project.groupId}.RealtimeProd</module>
+          <!-- <module>${project.groupId}.RealtimeProd</module> -->
         </configuration>
       </plugin>
     </plugins>

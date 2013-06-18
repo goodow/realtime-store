@@ -15,8 +15,12 @@ package com.goodow.realtime;
 
 import com.goodow.realtime.model.util.ModelFactory;
 
+import com.google.common.annotations.GwtIncompatible;
+
 import org.timepedia.exporter.client.Export;
+import org.timepedia.exporter.client.ExportAfterCreateMethod;
 import org.timepedia.exporter.client.ExportPackage;
+import org.timepedia.exporter.client.NoExport;
 
 /**
  * Event fired when items are added to a collaborative list.
@@ -24,6 +28,22 @@ import org.timepedia.exporter.client.ExportPackage;
 @ExportPackage(ModelFactory.PACKAGE_PREFIX_REALTIME)
 @Export(all = true)
 public class ValuesAddedEvent extends BaseModelEvent {
+  @GwtIncompatible(ModelFactory.JS_REGISTER_PROPERTIES)
+  @ExportAfterCreateMethod
+  // @formatter:off
+  public native static void __jsniRunAfter__() /*-{
+    var _ = $wnd.good.realtime.ValuesAddedEvent.prototype;
+    _.getValues = function() {
+      var values = this.g.@com.goodow.realtime.ValuesAddedEvent::getValues()();
+      var toRtn = [];
+      for (var i=0, len=values.length; i<len; i++) {
+        toRtn.push(@com.goodow.realtime.model.util.impl.JsModelFactory::wrap(Ljava/lang/Object;)(values[i]));
+      }
+      return toRtn;
+    };
+  }-*/;
+  // @formatter:on
+
   /**
    * The index of the first added value.
    */
@@ -51,6 +71,7 @@ public class ValuesAddedEvent extends BaseModelEvent {
     return index;
   }
 
+  @NoExport
   public Object[] getValues() {
     return values;
   }

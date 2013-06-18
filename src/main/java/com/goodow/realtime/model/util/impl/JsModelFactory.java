@@ -19,6 +19,7 @@ import com.goodow.realtime.EventHandler;
 import com.goodow.realtime.model.util.ModelFactory;
 
 import com.google.gwt.core.client.EntryPoint;
+import com.google.gwt.core.client.JavaScriptObject;
 
 import org.timepedia.exporter.client.ExportClosure;
 import org.timepedia.exporter.client.ExportOverlay;
@@ -27,6 +28,12 @@ import org.timepedia.exporter.client.ExporterUtil;
 
 import java.util.Comparator;
 import java.util.logging.Logger;
+
+import elemental.js.json.JsJsonBoolean;
+import elemental.js.json.JsJsonNumber;
+import elemental.js.json.JsJsonString;
+import elemental.json.JsonType;
+import elemental.json.JsonValue;
 
 public class JsModelFactory implements ModelFactory, EntryPoint {
   @ExportPackage(ModelFactory.PACKAGE_PREFIX_OVERLAY)
@@ -41,6 +48,23 @@ public class JsModelFactory implements ModelFactory, EntryPoint {
   }
 
   private static final Logger log = Logger.getLogger(JsModelFactory.class.getName());
+
+  static JavaScriptObject wrap(Object o) {
+    if (o instanceof String) {
+      return (JavaScriptObject) JsJsonString.create((String) o);
+    } else if (o instanceof Number) {
+      return (JavaScriptObject) JsJsonNumber.create(((Number) o).doubleValue());
+    } else if (o instanceof Boolean) {
+      return (JavaScriptObject) JsJsonBoolean.create(((Boolean) o).booleanValue());
+    } else if (o instanceof JsonValue) {
+      if (JsonType.NULL == ((JsonValue) o).getType()) {
+        return null;
+      }
+      return (JavaScriptObject) o;
+    } else {
+      return ExporterUtil.wrap(o);
+    }
+  }
 
   @Override
   public void onModuleLoad() {
