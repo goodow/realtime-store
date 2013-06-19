@@ -2,7 +2,7 @@ cd ../realtime-channel
 mvn clean install
 
 cd ../realtime-model
-mvn clean compile gwt:compile -Dgwt.module=com.goodow.realtime.Realtime
+mvn clean compile gwt:compile -Dgwt.module=com.goodow.realtime.RealtimeProd
 #-Dgwt.draftCompile=true
 
 cd ../realtime-server/src/main/webapp/good/realtime/
