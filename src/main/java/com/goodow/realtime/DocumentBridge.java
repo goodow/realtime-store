@@ -141,7 +141,8 @@ public class DocumentBridge implements RealtimeOperationSucker.Listener {
   @SuppressWarnings({"rawtypes", "unchecked"})
   @Override
   public String toString() {
-    StringBuilder sb = new StringBuilder("[");
+    StringBuilder sb1 = new StringBuilder();
+    StringBuilder sb2 = new StringBuilder();
     boolean isFirst = true;
     for (String id : model.objects.keySet()) {
       CollaborativeObject collaborativeObject = model.getObject(id);
@@ -151,6 +152,12 @@ public class DocumentBridge implements RealtimeOperationSucker.Listener {
           continue;
         }
         op.setId(id);
+        StringBuilder sb;
+        if (op.getType() == CreateOperation.TYPE) {
+          sb = sb1;
+        } else {
+          sb = sb2;
+        }
         if (!isFirst) {
           sb.append(",");
         }
@@ -158,8 +165,7 @@ public class DocumentBridge implements RealtimeOperationSucker.Listener {
         sb.append(new RealtimeOperation(op).toString());
       }
     }
-    sb.append("]");
-    return sb.toString();
+    return "[" + sb1.toString() + sb2.toString() + "]";
   }
 
   void consumeAndSubmit(Operation<?> op) {
