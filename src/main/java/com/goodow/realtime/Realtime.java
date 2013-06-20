@@ -15,6 +15,7 @@ package com.goodow.realtime;
 
 import com.goodow.realtime.Error.ErrorHandler;
 import com.goodow.realtime.channel.RealtimeChannelDemuxer;
+import com.goodow.realtime.channel.http.HttpTransport;
 import com.goodow.realtime.channel.operation.RealtimeOperationSucker;
 import com.goodow.realtime.channel.rpc.SnapshotService.Callback;
 import com.goodow.realtime.model.util.ModelFactory;
@@ -87,5 +88,9 @@ public class Realtime implements Exportable {
         DocumentBridge.loadDoucument(onLoaded, bridge.getDocument());
       }
     });
+  }
+
+  public static void setChannel(String channel) {
+    HttpTransport.CHANNEL = channel;
   }
 }
