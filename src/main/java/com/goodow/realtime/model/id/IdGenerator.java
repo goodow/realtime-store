@@ -19,6 +19,7 @@ public class IdGenerator {
 
   /** valid characters. */
   static final char[] ALPHABET = "abcdefghijklmnopqrstuvwxyz0123456789".toCharArray();
+  static final char[] NUMBERS = "0123456789".toCharArray();
 
   private final Random random;
 
@@ -37,6 +38,14 @@ public class IdGenerator {
     StringBuilder result = new StringBuilder(length);
     for (int i = 0; i < length; i++) {
       result.append(ALPHABET[random.nextInt(36)]);
+    }
+    return result.toString();
+  }
+
+  public String nextNumbers(int length) {
+    StringBuilder result = new StringBuilder(length);
+    for (int i = 0; i < length; i++) {
+      result.append(NUMBERS[random.nextInt(10)]);
     }
     return result.toString();
   }
