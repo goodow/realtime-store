@@ -3,8 +3,8 @@
   <inherits name='com.goodow.realtime.Realtime'/>
   
   <extend-property name="user.agent" values="ie8" />
-  <!-- <extend-property name="user.agent" values="gecko1_8" />
-  <extend-property name="user.agent" values="safari" />
+  <extend-property name="user.agent" values="gecko1_8" />
+  <!-- <extend-property name="user.agent" values="safari" />
   <extend-property name="user.agent" values="opera" />
   <extend-property name="user.agent" values="ie9" fallback-value="ie8" /> -->
   <!-- <set-property name="user.agent" value="ie8" /> -->

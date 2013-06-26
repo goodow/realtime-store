@@ -33,6 +33,7 @@ import org.timepedia.exporter.client.NoExport;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -109,7 +110,7 @@ public class Model implements EventTarget {
   private boolean canRedo;
   private boolean canUndo;
 
-  final Map<String, CollaborativeObject> objects = new HashMap<String, CollaborativeObject>();
+  final Map<String, CollaborativeObject> objects = new LinkedHashMap<String, CollaborativeObject>();
   private Map<String, List<String>> indexReferences;
   final Document document;
   final DocumentBridge bridge;
