@@ -90,7 +90,7 @@ public class Realtime implements Exportable {
     });
   }
 
-  public static void setChannel(String channel) {
-    HttpTransport.CHANNEL = channel;
+  public static void setServerAddress(String serverAddress) {
+    HttpTransport.CHANNEL = serverAddress;
   }
 }
