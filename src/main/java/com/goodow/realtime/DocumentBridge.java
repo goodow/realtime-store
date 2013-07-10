@@ -14,10 +14,10 @@
 package com.goodow.realtime;
 
 import com.goodow.realtime.Error.ErrorHandler;
-import com.goodow.realtime.channel.operation.RealtimeOperationSucker;
+import com.goodow.realtime.channel.operation.OperationSucker;
+import com.goodow.realtime.channel.operation.OperationSucker.OutputSink;
 import com.goodow.realtime.operation.CreateOperation;
 import com.goodow.realtime.operation.Operation;
-import com.goodow.realtime.operation.OperationSink;
 import com.goodow.realtime.operation.RealtimeOperation;
 import com.goodow.realtime.operation.RealtimeTransformer;
 import com.goodow.realtime.operation.basic.NoOp;
@@ -29,13 +29,16 @@ import elemental.json.JsonValue;
  #import "GDRRealtime+OCNI.h"
  #import "GDRError+OCNI.h"
  ]-*/
-public class DocumentBridge implements RealtimeOperationSucker.Listener {
-  private static final OperationSink<RealtimeOperation<?>> VOID =
-      new OperationSink<RealtimeOperation<?>>() {
-        @Override
-        public void consume(RealtimeOperation<?> op) {
-        }
-      };
+public class DocumentBridge implements OperationSucker.Listener {
+  private static final OperationSucker.OutputSink VOID = new OperationSucker.OutputSink() {
+    @Override
+    public void close() {
+    }
+
+    @Override
+    public void consume(RealtimeOperation<?> op) {
+    }
+  };
 
   @SuppressWarnings("cast")
   static void initializeModel(ModelInitializerHandler opt_initializer, Model model) {
@@ -83,7 +86,7 @@ public class DocumentBridge implements RealtimeOperationSucker.Listener {
   }
 
   String sessionId;
-  OperationSink<RealtimeOperation<?>> outputSink = VOID;
+  OutputSink outputSink = VOID;
   private Document document;
   private Model model;
 

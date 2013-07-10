@@ -58,7 +58,7 @@ public class Document implements EventTarget {
   static final String EVENT_HANDLER_KEY = "document";
   private static final Logger log = Logger.getLogger(Document.class.getName());
   private List<Collaborator> collaborators;
-  private final Model model;
+  private Model model;
   private Map<Pair<String, EventType>, List<EventHandler<?>>> handlers;
   private final Map<String, List<String>> parents = new HashMap<String, List<String>>();
 
@@ -135,7 +135,7 @@ public class Document implements EventTarget {
       bubblingToAncestors(id, objectChangedEvent, seen);
     }
   };
-  final DocumentBridge bridge;
+  private DocumentBridge bridge;
 
   /**
    * @param bridge The driver for the GWT collaborative libraries.
@@ -172,8 +172,10 @@ public class Document implements EventTarget {
    * 
    * @throws DocumentClosedError
    */
-  public void close() throws DocumentClosedError {
-
+  public void close() {
+    bridge.outputSink.close();
+    bridge = null;
+    model = null;
   }
 
   /**
@@ -253,6 +255,12 @@ public class Document implements EventTarget {
           parents.remove(childId);
         }
       }
+    }
+  }
+
+  void checkStatus() throws DocumentClosedError {
+    if (bridge == null) {
+      throw new DocumentClosedError();
     }
   }
 

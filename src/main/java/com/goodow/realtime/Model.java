@@ -13,12 +13,12 @@
  */
 package com.goodow.realtime;
 
-import com.goodow.realtime.model.id.IdGenerator;
 import com.goodow.realtime.model.util.JsonSerializer;
 import com.goodow.realtime.model.util.ModelFactory;
 import com.goodow.realtime.operation.CreateOperation;
 import com.goodow.realtime.operation.Operation;
 import com.goodow.realtime.operation.ReferenceShiftedOperation;
+import com.goodow.realtime.operation.id.IdGenerator;
 import com.goodow.realtime.operation.list.ArrayOp;
 import com.goodow.realtime.operation.list.StringOp;
 import com.goodow.realtime.operation.list.algorithm.ListOp;

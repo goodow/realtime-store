@@ -14,9 +14,9 @@
 package com.goodow.realtime;
 
 import com.goodow.realtime.Error.ErrorHandler;
-import com.goodow.realtime.channel.RealtimeChannelDemuxer;
+import com.goodow.realtime.channel.ChannelDemuxer;
 import com.goodow.realtime.channel.http.HttpTransport;
-import com.goodow.realtime.channel.operation.RealtimeOperationSucker;
+import com.goodow.realtime.channel.operation.OperationSucker;
 import com.goodow.realtime.channel.rpc.SnapshotService.Callback;
 import com.goodow.realtime.model.util.ModelFactory;
 
@@ -32,7 +32,7 @@ import elemental.json.JsonValue;
 @ExportPackage("")
 @Export(ModelFactory.PACKAGE_PREFIX_REALTIME)
 public class Realtime implements Exportable {
-  private static final RealtimeChannelDemuxer demuxer = RealtimeChannelDemuxer.get();
+  private static final ChannelDemuxer demuxer = ChannelDemuxer.get();
   static String USERID;
 
   public static void authorize(String userId, String token) {
@@ -71,7 +71,7 @@ public class Realtime implements Exportable {
       DocumentBridge.loadDoucument(onLoaded, snapshot.getDocument());
       return;
     }
-    final RealtimeOperationSucker operationSucker = new RealtimeOperationSucker(docId);
+    final OperationSucker operationSucker = new OperationSucker(docId);
     final DocumentBridge bridge = new DocumentBridge();
     operationSucker.load(bridge, new Callback() {
       @Override
