@@ -102,6 +102,10 @@ public class Model implements EventTarget {
       var v = this.g.@com.goodow.realtime.Model::__jsniCreateMap__(Lelemental/js/util/JsMapFromStringTo;)(jsMap);
       return @org.timepedia.exporter.client.ExporterUtil::wrap(Ljava/lang/Object;)(v);
     };
+    _.getObject = function(objectId) {
+      var v = this.g.@com.goodow.realtime.Model::getObject(Ljava/lang/String;)(objectId);
+      return @org.timepedia.exporter.client.ExporterUtil::wrap(Ljava/lang/Object;)(v);
+    };
   }-*/;
 
   // @formatter:on
@@ -244,6 +248,12 @@ public class Model implements EventTarget {
     log.info("endCompoundOperation");
   }
 
+  @SuppressWarnings("unchecked")
+  @NoExport
+  public <T extends CollaborativeObject> T getObject(String objectId) {
+    return (T) objects.get(objectId);
+  }
+
   /**
    * Returns the root of the object model.
    * 
@@ -306,11 +316,6 @@ public class Model implements EventTarget {
 
   void createRoot() {
     initializeCreate(CreateOperation.COLLABORATIVE_MAP, null, ROOT_ID);
-  }
-
-  @SuppressWarnings("unchecked")
-  <T extends CollaborativeObject> T getObject(String objectId) {
-    return (T) objects.get(objectId);
   }
 
   void setIndexReferenceIndex(String referencedObject, boolean isInsert, int index, int length,

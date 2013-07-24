@@ -166,14 +166,15 @@ public class CollaborativeList extends CollaborativeObject {
    * 
    * @return A copy of the contents of this collaborative list.
    */
+  @SuppressWarnings("unchecked")
   @NoExport
-  public Object[] asArray() {
+  public <T> T[] asArray() {
     int length = length();
     Object[] objects = new Object[length];
     for (int i = 0; i < length; i++) {
       objects[i] = get(i);
     }
-    return objects;
+    return (T[]) objects;
   }
 
   /**

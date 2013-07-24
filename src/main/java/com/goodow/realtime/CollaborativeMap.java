@@ -206,9 +206,9 @@ public class CollaborativeMap extends CollaborativeObject {
    * @exception java.lang.IllegalArgumentException
    */
   @NoExport
-  public Object remove(String key) {
+  public <T> T remove(String key) {
     checkKey(key);
-    Object oldValue = get(key);
+    T oldValue = this.<T> get(key);
     if (oldValue == null) {
       return null;
     }
@@ -231,14 +231,14 @@ public class CollaborativeMap extends CollaborativeObject {
    * @exception java.lang.IllegalArgumentException
    */
   @NoExport
-  public Object set(String key, Object value) {
+  public <T> T set(String key, Object value) {
     checkKey(key);
     MapOp op = new MapOp();
     JsonArray serializedValue = JsonSerializer.serializeObject(value);
     if (serializedValue == null && !has(key)) {
       return null;
     }
-    Object oldObject = get(key);
+    T oldObject = this.<T> get(key);
     op.update(key, snapshot.getArray(key), serializedValue);
     consumeAndSubmit(op);
     return oldObject;
