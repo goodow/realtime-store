@@ -14,6 +14,7 @@
 package com.goodow.realtime;
 
 import com.goodow.realtime.Error.ErrorHandler;
+import com.goodow.realtime.channel.constant.Constants.Params;
 import com.goodow.realtime.channel.util.ChannelNative;
 import com.goodow.realtime.model.util.JsonSerializer;
 import com.goodow.realtime.model.util.ModelFactory;
@@ -32,6 +33,7 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import elemental.json.JsonArray;
+import elemental.json.JsonObject;
 import elemental.json.JsonValue;
 
 /**
@@ -57,7 +59,7 @@ import elemental.json.JsonValue;
 public class Document implements EventTarget {
   static final String EVENT_HANDLER_KEY = "document";
   private static final Logger log = Logger.getLogger(Document.class.getName());
-  private List<Collaborator> collaborators;
+  private final List<Collaborator> collaborators = new ArrayList<Collaborator>();
   private Model model;
   private Map<Pair<String, EventType>, List<EventHandler<?>>> handlers;
   private final Map<String, List<String>> parents = new HashMap<String, List<String>>();
@@ -192,11 +194,10 @@ public class Document implements EventTarget {
    * Gets an array of collaborators active in this session. Each collaborator is a jsMap with these
    * fields: sessionId, userId, displayName, color, isMe, isAnonymous.
    * 
-   * @return A jsArray of collaborators.
+   * @return An array of collaborators.
    */
   public Collaborator[] getCollaborators() {
-    return new Collaborator[] {new Collaborator(Realtime.USERID, bridge.sessionId, "fake name",
-        "#58B442", true, true, null)};
+    return collaborators.toArray(new Collaborator[0]);
   }
 
   /**
@@ -261,6 +262,23 @@ public class Document implements EventTarget {
   void checkStatus() throws DocumentClosedError {
     if (bridge == null) {
       throw new DocumentClosedError();
+    }
+  }
+
+  void onCollaboratorChanged(boolean isJoined, JsonObject json) {
+    Collaborator collaborator =
+        new Collaborator(json.getString(Params.USER_ID), json.getString(Params.SESSION_ID), json
+            .getString(Params.DISPLAY_NAME), json.getString(Params.COLOR), json
+            .getBoolean(Params.IS_ME), json.getBoolean(Params.IS_ANONYMOUS), json
+            .getString(Params.PHOTO_URL));
+    if (isJoined) {
+      collaborators.add(collaborator);
+      CollaboratorJoinedEvent event = new CollaboratorJoinedEvent(this, collaborator);
+      scheduleEvent(Document.EVENT_HANDLER_KEY, EventType.COLLABORATOR_JOINED, event);
+    } else {
+      collaborators.remove(collaborator);
+      CollaboratorLeftEvent event = new CollaboratorLeftEvent(this, collaborator);
+      scheduleEvent(Document.EVENT_HANDLER_KEY, EventType.COLLABORATOR_LEFT, event);
     }
   }
 

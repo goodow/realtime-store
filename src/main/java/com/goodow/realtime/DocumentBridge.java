@@ -23,6 +23,7 @@ import com.goodow.realtime.operation.RealtimeTransformer;
 import com.goodow.realtime.operation.basic.NoOp;
 
 import elemental.json.JsonArray;
+import elemental.json.JsonObject;
 import elemental.json.JsonValue;
 
 /*-[
@@ -129,16 +130,17 @@ public class DocumentBridge implements OperationSucker.Listener {
     model.getObject(operation.getId()).consume(operation);
   }
 
-  public Document getDocument() {
-    return document;
+  @Override
+  public void onCollaboratorChanged(boolean isJoined, JsonObject json) {
+    document.onCollaboratorChanged(isJoined, json);
   }
 
   @Override
   public void onSaveStateChanged(boolean isSaving, boolean isPending) {
     DocumentSaveStateChangedEvent event =
         new DocumentSaveStateChangedEvent(document, isSaving, isPending);
-    getDocument().scheduleEvent(Document.EVENT_HANDLER_KEY, EventType.DOCUMENT_SAVE_STATE_CHANGED,
-        event);
+    document
+        .scheduleEvent(Document.EVENT_HANDLER_KEY, EventType.DOCUMENT_SAVE_STATE_CHANGED, event);
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})
@@ -194,6 +196,10 @@ public class DocumentBridge implements OperationSucker.Listener {
         consume(operation);
       }
     }
+  }
+
+  Document getDocument() {
+    return document;
   }
 
   boolean isLocalSession(String sessionId) {
