@@ -181,6 +181,9 @@ public class CollaborativeList extends CollaborativeObject {
    * Removes all values from the list.
    */
   public void clear() {
+    if (length() == 0) {
+      return;
+    }
     removeRange(0, length());
   }
 
