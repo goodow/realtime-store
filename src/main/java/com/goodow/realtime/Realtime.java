@@ -77,7 +77,7 @@ public class Realtime implements Exportable {
       @Override
       public void onSuccess(JsonValue snapshot, String sessionId, int revision) {
         bridge.sessionId = sessionId;
-        bridge.outputSink = operationSucker.getOutputSink();
+        bridge.setOutputSink(operationSucker.getOutputSink());
         bridge.createSnapshot(snapshot);
 
         if (revision == 1) {

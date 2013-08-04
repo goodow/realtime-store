@@ -181,16 +181,6 @@ public class Document implements EventTarget {
   }
 
   /**
-   * Exports the document to a JSON format.
-   * 
-   * @param successFn A function that the exported JSON will be passed to when it is available.
-   * @param failureFn A function that will be called if the export fails.
-   */
-  public void exportDocument(Disposable successFn, Disposable failureFn) {
-
-  }
-
-  /**
    * Gets an array of collaborators active in this session. Each collaborator is a jsMap with these
    * fields: sessionId, userId, displayName, color, isMe, isAnonymous.
    * 

@@ -16,6 +16,7 @@ package com.goodow.realtime;
 import com.goodow.realtime.Error.ErrorHandler;
 import com.goodow.realtime.channel.operation.OperationSucker;
 import com.goodow.realtime.channel.operation.OperationSucker.OutputSink;
+import com.goodow.realtime.channel.util.ChannelNative;
 import com.goodow.realtime.operation.CreateOperation;
 import com.goodow.realtime.operation.Operation;
 import com.goodow.realtime.operation.RealtimeOperation;
@@ -51,12 +52,17 @@ public class DocumentBridge implements OperationSucker.Listener {
   }
 
   @SuppressWarnings("cast")
-  static void loadDoucument(final DocumentLoadedHandler onLoaded, Document document) {
-    if (onLoaded instanceof DocumentLoadedHandler) {
-      onLoaded.onLoaded(document);
-    } else {
-      __ocniLoadDoucument__(onLoaded, document);
-    }
+  static void loadDoucument(final DocumentLoadedHandler onLoaded, final Document document) {
+    ChannelNative.get().scheduleDeferred(new Runnable() {
+      @Override
+      public void run() {
+        if (onLoaded instanceof DocumentLoadedHandler) {
+          onLoaded.onLoaded(document);
+        } else {
+          __ocniLoadDoucument__(onLoaded, document);
+        }
+      }
+    });
   }
 
   //@formatter:off
@@ -130,6 +136,10 @@ public class DocumentBridge implements OperationSucker.Listener {
     model.getObject(operation.getId()).consume(operation);
   }
 
+  public Document getDocument() {
+    return document;
+  }
+
   @Override
   public void onCollaboratorChanged(boolean isJoined, JsonObject json) {
     document.onCollaboratorChanged(isJoined, json);
@@ -141,6 +151,10 @@ public class DocumentBridge implements OperationSucker.Listener {
         new DocumentSaveStateChangedEvent(document, isSaving, isPending);
     document
         .scheduleEvent(Document.EVENT_HANDLER_KEY, EventType.DOCUMENT_SAVE_STATE_CHANGED, event);
+  }
+
+  public void setOutputSink(OutputSink outputSink) {
+    this.outputSink = outputSink;
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})
@@ -196,10 +210,6 @@ public class DocumentBridge implements OperationSucker.Listener {
         consume(operation);
       }
     }
-  }
-
-  Document getDocument() {
-    return document;
   }
 
   boolean isLocalSession(String sessionId) {
