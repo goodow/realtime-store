@@ -44,7 +44,8 @@ public class JsonSerializer {
             return array.getString(1);
           case OBJECT:
           case ARRAY:
-            return array.get(1);
+            JsonValue val = array.get(1);
+            return Json.instance().parse(val.toJson());
           case NULL:
           default:
             throw new RuntimeException("Should not reach here!");
@@ -74,6 +75,7 @@ public class JsonSerializer {
       if (JsonType.NULL == val.getType()) {
         return null;
       }
+      val = Json.instance().parse(val.toJson());
     } else if (obj instanceof CollaborativeObject) {
       type = REFERENCE_TYPE;
       val = Json.create(((CollaborativeObject) obj).getId());

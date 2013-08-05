@@ -13,6 +13,8 @@
  */
 package com.goodow.realtime;
 
+import com.goodow.realtime.operation.util.JsonUtility;
+
 import junit.framework.TestCase;
 
 import java.util.HashMap;
@@ -25,7 +27,17 @@ import elemental.json.JsonObject;
 import elemental.json.JsonValue;
 
 public class CollaborativeMapTest extends TestCase {
+  public static void assertEquals(Object expected, Object actual) {
+    if (expected instanceof JsonValue && actual instanceof JsonValue) {
+      if (JsonUtility.jsonEqual((JsonValue) expected, (JsonValue) actual)) {
+        return;
+      }
+    }
+    TestCase.assertEquals(expected, actual);
+  }
+
   Model mod;
+
   CollaborativeMap map;
 
   public void testClear() {
