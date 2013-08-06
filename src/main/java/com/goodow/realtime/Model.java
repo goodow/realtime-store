@@ -23,6 +23,7 @@ import com.goodow.realtime.operation.list.ArrayOp;
 import com.goodow.realtime.operation.list.StringOp;
 import com.goodow.realtime.operation.list.algorithm.ListOp;
 import com.goodow.realtime.operation.map.MapOp;
+import com.goodow.realtime.operation.util.JsonUtility;
 
 import com.google.common.annotations.GwtIncompatible;
 
@@ -33,14 +34,17 @@ import org.timepedia.exporter.client.NoExport;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import elemental.js.util.JsMapFromStringTo;
 import elemental.json.Json;
 import elemental.json.JsonArray;
+import elemental.json.JsonValue;
 import elemental.util.ArrayOfString;
 
 /**
@@ -115,6 +119,7 @@ public class Model implements EventTarget {
   private boolean canUndo;
 
   final Map<String, CollaborativeObject> objects = new LinkedHashMap<String, CollaborativeObject>();
+  private final Map<String, List<String>> parents = new HashMap<String, List<String>>();
   private Map<String, List<String>> indexReferences;
   final Document document;
   final DocumentBridge bridge;
@@ -254,6 +259,15 @@ public class Model implements EventTarget {
     return (T) objects.get(objectId);
   }
 
+  public String[] getParents(String objectId) {
+    List<String> list = parents.get(objectId);
+    if (list == null) {
+      return null;
+    }
+    Set<String> set = new HashSet<String>(list);
+    return set.toArray(new String[0]);
+  }
+
   /**
    * Returns the root of the object model.
    * 
@@ -296,6 +310,30 @@ public class Model implements EventTarget {
    */
   public void undo() {
     throw new UnsupportedOperationException();
+  }
+
+  void addOrRemoveParent(JsonValue childOrNull, String parentId, boolean isAdd) {
+    if (JsonUtility.isNull(childOrNull)) {
+      return;
+    }
+    JsonArray child = (JsonArray) childOrNull;
+    if (child.getNumber(0) == JsonSerializer.REFERENCE_TYPE) {
+      String childId = child.getString(1);
+      List<String> list = parents.get(childId);
+      if (isAdd) {
+        if (list == null) {
+          list = new ArrayList<String>();
+          parents.put(childId, list);
+        }
+        list.add(parentId);
+      } else {
+        assert list != null && list.contains(parentId);
+        list.remove(parentId);
+        if (list.isEmpty()) {
+          parents.remove(childId);
+        }
+      }
+    }
   }
 
   /**

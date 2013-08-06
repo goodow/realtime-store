@@ -334,8 +334,8 @@ public class CollaborativeMap extends CollaborativeObject {
     ValueChangedEvent event =
         new ValueChangedEvent(this, sessionId, userId, key, newObject, get(key));
     snapshot.put(key, newValue);
-    model.document.addOrRemoveParent(oldValue, id, false);
-    model.document.addOrRemoveParent(newValue, id, true);
+    model.addOrRemoveParent(oldValue, id, false);
+    model.addOrRemoveParent(newValue, id, true);
     fireEvent(event);
   }
 
@@ -344,7 +344,7 @@ public class CollaborativeMap extends CollaborativeObject {
     JsonArray oldValue = snapshot.getArray(key);
     ValueChangedEvent event = new ValueChangedEvent(this, sessionId, userId, key, null, get(key));
     snapshot.remove(key);
-    model.document.addOrRemoveParent(oldValue, id, false);
+    model.addOrRemoveParent(oldValue, id, false);
     fireEvent(event);
   }
 }

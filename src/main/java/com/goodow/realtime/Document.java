@@ -16,9 +16,7 @@ package com.goodow.realtime;
 import com.goodow.realtime.Error.ErrorHandler;
 import com.goodow.realtime.channel.constant.Constants.Params;
 import com.goodow.realtime.channel.util.ChannelNative;
-import com.goodow.realtime.model.util.JsonSerializer;
 import com.goodow.realtime.model.util.ModelFactory;
-import com.goodow.realtime.operation.util.JsonUtility;
 import com.goodow.realtime.operation.util.Pair;
 
 import org.timepedia.exporter.client.Export;
@@ -32,9 +30,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import elemental.json.JsonArray;
 import elemental.json.JsonObject;
-import elemental.json.JsonValue;
 
 /**
  * A Realtime document. A document consists of a Realtime model and a set of collaborators. Listen
@@ -62,7 +58,6 @@ public class Document implements EventTarget {
   private final List<Collaborator> collaborators = new ArrayList<Collaborator>();
   private Model model;
   private Map<Pair<String, EventType>, List<EventHandler<?>>> handlers;
-  private final Map<String, List<String>> parents = new HashMap<String, List<String>>();
 
   private boolean isEventsScheduled = false;
   private List<Pair<Pair<String, EventType>, Disposable>> events;
@@ -98,7 +93,7 @@ public class Document implements EventTarget {
       seen.add(id);
       evts.add(Pair.of(Pair.of(id, objectChangedEvent.type), (Disposable) objectChangedEvent));
 
-      String[] parents = getParents(id);
+      String[] parents = model.getParents(id);
       if (parents != null) {
         for (String parent : parents) {
           bubblingToAncestors(parent, objectChangedEvent, seen);
@@ -225,30 +220,6 @@ public class Document implements EventTarget {
     }
   }
 
-  void addOrRemoveParent(JsonValue childOrNull, String parentId, boolean isAdd) {
-    if (JsonUtility.isNull(childOrNull)) {
-      return;
-    }
-    JsonArray child = (JsonArray) childOrNull;
-    if (child.getNumber(0) == JsonSerializer.REFERENCE_TYPE) {
-      String childId = child.getString(1);
-      List<String> list = parents.get(childId);
-      if (isAdd) {
-        if (list == null) {
-          list = new ArrayList<String>();
-          parents.put(childId, list);
-        }
-        list.add(parentId);
-      } else {
-        assert list != null && list.contains(parentId);
-        list.remove(parentId);
-        if (list.isEmpty()) {
-          parents.remove(childId);
-        }
-      }
-    }
-  }
-
   void checkStatus() throws DocumentClosedError {
     if (bridge == null) {
       throw new DocumentClosedError();
@@ -335,15 +306,6 @@ public class Document implements EventTarget {
       handlers.put(key, handlersPerType);
     }
     return handlersPerType;
-  }
-
-  private String[] getParents(String objectId) {
-    List<String> list = parents.get(objectId);
-    if (list == null) {
-      return null;
-    }
-    Set<String> set = new HashSet<String>(list);
-    return set.toArray(new String[0]);
   }
 
   private void initializeEvents() {

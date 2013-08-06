@@ -542,7 +542,7 @@ public class CollaborativeList extends CollaborativeObject {
       JsonValue value = array.get(i);
       objects[i] = JsonSerializer.deserializeObject(value, model.objects);
       snapshot.insert(index + i, value);
-      model.document.addOrRemoveParent(value, id, true);
+      model.addOrRemoveParent(value, id, true);
     }
     ValuesAddedEvent event = new ValuesAddedEvent(this, sessionId, userId, index, objects);
     fireEvent(event);
@@ -556,7 +556,7 @@ public class CollaborativeList extends CollaborativeObject {
       assert JsonUtility.jsonEqual(snapshot.get(index), array.get(i));
       objects[i] = get(index);
       snapshot.remove(index);
-      model.document.addOrRemoveParent(array.get(i), id, false);
+      model.addOrRemoveParent(array.get(i), id, false);
     }
     ValuesRemovedEvent event = new ValuesRemovedEvent(this, sessionId, userId, index, objects);
     fireEvent(event);
