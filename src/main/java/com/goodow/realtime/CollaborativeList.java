@@ -15,11 +15,12 @@ package com.goodow.realtime;
 
 import com.goodow.realtime.model.util.JsonSerializer;
 import com.goodow.realtime.model.util.ModelFactory;
-import com.goodow.realtime.operation.CreateOperation;
 import com.goodow.realtime.operation.Operation;
-import com.goodow.realtime.operation.RealtimeOperation;
-import com.goodow.realtime.operation.list.ArrayOp;
-import com.goodow.realtime.operation.list.algorithm.ListTarget;
+import com.goodow.realtime.operation.create.CreateOperation;
+import com.goodow.realtime.operation.list.ListTarget;
+import com.goodow.realtime.operation.list.json.JsonDeleteOperation;
+import com.goodow.realtime.operation.list.json.JsonInsertOperation;
+import com.goodow.realtime.operation.list.json.JsonReplaceOperation;
 import com.goodow.realtime.operation.util.JsonUtility;
 
 import com.google.common.annotations.GwtIncompatible;
@@ -181,10 +182,11 @@ public class CollaborativeList extends CollaborativeObject {
    * Removes all values from the list.
    */
   public void clear() {
-    if (length() == 0) {
+    int length = length();
+    if (length == 0) {
       return;
     }
-    removeRange(0, length());
+    removeRange(0, length);
   }
 
   /**
@@ -252,19 +254,15 @@ public class CollaborativeList extends CollaborativeObject {
    * @exception java.lang.ArrayIndexOutOfBoundsException
    */
   public void insertAll(int index, Object... values) {
+    assert values != null;
     checkIndex(index, true);
-    JsonArray array = Json.createArray();
-    if (values == null) {
-      array.set(0, (JsonValue) null);
-    } else if (values.length == 0) {
+    if (values.length == 0) {
       return;
     } else {
-      for (int i = 0, len = values.length; i < len; i++) {
-        array.set(i, JsonSerializer.serializeObject(values[i]));
-      }
+      JsonValue[] array = JsonSerializer.serializeObjects(values);
+      JsonInsertOperation op = new JsonInsertOperation(id, index, array);
+      consumeAndSubmit(op);
     }
-    ArrayOp op = new ArrayOp(true, index, array, length());
-    consumeAndSubmit(op);
   }
 
   /**
@@ -368,16 +366,12 @@ public class CollaborativeList extends CollaborativeObject {
    * @exception java.lang.ArrayIndexOutOfBoundsException
    */
   public void removeRange(int startIndex, int endIndex) {
-    int length = length();
-    if (startIndex < 0 || startIndex >= length || endIndex <= startIndex || endIndex > length) {
+    if (startIndex < 0 || startIndex >= endIndex || endIndex > length()) {
       throw new ArrayIndexOutOfBoundsException("StartIndex: " + startIndex + ", EndIndex: "
-          + endIndex + ", Size: " + length);
+          + endIndex + ", Size: " + length());
     }
-    JsonArray array = Json.createArray();
-    for (int i = startIndex; i < endIndex; i++) {
-      array.set(i - startIndex, snapshot.get(i));
-    }
-    ArrayOp op = new ArrayOp(false, startIndex, array, length);
+    JsonValue[] values = subValues(startIndex, endIndex - startIndex);
+    JsonDeleteOperation op = new JsonDeleteOperation(id, startIndex, values);
     consumeAndSubmit(op);
   }
 
@@ -405,12 +399,16 @@ public class CollaborativeList extends CollaborativeObject {
    * @exception java.lang.ArrayIndexOutOfBoundsException
    */
   public void replaceRange(int index, Object... values) {
-    model.beginCompoundOperation("list.replaceRange");
-    int endIndex = index + values.length;
-    int length = length();
-    removeRange(index, endIndex > length ? length : endIndex);
-    insertAll(index, values);
-    model.endCompoundOperation();
+    assert values != null;
+    if (values.length == 0) {
+      throw new UnsupportedOperationException(
+          "At least one value must be specified for a set mutation.");
+    }
+    checkIndex(index + values.length, true);
+    JsonReplaceOperation op =
+        new JsonReplaceOperation(id, index, subValues(index, values.length), JsonSerializer
+            .serializeObjects(values));
+    consumeAndSubmit(op);
   }
 
   /**
@@ -422,11 +420,7 @@ public class CollaborativeList extends CollaborativeObject {
    */
   @NoExport
   public void set(int index, Object value) {
-    checkIndex(index, false);
-    model.beginCompoundOperation("list.set");
-    remove(index);
-    insert(index, value);
-    model.endCompoundOperation();
+    replaceRange(index, value);
   }
 
   /**
@@ -437,51 +431,43 @@ public class CollaborativeList extends CollaborativeObject {
   @NoExport
   public void setLength(int length) {
     checkIndex(length, true);
-    int len = length();
-    if (length == len) {
+    int total = length();
+    if (length == total) {
       return;
     }
-    removeRange(length, len);
+    removeRange(length, total);
   }
 
+  @SuppressWarnings("unchecked")
   @Override
-  protected void consume(final RealtimeOperation<?> operation) {
-    operation.<ListTarget<JsonArray>> getOp().apply(new ListTarget<JsonArray>() {
-      private int cursor;
-
+  protected void consume(final String userId, final String sessionId, Operation<?> operation) {
+    ((Operation<ListTarget<JsonValue[]>>) operation).apply(new ListTarget<JsonValue[]>() {
       @Override
-      public ListTarget<JsonArray> delete(JsonArray list) {
-        assert list.length() > 0;
-        assert cursor + list.length() <= length();
-        removeAndFireEvent(cursor, list, operation.sessionId, operation.userId);
-        return null;
+      public void delete(int startIndex, int length) {
+        removeAndFireEvent(startIndex, length, sessionId, userId);
       }
 
       @Override
-      public ListTarget<JsonArray> insert(JsonArray list) {
-        assert list.length() > 0;
-        assert cursor <= length();
-        insertAndFireEvent(cursor, list, operation.sessionId, operation.userId);
-        cursor += list.length();
-        return null;
+      public void insert(int startIndex, JsonValue[] values) {
+        insertAndFireEvent(startIndex, values, sessionId, userId);
       }
 
       @Override
-      public ListTarget<JsonArray> retain(int length) {
-        cursor += length;
-        return null;
+      public void replace(int startIndex, JsonValue[] values) {
+        replaceAndFireEvent(startIndex, values, sessionId, userId);
       }
     });
   }
 
   @Override
   Operation<?>[] toInitialization() {
-    ArrayOp op = null;
-    if (length() != 0) {
-      op = new ArrayOp();
-      op.insert(snapshot);
+    int length = length();
+    Operation<?>[] toRtn = new Operation[1 + (length == 0 ? 0 : 1)];
+    toRtn[0] = new CreateOperation(id, CreateOperation.LIST);
+    if (length != 0) {
+      toRtn[1] = new JsonInsertOperation(id, 0, subValues(0, length));
     }
-    return new Operation[] {new CreateOperation(CreateOperation.COLLABORATIVE_LIST, id), op};
+    return toRtn;
   }
 
   @Override
@@ -496,11 +482,12 @@ public class CollaborativeList extends CollaborativeObject {
     for (int i = 0, len = length(); i < len; i++) {
       if (!isFirst) {
         sb.append(", ");
+      } else {
+        isFirst = false;
       }
-      isFirst = false;
       Object value = get(i);
       if (value == null) {
-        sb.append("null");
+        sb.append((String) null);
       } else if (value instanceof CollaborativeObject) {
         CollaborativeObject obj = (CollaborativeObject) value;
         obj.toString(seen, sb);
@@ -535,31 +522,54 @@ public class CollaborativeList extends CollaborativeObject {
     }
   }
 
-  private void insertAndFireEvent(int index, JsonArray array, String sessionId, String userId) {
-    int length = array.length();
-    Object[] objects = new Object[length];
-    for (int i = 0; i < length; i++) {
-      JsonValue value = array.get(i);
+  private void insertAndFireEvent(int index, JsonValue[] values, String sessionId, String userId) {
+    assert index <= length();
+    Object[] objects = new Object[values.length];
+    int i = 0;
+    for (JsonValue value : values) {
       objects[i] = JsonSerializer.deserializeObject(value, model.objects);
-      snapshot.insert(index + i, value);
+      snapshot.insert(index + i++, value);
       model.addOrRemoveParent(value, id, true);
     }
     ValuesAddedEvent event = new ValuesAddedEvent(this, sessionId, userId, index, objects);
     fireEvent(event);
-    model.setIndexReferenceIndex(id, true, index, length, sessionId, userId);
+    model.setIndexReferenceIndex(id, true, index, values.length, sessionId, userId);
   }
 
-  private void removeAndFireEvent(int index, JsonArray array, String sessionId, String userId) {
-    int length = array.length();
+  private void removeAndFireEvent(int index, int length, String sessionId, String userId) {
+    assert index + length <= length();
     Object[] objects = new Object[length];
     for (int i = 0; i < length; i++) {
-      assert JsonUtility.jsonEqual(snapshot.get(index), array.get(i));
       objects[i] = get(index);
+      model.addOrRemoveParent(snapshot.get(index), id, false);
       snapshot.remove(index);
-      model.addOrRemoveParent(array.get(i), id, false);
     }
     ValuesRemovedEvent event = new ValuesRemovedEvent(this, sessionId, userId, index, objects);
     fireEvent(event);
     model.setIndexReferenceIndex(id, false, index, length, sessionId, userId);
+  }
+
+  private void replaceAndFireEvent(int index, JsonValue[] values, String sessionId, String userId) {
+    assert index + values.length <= length();
+    Object[] oldValues = new Object[values.length];
+    Object[] newValues = new Object[values.length];
+    int i = 0;
+    for (JsonValue value : values) {
+      oldValues[i] = get(index + i);
+      newValues[i] = JsonSerializer.deserializeObject(value, model.objects);
+      model.addOrRemoveParent(snapshot.get(index + i), id, false);
+      snapshot.set(index + i++, value);
+      model.addOrRemoveParent(value, id, true);
+    }
+    ValuesSetEvent event = new ValuesSetEvent(this, sessionId, userId, index, oldValues, newValues);
+    fireEvent(event);
+  }
+
+  private JsonValue[] subValues(int startIndex, int length) {
+    JsonValue[] array = new JsonValue[length];
+    for (int i = 0; i < length; i++) {
+      array[i] = snapshot.get(startIndex + i);
+    }
+    return array;
   }
 }

@@ -15,12 +15,10 @@ package com.goodow.realtime;
 
 import com.goodow.realtime.model.util.JsonSerializer;
 import com.goodow.realtime.model.util.ModelFactory;
-import com.goodow.realtime.operation.CreateOperation;
 import com.goodow.realtime.operation.Operation;
-import com.goodow.realtime.operation.RealtimeOperation;
-import com.goodow.realtime.operation.map.MapOp;
+import com.goodow.realtime.operation.create.CreateOperation;
 import com.goodow.realtime.operation.map.MapTarget;
-import com.goodow.realtime.operation.util.JsonUtility;
+import com.goodow.realtime.operation.map.json.JsonMapOperation;
 
 import com.google.common.annotations.GwtIncompatible;
 
@@ -36,6 +34,7 @@ import java.util.Set;
 import elemental.json.Json;
 import elemental.json.JsonArray;
 import elemental.json.JsonObject;
+import elemental.json.JsonType;
 import elemental.json.JsonValue;
 
 /**
@@ -212,8 +211,7 @@ public class CollaborativeMap extends CollaborativeObject {
     if (oldValue == null) {
       return null;
     }
-    MapOp op = new MapOp();
-    op.update(key, snapshot.getArray(key), null);
+    JsonMapOperation op = new JsonMapOperation(id, key, snapshot.getArray(key), null);
     consumeAndSubmit(op);
     return oldValue;
   }
@@ -233,13 +231,12 @@ public class CollaborativeMap extends CollaborativeObject {
   @NoExport
   public <T> T set(String key, Object value) {
     checkKey(key);
-    MapOp op = new MapOp();
     JsonArray serializedValue = JsonSerializer.serializeObject(value);
     if (serializedValue == null && !has(key)) {
       return null;
     }
     T oldObject = this.<T> get(key);
-    op.update(key, snapshot.getArray(key), serializedValue);
+    JsonMapOperation op = new JsonMapOperation(id, key, snapshot.getArray(key), serializedValue);
     consumeAndSubmit(op);
     return oldObject;
   }
@@ -267,32 +264,32 @@ public class CollaborativeMap extends CollaborativeObject {
     return values;
   }
 
+  @SuppressWarnings("unchecked")
   @Override
-  protected void consume(final RealtimeOperation<?> operation) {
-    operation.<MapTarget> getOp().apply(new MapTarget() {
+  protected void consume(final String userId, final String sessionId, Operation<?> operation) {
+    ((Operation<MapTarget<JsonValue>>) operation).apply(new MapTarget<JsonValue>() {
       @Override
-      public MapTarget update(String key, JsonValue oldValue, JsonValue newValue) {
-        assert oldValue == null || JsonUtility.jsonEqual(snapshot.get(key), oldValue);
+      public void set(String key, JsonValue newValue) {
         if (newValue == null) {
-          removeAndFireEvent(key, operation.sessionId, operation.userId);
+          removeAndFireEvent(key, sessionId, userId);
         } else {
-          putAndFireEvent(key, newValue, operation.sessionId, operation.userId);
+          putAndFireEvent(key, newValue, sessionId, userId);
         }
-        return null;
       }
     });
   }
 
   @Override
   Operation<?>[] toInitialization() {
-    MapOp op = null;
+    Operation<?>[] toRtn = new Operation[1 + size()];
+    toRtn[0] = new CreateOperation(id, CreateOperation.MAP);
     if (!isEmpty()) {
-      op = new MapOp();
+      int i = 0;
       for (String key : keys()) {
-        op.update(key, null, snapshot.get(key));
+        toRtn[i++] = new JsonMapOperation(id, key, null, snapshot.get(key));
       }
     }
-    return new Operation[] {new CreateOperation(CreateOperation.COLLABORATIVE_MAP, id), op};
+    return toRtn;
   }
 
   @Override
@@ -307,8 +304,9 @@ public class CollaborativeMap extends CollaborativeObject {
     for (String key : keys()) {
       if (!isFirst) {
         sb.append(", ");
+      } else {
+        isFirst = false;
       }
-      isFirst = false;
       sb.append(key).append(": ");
       Object value = get(key);
       if (value instanceof CollaborativeObject) {
@@ -328,7 +326,7 @@ public class CollaborativeMap extends CollaborativeObject {
   }
 
   private void putAndFireEvent(String key, JsonValue newValue, String sessionId, String userId) {
-    assert null != newValue && Json.createNull() != newValue;
+    assert null != newValue && JsonType.NULL != newValue.getType();
     JsonArray oldValue = snapshot.getArray(key);
     Object newObject = JsonSerializer.deserializeObject(newValue, model.objects);
     ValueChangedEvent event =

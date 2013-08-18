@@ -92,6 +92,7 @@ mod.createMap()
 ],"initialize"]]
 
 list.removeRange(4, 7)
+0110
 [[4,[0,
 	[6,"gde23jpazhfqiy50e",4,3]
 ]]]
@@ -100,14 +101,17 @@ list.push(null)
 	[5,"gde23jpazhfqiy50e",4,[0,null]]
 ]]]
 list.insertAll(4, [true, string])
+0101
 [[4,[0,
 	[5,"gde23jpazhfqiy50e",4,[0,[21,true],[2,"gdeohwe75hfgyjlp6"]]]
 ]]]
 list.set(4, 'abc')
+1011
 [[4,[0,
 	[11,"gde23jpazhfqiy50e",4,[0,[21,"abc"]]]
 ]]]
 list.replaceRange(2, [null,4])
+
 [[4,[0,
 	[11,"gdem91atjhfhgs9wt",2,[0,null,[21,4]]]
 ]]]
@@ -143,6 +147,9 @@ displayReferenceShiftedEvent = function (evt) {
 }
 displayStringEvent = function(evt){
   console.log('type='+evt.type+',index='+evt.index+',text='+evt.text);
+}
+valuesSetListener = function(evt){
+  console.log('type='+evt.type+',index='+evt.index+',oldValues='+evt.oldValues+',newValues='+evt.newValues);
 }
 root.addEventListener(gapi.drive.realtime.EventType.OBJECT_CHANGED, displayObjectChangedEvent)
 root.removeEventListener(gapi.drive.realtime.EventType.OBJECT_CHANGED,displayObjectChangedEvent)
@@ -186,6 +193,26 @@ str.append('d');
 [4,[0,1367894092595,[[
 	[[4,[0,[4,[0,[5,"gdelfgrhjhfwnhdrl",28,[1,"x"]]]]]]],1367894137096,"101854939286968683254",70,"1f67d8b67d4fc552",0
 ]]]]
+
+mod.beginCompoundOperation('xxoo');str.insertString(1, '123');str.insertString(4,'456');str.removeRange(1,3);str.removeRange(1,3);mod.endCompoundOperation()
+send
+[133,"3",[0,[4,
+[0,
+	[4,[0,[5,"gder0ljfshjqw1lqs",1,[1,"123"]]],null,null,true,true],
+	[4,[0,[5,"gder0ljfshjqw1lqs",4,[1,"456"]]],null,null,true,true],
+	[4,[0,[6,"gder0ljfshjqw1lqs",1,2]],null,null,true,true],
+	[4,[0,[6,"gder0ljfshjqw1lqs",1,2]],null,null,true,true]
+],"xxoo",null,true,true]]]:
+receive
+370
+[[12,[3,1376643469454,[3,[0,[26,134,"140865ab510","101854939286968683254","2632ee3a7fa13a30",[4,
+[0,
+	[4,[0,[5,"gder0ljfshjqw1lqs",1,[1,"123"]]],null,null,true,true],
+	[4,[0,[5,"gder0ljfshjqw1lqs",4,[1,"456"]]],null,null,true,true],
+	[4,[0,[6,"gder0ljfshjqw1lqs",1,2]],null,null,true,true],
+	[4,[0,[6,"gder0ljfshjqw1lqs",1,2]],null,null,true,true]
+],"xxoo",null,true,true]]]]]]
+
 
 386
 [[0,["c","FD5E7E8508F9D931",,8]

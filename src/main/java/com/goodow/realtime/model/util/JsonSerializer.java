@@ -86,4 +86,13 @@ public class JsonSerializer {
     array.set(1, val);
     return array;
   }
+
+  public static JsonValue[] serializeObjects(Object... values) {
+    JsonValue[] array = new JsonValue[values.length];
+    int i = 0;
+    for (Object obj : values) {
+      array[i++] = serializeObject(obj);
+    }
+    return array;
+  }
 }

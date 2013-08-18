@@ -15,12 +15,11 @@ package com.goodow.realtime;
 
 import com.goodow.realtime.model.util.ModelFactory;
 import com.goodow.realtime.model.util.ModelNative;
-import com.goodow.realtime.operation.CreateOperation;
 import com.goodow.realtime.operation.Operation;
-import com.goodow.realtime.operation.RealtimeOperation;
-import com.goodow.realtime.operation.list.StringOp;
-import com.goodow.realtime.operation.list.algorithm.ListOp;
-import com.goodow.realtime.operation.list.algorithm.ListTarget;
+import com.goodow.realtime.operation.create.CreateOperation;
+import com.goodow.realtime.operation.list.ListTarget;
+import com.goodow.realtime.operation.list.string.StringDeleteOperation;
+import com.goodow.realtime.operation.list.string.StringInsertOperation;
 
 import com.google.common.annotations.GwtIncompatible;
 
@@ -115,7 +114,7 @@ public class CollaborativeString extends CollaborativeObject {
           "At least one value must be specified for an insert mutation. text: " + text);
     }
     checkIndex(index);
-    StringOp op = new StringOp(true, index, text, length());
+    StringInsertOperation op = new StringInsertOperation(id, index, text);
     consumeAndSubmit(op);
   }
 
@@ -154,7 +153,8 @@ public class CollaborativeString extends CollaborativeObject {
       throw new StringIndexOutOfBoundsException("StartIndex: " + startIndex + ", EndIndex: "
           + endIndex + ", Size: " + length);
     }
-    StringOp op = new StringOp(false, startIndex, snapshot.substring(startIndex, endIndex), length);
+    StringDeleteOperation op =
+        new StringDeleteOperation(id, startIndex, snapshot.substring(startIndex, endIndex));
     consumeAndSubmit(op);
   }
 
@@ -180,40 +180,36 @@ public class CollaborativeString extends CollaborativeObject {
     model.endCompoundOperation();
   }
 
+  @SuppressWarnings("unchecked")
   @Override
-  protected void consume(final RealtimeOperation<?> operation) {
-    operation.<ListTarget<String>> getOp().apply(new ListTarget<String>() {
-      private int cursor;
+  protected void consume(final String userId, final String sessionId, Operation<?> operation) {
+    ((Operation<ListTarget<String>>) operation).apply(new ListTarget<String>() {
 
       @Override
-      public ListTarget<String> delete(String str) {
-        assert snapshot.substring(cursor, cursor + str.length()).equals(str);
-        deleteAndFireEvent(cursor, cursor + str.length(), operation.sessionId, operation.userId);
-        return null;
+      public void delete(int startIndex, int length) {
+        deleteAndFireEvent(startIndex, length, sessionId, userId);
       }
 
       @Override
-      public ListTarget<String> insert(String str) {
-        insertAndFireEvent(cursor, str, operation.sessionId, operation.userId);
-        cursor += str.length();
-        return null;
+      public void insert(int startIndex, String values) {
+        insertAndFireEvent(startIndex, values, sessionId, userId);
       }
 
       @Override
-      public ListTarget<String> retain(int length) {
-        cursor += length;
-        return null;
+      public void replace(int startIndex, String values) {
+        throw new UnsupportedOperationException();
       }
     });
   }
 
   @Override
   Operation<?>[] toInitialization() {
-    ListOp<String> op = null;
+    Operation<?>[] toRtn = new Operation[1 + (length() == 0 ? 0 : 1)];
+    toRtn[0] = new CreateOperation(id, CreateOperation.STRING);
     if (length() != 0) {
-      op = new StringOp().insert(getText());
+      toRtn[1] = new StringInsertOperation(id, 0, getText());
     }
-    return new Operation[] {new CreateOperation(CreateOperation.COLLABORATIVE_STRING, id), op};
+    return toRtn;
   }
 
   @Override
@@ -233,13 +229,14 @@ public class CollaborativeString extends CollaborativeObject {
     }
   }
 
-  private void deleteAndFireEvent(int startIndex, int endIndex, String sessionId, String userId) {
-    assert startIndex < endIndex && endIndex <= length();
+  private void deleteAndFireEvent(int startIndex, int length, String sessionId, String userId) {
+    int endIndex = startIndex + length;
+    assert length > 0 && endIndex <= length();
     String toDelete = snapshot.substring(startIndex, endIndex);
     TextDeletedEvent event = new TextDeletedEvent(this, sessionId, userId, startIndex, toDelete);
     snapshot.delete(startIndex, endIndex);
     fireEvent(event);
-    model.setIndexReferenceIndex(id, false, startIndex, endIndex - startIndex, sessionId, userId);
+    model.setIndexReferenceIndex(id, false, startIndex, length, sessionId, userId);
   }
 
   private void insertAndFireEvent(int index, String text, String sessionId, String userId) {

@@ -14,10 +14,9 @@
 package com.goodow.realtime;
 
 import com.goodow.realtime.model.util.ModelFactory;
-import com.goodow.realtime.operation.CreateOperation;
 import com.goodow.realtime.operation.Operation;
-import com.goodow.realtime.operation.RealtimeOperation;
-import com.goodow.realtime.operation.ReferenceShiftedOperation;
+import com.goodow.realtime.operation.create.CreateOperation;
+import com.goodow.realtime.operation.cursor.ReferenceShiftedOperation;
 
 import com.google.common.annotations.GwtIncompatible;
 
@@ -76,7 +75,7 @@ public class IndexReference extends CollaborativeObject {
   }-*/;
   // @formatter:on
 
-  private String referencedObject;
+  private String referencedObjectId;
   private int index = -1;
   private boolean canBeDeleted;
 
@@ -113,7 +112,7 @@ public class IndexReference extends CollaborativeObject {
    * @return The object this reference points to. Read-only.
    */
   public CollaborativeObject getReferencedObject() {
-    return model.getObject(referencedObject);
+    return model.getObject(referencedObjectId);
   }
 
   public void removeReferenceShiftedListener(EventHandler<ReferenceShiftedEvent> handler) {
@@ -131,18 +130,17 @@ public class IndexReference extends CollaborativeObject {
       return;
     }
     ReferenceShiftedOperation op =
-        new ReferenceShiftedOperation(referencedObject, index, canBeDeleted, this.index);
+        new ReferenceShiftedOperation(id, referencedObjectId, index, canBeDeleted, this.index);
     consumeAndSubmit(op);
   }
 
   @Override
-  protected void consume(RealtimeOperation<?> operation) {
-    ReferenceShiftedOperation op = (ReferenceShiftedOperation) operation.<Void> getOp();
+  protected void consume(final String userId, final String sessionId, Operation<?> operation) {
+    ReferenceShiftedOperation op = (ReferenceShiftedOperation) operation;
     assert op.oldIndex == getIndex();
     ReferenceShiftedEvent event =
-        new ReferenceShiftedEvent(this, op.oldIndex, op.newIndex, operation.sessionId,
-            operation.userId);
-    referencedObject = op.referencedObject;
+        new ReferenceShiftedEvent(this, op.oldIndex, op.newIndex, sessionId, userId);
+    referencedObjectId = op.referencedObjectId;
     index = op.newIndex;
     canBeDeleted = op.canBeDeleted;
     fireEvent(event);
@@ -168,17 +166,15 @@ public class IndexReference extends CollaborativeObject {
       }
     }
     ReferenceShiftedOperation op =
-        new ReferenceShiftedOperation(referencedObject, newIndex, canBeDeleted, cursor);
-    op.setId(id);
-    RealtimeOperation<Void> operation = new RealtimeOperation<Void>(op, userId, sessionId);
-    consume(operation);
+        new ReferenceShiftedOperation(id, referencedObjectId, newIndex, canBeDeleted, cursor);
+    consume(userId, sessionId, op);
   }
 
   @Override
   Operation<?>[] toInitialization() {
     ReferenceShiftedOperation op =
-        new ReferenceShiftedOperation(referencedObject, index, canBeDeleted, index);
-    return new Operation[] {new CreateOperation(CreateOperation.INDEX_REFERENCE, id), op};
+        new ReferenceShiftedOperation(id, referencedObjectId, index, canBeDeleted, index);
+    return new Operation[] {new CreateOperation(id, CreateOperation.INDEX_REFERENCE), op};
   }
 
   @Override
@@ -190,7 +186,7 @@ public class IndexReference extends CollaborativeObject {
     seen.add(id);
     sb.append("DefaultIndexReference [");
     sb.append("id=").append(getId());
-    sb.append(", objectId=").append(referencedObject);
+    sb.append(", objectId=").append(referencedObjectId);
     sb.append(", index=").append(getIndex());
     sb.append(", canBeDeleted=").append(canBeDeleted);
     sb.append("]");

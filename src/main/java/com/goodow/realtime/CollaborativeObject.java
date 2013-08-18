@@ -15,7 +15,6 @@ package com.goodow.realtime;
 
 import com.goodow.realtime.model.util.ModelFactory;
 import com.goodow.realtime.operation.Operation;
-import com.goodow.realtime.operation.RealtimeOperation;
 
 import org.timepedia.exporter.client.Export;
 import org.timepedia.exporter.client.ExportPackage;
@@ -80,10 +79,9 @@ public abstract class CollaborativeObject implements EventTarget {
     return sb.toString();
   }
 
-  abstract void consume(RealtimeOperation<?> operation);
+  abstract void consume(String userId, String sessionId, Operation<?> operation);
 
   <T> void consumeAndSubmit(Operation<T> op) {
-    op.setId(id);
     model.bridge.consumeAndSubmit(op);
   }
 

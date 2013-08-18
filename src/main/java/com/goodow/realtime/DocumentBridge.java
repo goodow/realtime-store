@@ -17,11 +17,13 @@ import com.goodow.realtime.Error.ErrorHandler;
 import com.goodow.realtime.channel.operation.OperationSucker;
 import com.goodow.realtime.channel.operation.OperationSucker.OutputSink;
 import com.goodow.realtime.channel.util.ChannelNative;
-import com.goodow.realtime.operation.CreateOperation;
+import com.goodow.realtime.operation.AbstractOperation;
 import com.goodow.realtime.operation.Operation;
 import com.goodow.realtime.operation.RealtimeOperation;
-import com.goodow.realtime.operation.RealtimeTransformer;
-import com.goodow.realtime.operation.basic.NoOp;
+import com.goodow.realtime.operation.TransformerImpl;
+import com.goodow.realtime.operation.create.CreateOperation;
+
+import java.util.List;
 
 import elemental.json.JsonArray;
 import elemental.json.JsonObject;
@@ -38,7 +40,7 @@ public class DocumentBridge implements OperationSucker.Listener {
     }
 
     @Override
-    public void consume(RealtimeOperation<?> op) {
+    public void consume(RealtimeOperation op) {
     }
   };
 
@@ -104,36 +106,35 @@ public class DocumentBridge implements OperationSucker.Listener {
   DocumentBridge() {
   }
 
+  @SuppressWarnings("unchecked")
   @Override
-  public void consume(RealtimeOperation<?> operation) {
-    int type = operation.getType();
-    if (type == NoOp.TYPE) {
-      return;
-    }
-    if (type == CreateOperation.TYPE) {
-      CreateOperation op = (CreateOperation) operation.<Void> getOp();
-      CollaborativeObject obj;
-      switch (op.type) {
-        case CreateOperation.COLLABORATIVE_MAP:
-          obj = new CollaborativeMap(model);
-          break;
-        case CreateOperation.COLLABORATIVE_LIST:
-          obj = new CollaborativeList(model);
-          break;
-        case CreateOperation.COLLABORATIVE_STRING:
-          obj = new CollaborativeString(model);
-          break;
-        case CreateOperation.INDEX_REFERENCE:
-          obj = new IndexReference(model);
-          break;
-        default:
-          throw new RuntimeException("Shouldn't reach here!");
+  public void consume(RealtimeOperation operation) {
+    List<AbstractOperation<?>> ops = (List<AbstractOperation<?>>) operation.operations;
+    for (AbstractOperation<?> op : ops) {
+      if (op.type == CreateOperation.TYPE) {
+        CollaborativeObject obj;
+        switch (((CreateOperation) op).subType) {
+          case CreateOperation.MAP:
+            obj = new CollaborativeMap(model);
+            break;
+          case CreateOperation.LIST:
+            obj = new CollaborativeList(model);
+            break;
+          case CreateOperation.STRING:
+            obj = new CollaborativeString(model);
+            break;
+          case CreateOperation.INDEX_REFERENCE:
+            obj = new IndexReference(model);
+            break;
+          default:
+            throw new RuntimeException("Shouldn't reach here!");
+        }
+        obj.id = op.id;
+        model.objects.put(obj.id, obj);
+        continue;
       }
-      obj.id = operation.getId();
-      model.objects.put(obj.id, obj);
-      return;
+      model.getObject(op.id).consume(operation.userId, operation.sessionId, op);
     }
-    model.getObject(operation.getId()).consume(operation);
   }
 
   public Document getDocument() {
@@ -157,45 +158,41 @@ public class DocumentBridge implements OperationSucker.Listener {
     this.outputSink = outputSink;
   }
 
-  @SuppressWarnings({"rawtypes", "unchecked"})
   @Override
   public String toString() {
     StringBuilder sb1 = new StringBuilder();
     StringBuilder sb2 = new StringBuilder();
     boolean isFirst = true;
-    for (String id : model.objects.keySet()) {
-      CollaborativeObject collaborativeObject = model.getObject(id);
-      Operation<?>[] initializeOp = collaborativeObject.toInitialization();
+    for (CollaborativeObject object : model.objects.values()) {
+      Operation<?>[] initializeOp = object.toInitialization();
+      boolean isCreate = true;
       for (Operation<?> op : initializeOp) {
-        if (op == null) {
-          continue;
-        }
-        op.setId(id);
         StringBuilder sb;
-        if (op.getType() == CreateOperation.TYPE) {
+        if (isCreate) {
           sb = sb1;
+          isCreate = false;
         } else {
           sb = sb2;
         }
         if (!isFirst) {
           sb.append(",");
+        } else {
+          isFirst = false;
         }
-        isFirst = false;
-        sb.append(new RealtimeOperation(op).toString());
+        sb.append(op.toString());
       }
     }
     return "[" + sb1.toString() + sb2.toString() + "]";
   }
 
   void consumeAndSubmit(Operation<?> op) {
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    RealtimeOperation<?> operation = new RealtimeOperation(op, Realtime.USERID, sessionId);
+    RealtimeOperation operation = new RealtimeOperation(Realtime.USERID, sessionId, op);
     consume(operation);
     outputSink.consume(operation);
   }
 
   void createSnapshot(JsonValue serialized) {
-    RealtimeTransformer transformer = new RealtimeTransformer();
+    TransformerImpl<AbstractOperation<?>> transformer = new TransformerImpl<AbstractOperation<?>>();
     document = new Document(this, null, null);
     model = document.getModel();
     JsonArray snapshot = (JsonArray) serialized;
@@ -204,9 +201,8 @@ public class DocumentBridge implements OperationSucker.Listener {
     } else {
       for (int i = 0, len = snapshot.length(); i < len; i++) {
         JsonArray serializedOp = snapshot.getArray(i);
-        Operation<?> op = transformer.createOp(serializedOp);
-        @SuppressWarnings({"rawtypes", "unchecked"})
-        RealtimeOperation<?> operation = new RealtimeOperation(op, null, null);
+        Operation<?> op = transformer.createOperation(serializedOp);
+        RealtimeOperation operation = new RealtimeOperation(null, null, op);
         consume(operation);
       }
     }

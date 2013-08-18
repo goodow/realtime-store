@@ -15,14 +15,12 @@ package com.goodow.realtime;
 
 import com.goodow.realtime.model.util.JsonSerializer;
 import com.goodow.realtime.model.util.ModelFactory;
-import com.goodow.realtime.operation.CreateOperation;
-import com.goodow.realtime.operation.Operation;
-import com.goodow.realtime.operation.ReferenceShiftedOperation;
+import com.goodow.realtime.operation.create.CreateOperation;
+import com.goodow.realtime.operation.cursor.ReferenceShiftedOperation;
 import com.goodow.realtime.operation.id.IdGenerator;
-import com.goodow.realtime.operation.list.ArrayOp;
-import com.goodow.realtime.operation.list.StringOp;
-import com.goodow.realtime.operation.list.algorithm.ListOp;
-import com.goodow.realtime.operation.map.MapOp;
+import com.goodow.realtime.operation.list.json.JsonInsertOperation;
+import com.goodow.realtime.operation.list.string.StringInsertOperation;
+import com.goodow.realtime.operation.map.json.JsonMapOperation;
 import com.goodow.realtime.operation.util.JsonUtility;
 
 import com.google.common.annotations.GwtIncompatible;
@@ -42,7 +40,6 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import elemental.js.util.JsMapFromStringTo;
-import elemental.json.Json;
 import elemental.json.JsonArray;
 import elemental.json.JsonValue;
 import elemental.util.ArrayOfString;
@@ -190,18 +187,15 @@ public class Model implements EventTarget {
    * @return A collaborative list.
    */
   public CollaborativeList createList(Object... opt_initialValue) {
-    ArrayOp op = null;
-    if (opt_initialValue != null && opt_initialValue.length > 0) {
-      op = new ArrayOp();
-      JsonArray array = Json.createArray();
-      for (int i = 0, len = opt_initialValue.length; i < len; i++) {
-        JsonArray serializedValue = JsonSerializer.serializeObject(opt_initialValue[i]);
-        array.set(i, serializedValue);
-      }
-      op.insert(array);
-    }
     String id = generateObjectId();
-    initializeCreate(CreateOperation.COLLABORATIVE_LIST, op, id);
+    beginCreationCompoundOperation();
+    bridge.consumeAndSubmit(new CreateOperation(id, CreateOperation.LIST));
+    if (opt_initialValue != null && opt_initialValue.length > 0) {
+      JsonValue[] values = JsonSerializer.serializeObjects(opt_initialValue);
+      JsonInsertOperation op = new JsonInsertOperation(id, 0, values);
+      bridge.consumeAndSubmit(op);
+    }
+    endCompoundOperation();
     return getObject(id);
   }
 
@@ -213,19 +207,20 @@ public class Model implements EventTarget {
    */
   @NoExport
   public CollaborativeMap createMap(Map<String, ?> opt_initialValue) {
-    MapOp op = null;
+    String id = generateObjectId();
+    beginCreationCompoundOperation();
+    bridge.consumeAndSubmit(new CreateOperation(id, CreateOperation.MAP));
     if (opt_initialValue != null && !opt_initialValue.isEmpty()) {
-      op = new MapOp();
-      for (String key : opt_initialValue.keySet()) {
-        JsonArray serializedValue = JsonSerializer.serializeObject(opt_initialValue.get(key));
+      for (Map.Entry<String, ?> entry : opt_initialValue.entrySet()) {
+        JsonArray serializedValue = JsonSerializer.serializeObject(entry.getValue());
         if (serializedValue == null) {
           continue;
         }
-        op.update(key, null, serializedValue);
+        JsonMapOperation op = new JsonMapOperation(id, entry.getKey(), null, serializedValue);
+        bridge.consumeAndSubmit(op);
       }
     }
-    String id = generateObjectId();
-    initializeCreate(CreateOperation.COLLABORATIVE_MAP, op, id);
+    endCompoundOperation();
     return getObject(id);
   }
 
@@ -236,12 +231,14 @@ public class Model implements EventTarget {
    * @return A collaborative string.
    */
   public CollaborativeString createString(String opt_initialValue) {
-    ListOp<String> op = null;
-    if (opt_initialValue != null && !opt_initialValue.isEmpty()) {
-      op = new StringOp().insert(opt_initialValue);
-    }
     String id = generateObjectId();
-    initializeCreate(CreateOperation.COLLABORATIVE_STRING, op, id);
+    beginCreationCompoundOperation();
+    bridge.consumeAndSubmit(new CreateOperation(id, CreateOperation.STRING));
+    if (opt_initialValue != null && !opt_initialValue.isEmpty()) {
+      StringInsertOperation op = new StringInsertOperation(id, 0, opt_initialValue);
+      bridge.consumeAndSubmit(op);
+    }
+    endCompoundOperation();
     return getObject(id);
   }
 
@@ -336,24 +333,22 @@ public class Model implements EventTarget {
     }
   }
 
-  /**
-   * Starts a compound operation for the creation of the document's initial state.
-   */
-  void beginCreationCompoundOperation() {
-    beginCompoundOperation("initialize");
-  }
-
-  IndexReference createIndexReference(String referencedObject, int index, boolean canBeDeleted) {
-    ReferenceShiftedOperation op =
-        new ReferenceShiftedOperation(referencedObject, index, canBeDeleted, -1);
+  IndexReference createIndexReference(String referencedObjectId, int index, boolean canBeDeleted) {
     String id = generateObjectId();
-    initializeCreate(CreateOperation.INDEX_REFERENCE, op, id);
-    registerIndexReference(id, referencedObject);
+    ReferenceShiftedOperation op =
+        new ReferenceShiftedOperation(id, referencedObjectId, index, canBeDeleted, -1);
+    beginCreationCompoundOperation();
+    bridge.consumeAndSubmit(new CreateOperation(id, CreateOperation.INDEX_REFERENCE));
+    bridge.consumeAndSubmit(op);
+    registerIndexReference(id, referencedObjectId);
+    endCompoundOperation();
     return getObject(id);
   }
 
   void createRoot() {
-    initializeCreate(CreateOperation.COLLABORATIVE_MAP, null, ROOT_ID);
+    beginCreationCompoundOperation();
+    bridge.consumeAndSubmit(new CreateOperation(ROOT_ID, CreateOperation.MAP));
+    endCompoundOperation();
   }
 
   void setIndexReferenceIndex(String referencedObject, boolean isInsert, int index, int length,
@@ -384,19 +379,15 @@ public class Model implements EventTarget {
     return createMap(opt_initialValue);
   }
 
-  private String generateObjectId() {
-    return "gde" + new IdGenerator().next(14);
+  /**
+   * Starts a compound operation for the creation of the document's initial state.
+   */
+  private void beginCreationCompoundOperation() {
+    beginCompoundOperation("initialize");
   }
 
-  private void initializeCreate(int type, Operation<?> opt_initialValue, String id) {
-    beginCreationCompoundOperation();
-    CreateOperation op = new CreateOperation(type, id);
-    bridge.consumeAndSubmit(op);
-    if (opt_initialValue != null) {
-      opt_initialValue.setId(id);
-      bridge.consumeAndSubmit(opt_initialValue);
-    }
-    endCompoundOperation();
+  private String generateObjectId() {
+    return "gde" + new IdGenerator().next(14);
   }
 
   private void registerIndexReference(String indexReference, String referencedObject) {
