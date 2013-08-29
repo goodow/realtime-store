@@ -73,6 +73,7 @@ public class Realtime implements Exportable {
     }
     final OperationSucker operationSucker = new OperationSucker(docId);
     final DocumentBridge bridge = new DocumentBridge();
+    bridge.setUndoEnabled(true);
     operationSucker.load(bridge, new Callback() {
       @Override
       public void onSuccess(JsonValue snapshot, String sessionId, int revision) {
@@ -80,7 +81,7 @@ public class Realtime implements Exportable {
         bridge.setOutputSink(operationSucker.getOutputSink());
         bridge.createSnapshot(snapshot);
 
-        if (revision == 1) {
+        if (revision == 0) {
           if (opt_initializer != null) {
             DocumentBridge.initializeModel(opt_initializer, bridge.getDocument().getModel());
           }

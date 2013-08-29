@@ -530,6 +530,7 @@ public class CollaborativeList extends CollaborativeObject {
       objects[i] = JsonSerializer.deserializeObject(value, model.objects);
       snapshot.insert(index + i++, value);
       model.addOrRemoveParent(value, id, true);
+      model.bytesUsed += (value == null ? "null" : value.toJson()).length();
     }
     ValuesAddedEvent event = new ValuesAddedEvent(this, sessionId, userId, index, objects);
     fireEvent(event);
@@ -541,8 +542,10 @@ public class CollaborativeList extends CollaborativeObject {
     Object[] objects = new Object[length];
     for (int i = 0; i < length; i++) {
       objects[i] = get(index);
-      model.addOrRemoveParent(snapshot.get(index), id, false);
+      JsonValue value = snapshot.get(index);
       snapshot.remove(index);
+      model.addOrRemoveParent(value, id, false);
+      model.bytesUsed -= value.toJson().length();
     }
     ValuesRemovedEvent event = new ValuesRemovedEvent(this, sessionId, userId, index, objects);
     fireEvent(event);
@@ -551,17 +554,21 @@ public class CollaborativeList extends CollaborativeObject {
 
   private void replaceAndFireEvent(int index, JsonValue[] values, String sessionId, String userId) {
     assert index + values.length <= length();
-    Object[] oldValues = new Object[values.length];
-    Object[] newValues = new Object[values.length];
+    Object[] oldObjects = new Object[values.length];
+    Object[] newObjects = new Object[values.length];
     int i = 0;
-    for (JsonValue value : values) {
-      oldValues[i] = get(index + i);
-      newValues[i] = JsonSerializer.deserializeObject(value, model.objects);
-      model.addOrRemoveParent(snapshot.get(index + i), id, false);
-      snapshot.set(index + i++, value);
-      model.addOrRemoveParent(value, id, true);
+    for (JsonValue newValue : values) {
+      oldObjects[i] = get(index + i);
+      newObjects[i] = JsonSerializer.deserializeObject(newValue, model.objects);
+      JsonValue oldValue = snapshot.get(index + i);
+      snapshot.set(index + i++, newValue);
+      model.addOrRemoveParent(oldValue, id, false);
+      model.addOrRemoveParent(newValue, id, true);
+      model.bytesUsed -= oldValue.toJson().length();
+      model.bytesUsed += newValue.toJson().length();
     }
-    ValuesSetEvent event = new ValuesSetEvent(this, sessionId, userId, index, oldValues, newValues);
+    ValuesSetEvent event =
+        new ValuesSetEvent(this, sessionId, userId, index, oldObjects, newObjects);
     fireEvent(event);
   }
 

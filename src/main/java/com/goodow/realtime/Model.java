@@ -64,8 +64,8 @@ import elemental.util.ArrayOfString;
 @ExportPackage(ModelFactory.PACKAGE_PREFIX_REALTIME)
 @Export(all = true)
 public class Model implements EventTarget {
+  static final String EVENT_HANDLER_KEY = "model";
   private static final String ROOT_ID = "root";
-  private static final String EVENT_HANDLER_KEY = "model";
   private static final Logger log = Logger.getLogger(Model.class.getName());
 
   @GwtIncompatible(ModelFactory.JS_REGISTER_PROPERTIES)
@@ -108,18 +108,17 @@ public class Model implements EventTarget {
       return @org.timepedia.exporter.client.ExporterUtil::wrap(Ljava/lang/Object;)(v);
     };
   }-*/;
-
   // @formatter:on
 
   private boolean isReadOnly;
-  private boolean canRedo;
-  private boolean canUndo;
-
+  boolean canUndo;
+  boolean canRedo;
   final Map<String, CollaborativeObject> objects = new LinkedHashMap<String, CollaborativeObject>();
   private final Map<String, List<String>> parents = new HashMap<String, List<String>>();
   private Map<String, List<String>> indexReferences;
   final Document document;
   final DocumentBridge bridge;
+  double bytesUsed;
 
   /**
    * @param bridge The driver for the GWT collaborative libraries.
@@ -250,12 +249,17 @@ public class Model implements EventTarget {
     log.info("endCompoundOperation");
   }
 
+  public double getBytesUsed() {
+    return bytesUsed;
+  }
+
   @SuppressWarnings("unchecked")
   @NoExport
   public <T extends CollaborativeObject> T getObject(String objectId) {
     return (T) objects.get(objectId);
   }
 
+  // @Export("extra.getParents")
   public String[] getParents(String objectId) {
     List<String> list = parents.get(objectId);
     if (list == null) {
@@ -294,7 +298,7 @@ public class Model implements EventTarget {
    * Redo the last thing the active collaborator undid.
    */
   public void redo() {
-    throw new UnsupportedOperationException();
+    bridge.redo();
   }
 
   @Override
@@ -306,7 +310,7 @@ public class Model implements EventTarget {
    * Undo the last thing the active collaborator did.
    */
   public void undo() {
-    throw new UnsupportedOperationException();
+    bridge.undo();
   }
 
   void addOrRemoveParent(JsonValue childOrNull, String parentId, boolean isAdd) {

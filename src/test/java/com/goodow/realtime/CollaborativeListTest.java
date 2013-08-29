@@ -113,7 +113,8 @@ public class CollaborativeListTest extends TestCase {
     v4.put("subKey", "subValue");
     list.insertAll(0, "v1", 1, true, v4, null, Json.createNull());
     list.insert(0, null);
-    list.insertAll(2, (Object[]) null);
+    Object obj = null;
+    list.insertAll(2, obj);
     list.insertAll(0);
     assertEquals(8, list.length());
     assertNull(list.get(0));

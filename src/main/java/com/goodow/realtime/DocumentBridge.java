@@ -22,6 +22,8 @@ import com.goodow.realtime.operation.Operation;
 import com.goodow.realtime.operation.RealtimeOperation;
 import com.goodow.realtime.operation.TransformerImpl;
 import com.goodow.realtime.operation.create.CreateOperation;
+import com.goodow.realtime.operation.undo.UndoManager;
+import com.goodow.realtime.operation.undo.UndoManagerFactory;
 
 import java.util.List;
 
@@ -98,6 +100,7 @@ public class DocumentBridge implements OperationSucker.Listener {
   OutputSink outputSink = VOID;
   private Document document;
   private Model model;
+  private UndoManager<RealtimeOperation> undoManager = UndoManagerFactory.getNoOp();
 
   public DocumentBridge(JsonArray snapshot) {
     createSnapshot(snapshot);
@@ -106,35 +109,13 @@ public class DocumentBridge implements OperationSucker.Listener {
   DocumentBridge() {
   }
 
-  @SuppressWarnings("unchecked")
+  /*
+   * Incoming operations from remote
+   */
   @Override
   public void consume(RealtimeOperation operation) {
-    List<AbstractOperation<?>> ops = (List<AbstractOperation<?>>) operation.operations;
-    for (AbstractOperation<?> op : ops) {
-      if (op.type == CreateOperation.TYPE) {
-        CollaborativeObject obj;
-        switch (((CreateOperation) op).subType) {
-          case CreateOperation.MAP:
-            obj = new CollaborativeMap(model);
-            break;
-          case CreateOperation.LIST:
-            obj = new CollaborativeList(model);
-            break;
-          case CreateOperation.STRING:
-            obj = new CollaborativeString(model);
-            break;
-          case CreateOperation.INDEX_REFERENCE:
-            obj = new IndexReference(model);
-            break;
-          default:
-            throw new RuntimeException("Shouldn't reach here!");
-        }
-        obj.id = op.id;
-        model.objects.put(obj.id, obj);
-        continue;
-      }
-      model.getObject(op.id).consume(operation.userId, operation.sessionId, op);
-    }
+    applyLocally(operation);
+    nonUndoableOp(operation);
   }
 
   public Document getDocument() {
@@ -187,7 +168,9 @@ public class DocumentBridge implements OperationSucker.Listener {
 
   void consumeAndSubmit(Operation<?> op) {
     RealtimeOperation operation = new RealtimeOperation(Realtime.USERID, sessionId, op);
-    consume(operation);
+    applyLocally(operation);
+    undoManager.checkpoint();
+    undoableOp(operation);
     outputSink.consume(operation);
   }
 
@@ -203,12 +186,92 @@ public class DocumentBridge implements OperationSucker.Listener {
         JsonArray serializedOp = snapshot.getArray(i);
         Operation<?> op = transformer.createOperation(serializedOp);
         RealtimeOperation operation = new RealtimeOperation(null, null, op);
-        consume(operation);
+        applyLocally(operation);
       }
     }
   }
 
   boolean isLocalSession(String sessionId) {
     return sessionId != null && sessionId.equals(this.sessionId);
+  }
+
+  void redo() {
+    bypassUndoStack(undoManager.redo());
+  }
+
+  void setUndoEnabled(boolean undoEnabled) {
+    undoManager =
+        undoEnabled ? UndoManagerFactory.createUndoManager() : UndoManagerFactory
+            .<RealtimeOperation> getNoOp();
+  }
+
+  void undo() {
+    bypassUndoStack(undoManager.undo());
+  }
+
+  @SuppressWarnings("unchecked")
+  private void applyLocally(RealtimeOperation operation) {
+    List<AbstractOperation<?>> ops = (List<AbstractOperation<?>>) operation.operations;
+    for (AbstractOperation<?> op : ops) {
+      if (op.type == CreateOperation.TYPE) {
+        CollaborativeObject obj;
+        switch (((CreateOperation) op).subType) {
+          case CreateOperation.MAP:
+            obj = new CollaborativeMap(model);
+            break;
+          case CreateOperation.LIST:
+            obj = new CollaborativeList(model);
+            break;
+          case CreateOperation.STRING:
+            obj = new CollaborativeString(model);
+            break;
+          case CreateOperation.INDEX_REFERENCE:
+            obj = new IndexReference(model);
+            break;
+          default:
+            throw new RuntimeException("Shouldn't reach here!");
+        }
+        obj.id = op.id;
+        model.objects.put(obj.id, obj);
+        model.bytesUsed += op.toString().length();
+        model.bytesUsed++;
+        continue;
+      }
+      model.getObject(op.id).consume(operation.userId, operation.sessionId, op);
+    }
+  }
+
+  /**
+   * Applies an op locally and send it bypassing the undo stack. This is neccessary with operations
+   * popped from the undoManager as they are automatically applied.
+   * 
+   * @param operations
+   */
+  private void bypassUndoStack(List<RealtimeOperation> operations) {
+    for (RealtimeOperation operation : operations) {
+      applyLocally(operation);
+      outputSink.consume(operation);
+    }
+    mayUndoRedoStateChanged();
+  }
+
+  private void mayUndoRedoStateChanged() {
+    boolean canUndo = undoManager.canUndo();
+    boolean canRedo = undoManager.canRedo();
+    if (model.canUndo() != canUndo || model.canRedo() != canRedo) {
+      model.canUndo = canUndo;
+      model.canRedo = canRedo;
+      UndoRedoStateChangedEvent event = new UndoRedoStateChangedEvent(model, canUndo, canRedo);
+      document.scheduleEvent(Model.EVENT_HANDLER_KEY, EventType.UNDO_REDO_STATE_CHANGED, event);
+    }
+  }
+
+  private void nonUndoableOp(RealtimeOperation op) {
+    undoManager.nonUndoableOp(op);
+  }
+
+  private void undoableOp(RealtimeOperation op) {
+    undoManager.undoableOp(op);
+    mayUndoRedoStateChanged();
   }
 }

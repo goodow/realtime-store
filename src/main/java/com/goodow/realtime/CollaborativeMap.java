@@ -232,12 +232,12 @@ public class CollaborativeMap extends CollaborativeObject {
   public <T> T set(String key, Object value) {
     checkKey(key);
     JsonArray serializedValue = JsonSerializer.serializeObject(value);
-    if (serializedValue == null && !has(key)) {
-      return null;
-    }
     T oldObject = this.<T> get(key);
-    JsonMapOperation op = new JsonMapOperation(id, key, snapshot.getArray(key), serializedValue);
-    consumeAndSubmit(op);
+    JsonArray oldValue = snapshot.getArray(key);
+    if (!JsonMapOperation.jsonEquals(oldValue, serializedValue)) {
+      JsonMapOperation op = new JsonMapOperation(id, key, oldValue, serializedValue);
+      consumeAndSubmit(op);
+    }
     return oldObject;
   }
 
@@ -266,12 +266,14 @@ public class CollaborativeMap extends CollaborativeObject {
 
   @SuppressWarnings("unchecked")
   @Override
-  protected void consume(final String userId, final String sessionId, Operation<?> operation) {
+  protected void consume(final String userId, final String sessionId, final Operation<?> operation) {
     ((Operation<MapTarget<JsonValue>>) operation).apply(new MapTarget<JsonValue>() {
       @Override
       public void set(String key, JsonValue newValue) {
         if (newValue == null) {
           removeAndFireEvent(key, sessionId, userId);
+          model.bytesUsed -= operation.toString().length();
+          model.bytesUsed -= 2;
         } else {
           putAndFireEvent(key, newValue, sessionId, userId);
         }
@@ -284,7 +286,7 @@ public class CollaborativeMap extends CollaborativeObject {
     Operation<?>[] toRtn = new Operation[1 + size()];
     toRtn[0] = new CreateOperation(id, CreateOperation.MAP);
     if (!isEmpty()) {
-      int i = 0;
+      int i = 1;
       for (String key : keys()) {
         toRtn[i++] = new JsonMapOperation(id, key, null, snapshot.get(key));
       }
@@ -327,14 +329,18 @@ public class CollaborativeMap extends CollaborativeObject {
 
   private void putAndFireEvent(String key, JsonValue newValue, String sessionId, String userId) {
     assert null != newValue && JsonType.NULL != newValue.getType();
-    JsonArray oldValue = snapshot.getArray(key);
     Object newObject = JsonSerializer.deserializeObject(newValue, model.objects);
     ValueChangedEvent event =
         new ValueChangedEvent(this, sessionId, userId, key, newObject, get(key));
+    if (snapshot.hasKey(key)) {
+      JsonArray oldValue = snapshot.getArray(key);
+      model.addOrRemoveParent(oldValue, id, false);
+      model.bytesUsed -= oldValue.toJson().length();
+    }
     snapshot.put(key, newValue);
-    model.addOrRemoveParent(oldValue, id, false);
     model.addOrRemoveParent(newValue, id, true);
     fireEvent(event);
+    model.bytesUsed += newValue.toJson().length();
   }
 
   private void removeAndFireEvent(String key, String sessionId, String userId) {
@@ -344,5 +350,6 @@ public class CollaborativeMap extends CollaborativeObject {
     snapshot.remove(key);
     model.addOrRemoveParent(oldValue, id, false);
     fireEvent(event);
+    model.bytesUsed -= oldValue.toJson().length();
   }
 }

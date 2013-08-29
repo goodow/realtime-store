@@ -237,6 +237,7 @@ public class CollaborativeString extends CollaborativeObject {
     snapshot.delete(startIndex, endIndex);
     fireEvent(event);
     model.setIndexReferenceIndex(id, false, startIndex, length, sessionId, userId);
+    model.bytesUsed -= length;
   }
 
   private void insertAndFireEvent(int index, String text, String sessionId, String userId) {
@@ -245,5 +246,6 @@ public class CollaborativeString extends CollaborativeObject {
     snapshot.insert(index, text);
     fireEvent(event);
     model.setIndexReferenceIndex(id, true, index, text.length(), sessionId, userId);
+    model.bytesUsed += text.length();
   }
 }
