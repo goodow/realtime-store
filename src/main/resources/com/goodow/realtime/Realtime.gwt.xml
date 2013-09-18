@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module rename-to='realtime'>
   <inherits name='org.timepedia.exporter.Exporter'/>
-  <inherits name='com.goodow.realtime.Model'/>
+  <inherits name='com.goodow.realtime.Api'/>
   
   <!-- Logging -->
   <inherits name="com.google.gwt.logging.Logging" />
@@ -18,7 +18,6 @@
   <entry-point class="com.goodow.realtime.model.util.impl.JsModelFactory"/>
 
   <add-linker name="xsiframe"/>
-  <!-- <add-linker name="sso"/> -->
   <set-property name="export" value="yes"/>
   <set-configuration-property name="devModeRedirectEnabled" value="true"/>
 </module>

@@ -5,8 +5,8 @@
     <artifactId>realtime-parent</artifactId>
     <version>0.3.0-SNAPSHOT</version>
   </parent>
-  <artifactId>realtime-model</artifactId>
-  <url>https://github.com/goodow/realtime-model/</url>
+  <artifactId>realtime-api</artifactId>
+  <url>https://github.com/goodow/realtime-api/</url>
   <inceptionYear>2013</inceptionYear>
   
   <repositories>
@@ -51,6 +51,7 @@
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
+      <scope>provided</scope>
     </dependency>
     
     <!-- Test -->
