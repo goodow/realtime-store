@@ -79,7 +79,7 @@ function __MODULE_FUNC__() {
   //
   function maybeStartModule() {
     // TODO: it may not be necessary to check gwtOnLoad here.
-    if (gwtOnLoad && bodyDone) {
+    if (gwtOnLoad) {
       gwtOnLoad(onLoadErrorFunc, '__MODULE_NAME__', base, softPermutationId);
     }
   }
@@ -295,6 +295,7 @@ function __MODULE_FUNC__() {
       return;
     }
 
+/*
   var onBodyDoneTimerId;
   function onBodyDone() {
     if (!bodyDone) {
@@ -326,6 +327,7 @@ function __MODULE_FUNC__() {
       onBodyDone();
     }
   }, 50);
+*/
 
 // __MODULE_SCRIPTS_BEGIN__
   // Script resources are injected here

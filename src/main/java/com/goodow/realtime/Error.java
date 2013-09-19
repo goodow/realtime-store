@@ -16,7 +16,6 @@ package com.goodow.realtime;
 import com.goodow.realtime.model.util.ModelFactory;
 
 import org.timepedia.exporter.client.Export;
-import org.timepedia.exporter.client.ExportClosure;
 import org.timepedia.exporter.client.ExportPackage;
 import org.timepedia.exporter.client.Exportable;
 
@@ -26,12 +25,6 @@ import org.timepedia.exporter.client.Exportable;
 @ExportPackage(ModelFactory.PACKAGE_PREFIX_REALTIME)
 @Export
 public class Error implements Exportable {
-  @ExportPackage(ModelFactory.PACKAGE_PREFIX_OVERLAY)
-  @ExportClosure
-  public static interface ErrorHandler extends Exportable {
-    void handleError(Error error);
-  }
-
   /**
    * Whether the error is fatal. Fatal errors cannot be recovered from and require the document to
    * be reloaded.

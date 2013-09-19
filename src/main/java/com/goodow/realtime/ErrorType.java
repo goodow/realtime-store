@@ -30,7 +30,7 @@ public enum ErrorType implements Exportable {
    */
   CLIENT_ERROR,
   /**
-   * Another user created the document's initial state after gapi.drive.realtime.load was called but
+   * Another user created the document's initial state after good.realtime.load was called but
    * before the local creation was saved.
    */
   CONCURRENT_CREATION,
@@ -49,7 +49,7 @@ public enum ErrorType implements Exportable {
    */
   NOT_FOUND,
   /**
-   * An internal error occurred in the Drive Realtime API server.
+   * An internal error occurred in the Realtime API server.
    */
   SERVER_ERROR,
   /**

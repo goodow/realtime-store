@@ -13,7 +13,6 @@
  */
 package com.goodow.realtime;
 
-import com.goodow.realtime.Error.ErrorHandler;
 import com.goodow.realtime.channel.ChannelDemuxer;
 import com.goodow.realtime.channel.http.HttpTransport;
 import com.goodow.realtime.channel.operation.OperationSucker;
@@ -65,10 +64,11 @@ public class Realtime implements Exportable {
    *          object describing the error will be passed to this function.
    */
   public static void load(String docId, final DocumentLoadedHandler onLoaded,
-      final ModelInitializerHandler opt_initializer, ErrorHandler opt_error) {
+      final ModelInitializerHandler opt_initializer, final ErrorHandler opt_error) {
     DocumentBridge snapshot = (DocumentBridge) demuxer.getSnapshot(docId);
     if (snapshot != null) {
-      DocumentBridge.loadDoucument(onLoaded, snapshot.getDocument());
+      snapshot.addErrorHandler(opt_error);
+      snapshot.loadDoucument(onLoaded);
       return;
     }
     final OperationSucker operationSucker = new OperationSucker(docId);
@@ -79,14 +79,15 @@ public class Realtime implements Exportable {
       public void onSuccess(JsonValue snapshot, String sessionId, int revision) {
         bridge.sessionId = sessionId;
         bridge.setOutputSink(operationSucker.getOutputSink());
+        bridge.addErrorHandler(opt_error);
         bridge.createSnapshot(snapshot);
 
         if (revision == 0) {
           if (opt_initializer != null) {
-            DocumentBridge.initializeModel(opt_initializer, bridge.getDocument().getModel());
+            bridge.initializeModel(opt_initializer);
           }
         }
-        DocumentBridge.loadDoucument(onLoaded, bridge.getDocument());
+        bridge.loadDoucument(onLoaded);
       }
     });
   }

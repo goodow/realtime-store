@@ -13,7 +13,6 @@
  */
 package com.goodow.realtime;
 
-import com.goodow.realtime.Error.ErrorHandler;
 import com.goodow.realtime.channel.operation.OperationSucker;
 import com.goodow.realtime.channel.operation.OperationSucker.OutputSink;
 import com.goodow.realtime.channel.util.ChannelNative;
@@ -25,7 +24,9 @@ import com.goodow.realtime.operation.create.CreateOperation;
 import com.goodow.realtime.operation.undo.UndoManager;
 import com.goodow.realtime.operation.undo.UndoManagerFactory;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import elemental.json.JsonArray;
 import elemental.json.JsonObject;
@@ -46,61 +47,12 @@ public class DocumentBridge implements OperationSucker.Listener {
     }
   };
 
-  @SuppressWarnings("cast")
-  static void initializeModel(ModelInitializerHandler opt_initializer, Model model) {
-    if (opt_initializer instanceof ModelInitializerHandler) {
-      opt_initializer.onInitializer(model);
-    } else {
-      __ocniInitializeModel__(opt_initializer, model);
-    }
-  }
-
-  @SuppressWarnings("cast")
-  static void loadDoucument(final DocumentLoadedHandler onLoaded, final Document document) {
-    ChannelNative.get().scheduleDeferred(new Runnable() {
-      @Override
-      public void run() {
-        if (onLoaded instanceof DocumentLoadedHandler) {
-          onLoaded.onLoaded(document);
-        } else {
-          __ocniLoadDoucument__(onLoaded, document);
-        }
-      }
-    });
-  }
-
-  //@formatter:off
-   private static native void __ocniHandleError__(Object opt_error, Error error) /*-[
-     GDRErrorBlock block = (GDRErrorBlock) opt_error;
-     return block(error);
-   ]-*/ /*-{
-   }-*/;
-  private static native void __ocniInitializeModel__(Object opt_initializer, Model model) /*-[
-     GDRModelInitializerBlock block = (GDRModelInitializerBlock) opt_initializer;
-     return block(model);
-   ]-*/ /*-{
-   }-*/;
-   private static native void __ocniLoadDoucument__(Object onLoaded, Document document) /*-[
-     GDRDocumentLoadedBlock block = (GDRDocumentLoadedBlock) onLoaded;
-     return block(document);
-   ]-*/ /*-{
-   }-*/;
-
-  // @formatter:on
-  @SuppressWarnings("cast")
-  private static void handlerError(ErrorHandler opt_error, Error error) {
-    if (opt_error instanceof ErrorHandler) {
-      opt_error.handleError(error);
-    } else {
-      __ocniHandleError__(opt_error, error);
-    }
-  }
-
   String sessionId;
   OutputSink outputSink = VOID;
   private Document document;
   private Model model;
   private UndoManager<RealtimeOperation> undoManager = UndoManagerFactory.getNoOp();
+  private Set<ErrorHandler> errorHandlers;
 
   public DocumentBridge(JsonArray snapshot) {
     createSnapshot(snapshot);
@@ -120,6 +72,11 @@ public class DocumentBridge implements OperationSucker.Listener {
 
   public Document getDocument() {
     return document;
+  }
+
+  @Override
+  public void handleError(String type, String message, boolean isFatal) {
+    handleError(new Error(ErrorType.valueOf(type), message, isFatal));
   }
 
   @Override
@@ -166,6 +123,16 @@ public class DocumentBridge implements OperationSucker.Listener {
     return "[" + sb1.toString() + sb2.toString() + "]";
   }
 
+  void addErrorHandler(ErrorHandler errorHandler) {
+    if (errorHandler == null) {
+      return;
+    }
+    if (errorHandlers == null) {
+      errorHandlers = new HashSet<ErrorHandler>();
+    }
+    errorHandlers.add(errorHandler);
+  }
+
   void consumeAndSubmit(Operation<?> op) {
     RealtimeOperation operation = new RealtimeOperation(Realtime.USERID, sessionId, op);
     applyLocally(operation);
@@ -191,8 +158,37 @@ public class DocumentBridge implements OperationSucker.Listener {
     }
   }
 
+  void handleError(Error error) {
+    if (errorHandlers != null) {
+      for (ErrorHandler errorHandler : errorHandlers) {
+        handleError(errorHandler, error);
+      }
+    }
+  }
+
+  void initializeModel(ModelInitializerHandler initializer) {
+    if (initializer instanceof ModelInitializerHandler) {
+      initializer.onInitializer(model);
+    } else {
+      __ocniInitializeModel__(initializer, model);
+    }
+  }
+
   boolean isLocalSession(String sessionId) {
     return sessionId != null && sessionId.equals(this.sessionId);
+  }
+
+  void loadDoucument(final DocumentLoadedHandler onLoaded) {
+    ChannelNative.get().scheduleDeferred(new Runnable() {
+      @Override
+      public void run() {
+        if (onLoaded instanceof DocumentLoadedHandler) {
+          onLoaded.onLoaded(document);
+        } else {
+          __ocniLoadDoucument__(onLoaded, document);
+        }
+      }
+    });
   }
 
   void redo() {
@@ -208,6 +204,26 @@ public class DocumentBridge implements OperationSucker.Listener {
   void undo() {
     bypassUndoStack(undoManager.undo());
   }
+
+  // @formatter:off
+  private native void __ocniHandleError__(Object errorHandler, Error error) /*-[
+    GDRErrorBlock block = (GDRErrorBlock) errorHandler;
+    return block(error);
+  ]-*/ /*-{
+  }-*/;
+
+  private native void __ocniInitializeModel__(Object initializer, Model model) /*-[
+    GDRModelInitializerBlock block = (GDRModelInitializerBlock) initializer;
+    return block(model);
+  ]-*/ /*-{
+  }-*/;
+
+  private native void __ocniLoadDoucument__(Object onLoaded, Document document) /*-[
+    GDRDocumentLoadedBlock block = (GDRDocumentLoadedBlock) onLoaded;
+    return block(document);
+  ]-*/ /*-{
+  }-*/;
+  // @formatter:on
 
   @SuppressWarnings("unchecked")
   private void applyLocally(RealtimeOperation operation) {
@@ -242,7 +258,7 @@ public class DocumentBridge implements OperationSucker.Listener {
   }
 
   /**
-   * Applies an op locally and send it bypassing the undo stack. This is neccessary with operations
+   * Applies an op locally and send it bypassing the undo stack. This is necessary with operations
    * popped from the undoManager as they are automatically applied.
    * 
    * @param operations
@@ -253,6 +269,14 @@ public class DocumentBridge implements OperationSucker.Listener {
       outputSink.consume(operation);
     }
     mayUndoRedoStateChanged();
+  }
+
+  private void handleError(ErrorHandler errorHandler, Error error) {
+    if (errorHandler instanceof ErrorHandler) {
+      errorHandler.handleError(error);
+    } else {
+      __ocniHandleError__(errorHandler, error);
+    }
   }
 
   private void mayUndoRedoStateChanged() {

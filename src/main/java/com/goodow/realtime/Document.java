@@ -13,7 +13,6 @@
  */
 package com.goodow.realtime;
 
-import com.goodow.realtime.Error.ErrorHandler;
 import com.goodow.realtime.channel.constant.Constants.Params;
 import com.goodow.realtime.channel.util.ChannelNative;
 import com.goodow.realtime.model.util.ModelFactory;
