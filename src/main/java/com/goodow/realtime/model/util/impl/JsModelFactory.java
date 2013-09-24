@@ -102,11 +102,8 @@ public class JsModelFactory implements ModelFactory, EntryPoint {
 
   // @formatter:off
   private native void __jsniOnLoad__() /*-{
-		if ($wnd.good && $wnd.good.realtime && $wnd.good.realtime.onLoad && typeof $wnd.good.realtime.onLoad == 'function') {
-			$wnd.good.realtime.onLoad();
-		} else if ($wnd.gdrOnLoad && typeof $wnd.gdrOnLoad == 'function') {
-		  $wnd.gdrOnLoad();
-		}
+    $wnd.goodow = $wnd.goodow || $wnd.good;
+    $wnd.goodow.realtime = $wnd.goodow.realtime || $wnd.good.realtime;
   }-*/;
   // @formatter:on
 }
