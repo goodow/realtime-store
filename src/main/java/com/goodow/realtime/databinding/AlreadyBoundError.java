@@ -26,6 +26,7 @@ import org.timepedia.exporter.client.Exportable;
 @ExportPackage(ModelFactory.PACKAGE_PREFIX_DATABINDING)
 @Export
 public class AlreadyBoundError extends Error implements Exportable {
+  private static final long serialVersionUID = 7006069607151627482L;
   private final Object domElement;
   private String name;
 

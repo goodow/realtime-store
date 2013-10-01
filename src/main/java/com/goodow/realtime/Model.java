@@ -39,10 +39,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import elemental.js.util.JsMapFromStringTo;
 import elemental.json.JsonArray;
 import elemental.json.JsonValue;
 import elemental.util.ArrayOfString;
+import elemental.util.MapFromStringTo;
 
 /**
  * The collaborative model is the data model for a Realtime document. The document's object graph
@@ -100,7 +100,7 @@ public class Model implements EventTarget {
           }
         }
       }
-      var v = this.g.@com.goodow.realtime.Model::__jsniCreateMap__(Lelemental/js/util/JsMapFromStringTo;)(jsMap);
+      var v = this.g.@com.goodow.realtime.Model::__jsniCreateMap__(Lelemental/util/MapFromStringTo;)(jsMap);
       return @org.timepedia.exporter.client.ExporterUtil::wrap(Ljava/lang/Object;)(v);
     };
     _.getObject = function(objectId) {
@@ -370,7 +370,7 @@ public class Model implements EventTarget {
   }
 
   @GwtIncompatible(ModelFactory.JS_REGISTER_MATHODS)
-  private CollaborativeMap __jsniCreateMap__(JsMapFromStringTo<?> map) {
+  private CollaborativeMap __jsniCreateMap__(MapFromStringTo<?> map) {
     if (map == null) {
       return createMap(null);
     }

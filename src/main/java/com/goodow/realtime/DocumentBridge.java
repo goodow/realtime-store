@@ -33,8 +33,7 @@ import elemental.json.JsonObject;
 import elemental.json.JsonValue;
 
 /*-[
- #import "GDRRealtime+OCNI.h"
- #import "GDRError+OCNI.h"
+ #import "GDR.h"
  ]-*/
 public class DocumentBridge implements OperationSucker.Listener {
   private static final OperationSucker.OutputSink VOID = new OperationSucker.OutputSink() {
