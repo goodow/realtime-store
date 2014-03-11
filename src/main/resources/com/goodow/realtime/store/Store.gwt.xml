@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module>
+  <inherits name='com.goodow.realtime.channel.Channel'/>
+  <inherits name='com.goodow.realtime.operation.Operation'/>
+
+  <source path="">
+    <exclude name="model/util/impl/JreModelFactory.java" />
+    <exclude name="model/util/impl/ObjCModelFactory.java" />
+  </source>
+  <super-source path="super"/>
+</module>

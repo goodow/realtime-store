@@ -5,9 +5,9 @@ include ../resources/make/common.mk
 
 MAIN_SOURCES = $(subst $(MAIN_SRC_DIR)/,,$(shell find $(MAIN_SRC_DIR) -name *.java \
   ! -name ModelNative.java ! -name JreModelFactory.java ! -name JsModelFactory.java))
-MAIN_TEMP_SOURCES = $(subst $(MAIN_SRC_DIR), $(API_GEN_DIR), $(MAIN_SOURCES))
-MAIN_GEN_SOURCES = $(MAIN_SOURCES:%.java=$(API_GEN_DIR)/%.m)
-OVERRIDE_GEN_DIR = $(GDREALTIME_DIR)/Classes/override_generated/api
+MAIN_TEMP_SOURCES = $(subst $(MAIN_SRC_DIR), $(STORE_GEN_DIR), $(MAIN_SOURCES))
+MAIN_GEN_SOURCES = $(MAIN_SOURCES:%.java=$(STORE_GEN_DIR)/%.m)
+OVERRIDE_GEN_DIR = $(GDREALTIME_DIR)/Classes/override_generated/store
 
 OCNI_SOURCES = $(subst ./,,$(shell cd $(OCNI_SRC_DIR); find . -name *.java))
 OCNI_GEN_SOURCES = $(OCNI_SOURCES:%.java=$(BUILD_DIR)/%.placeholder)
@@ -33,11 +33,11 @@ translate: translate_main translate_test
 pod_update: 
 	@cd $(GDREALTIME_DIR)/Project;pod update
 
-pre_translate_main: $(BUILD_DIR) $(API_GEN_DIR)
+pre_translate_main: $(BUILD_DIR) $(STORE_GEN_DIR)
 	@rm -f $(MAIN_SOURCE_LIST)
 	@touch $(MAIN_SOURCE_LIST)
         
-$(API_GEN_DIR)/%.m $(API_GEN_DIR)/%.h: $(MAIN_SRC_DIR)/%.java
+$(STORE_GEN_DIR)/%.m $(STORE_GEN_DIR)/%.h: $(MAIN_SRC_DIR)/%.java
 	@echo $? >> $(MAIN_SOURCE_LIST)
 $(BUILD_DIR)/%.placeholder: $(OCNI_SRC_DIR)/%.java
 	@echo $? >> $(MAIN_SOURCE_LIST)
@@ -46,12 +46,12 @@ $(BUILD_DIR)/%.placeholder: $(OCNI_SRC_DIR)/%.java
 
 translate_main: pre_translate_main $(MAIN_GEN_SOURCES) $(OCNI_GEN_SOURCES)
 	@if [ `cat $(MAIN_SOURCE_LIST) | wc -l` -ge 1 ] ; then \
-	  $(J2OBJC) -sourcepath $(MAIN_SRC_DIR) -d $(API_GEN_DIR) \
+	  $(J2OBJC) -sourcepath $(MAIN_SRC_DIR) -d $(STORE_GEN_DIR) \
 	    -classpath $(CLASSPATH) \
 	    `cat $(MAIN_SOURCE_LIST)` ; \
 	fi
-	@cp -r $(OVERRIDE_GEN_DIR)/ $(API_GEN_DIR)
-	@cd $(API_GEN_DIR);mkdir -p ../include;tar -c . | tar -x -C ../include --include=*.h
+	@cp -r $(OVERRIDE_GEN_DIR)/ $(STORE_GEN_DIR)
+	@cd $(STORE_GEN_DIR);mkdir -p ../include;tar -c . | tar -x -C ../include --include=*.h
 
 pre_translate_test: $(BUILD_DIR) $(TEST_GEN_DIR)
 	@rm -f $(TEST_SOURCE_LIST)
@@ -67,13 +67,13 @@ translate_test: pre_translate_test $(TEST_GEN_SOURCES)
 	    `cat $(TEST_SOURCE_LIST)` ; \
 	fi
 
-$(API_GEN_DIR):
-	@mkdir -p $(API_GEN_DIR)
+$(STORE_GEN_DIR):
+	@mkdir -p $(STORE_GEN_DIR)
 $(TEST_GEN_DIR):
 	@mkdir -p $(TEST_GEN_DIR)
 $(BUILD_DIR):
 	@mkdir -p $(BUILD_DIR)
 
 clean:
-	@rm -rf $(API_GEN_DIR) $(TEST_GEN_DIR) $(BUILD_DIR)
+	@rm -rf $(STORE_GEN_DIR) $(TEST_GEN_DIR) $(BUILD_DIR)
 	@cd $(GDREALTIME_DIR)/Project;xcodebuild -workspace GDRealtime.xcworkspace/ -scheme test clean

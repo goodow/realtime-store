@@ -1,0 +1,73 @@
+# realtime.store.snapshot
+---
+action: get
+id: docId
+accessToken: token
+autoCreate: true
+--- # reply
+sessionId: sid
+revision: 0
+snapshot: 
+  - [7, "gde23jpazhfqiy50e", 0]
+  
+--- # writeSnapshot
+action: put
+--- # reply
+status: ok
+...
+
+
+# realtime.store.delta
+---
+action: get
+start: 10
+end: 11 # noninclusively
+--- # reply
+[]
+
+--- # writeOp
+action: put
+id: docId
+sessionId: sid
+revision: 1
+operations: {}
+--- # reply
+appliedRevision: 2
+
+--- # getVersion
+action: head
+--- # reply
+...
+
+--- &delta # realtime.store.delta:id publish
+sessionId: sid
+resultingRevision: 1
+operation: {}
+...
+
+--- # realtime.store.delta.ack
+id: docId
+_seq: 3
+--- # reply
+- *delta
+...
+
+
+# realtime.store.collaborator:id Presence publish
+--- &collaborator
+isJoined: false
+sessionId: sid
+userId: uid
+displayName: name
+color: #58B442
+isMe: true
+isAnonymous: false
+photoUrl: http://xx
+...
+
+--- # @realtime.store.event.EventType:id:objectId Event publish
+*Event
+
+--- # @realtime.store.event.document_error:id Document error event publish
+*com.goodow.realtime.Error
+...

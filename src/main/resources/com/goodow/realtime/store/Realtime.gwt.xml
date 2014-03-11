@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module rename-to='realtime'>
+  <inherits name='org.timepedia.exporter.Exporter'/>
+  <inherits name='com.goodow.realtime.store.Store'/>
+  
+  <!-- Logging -->
+  <inherits name="com.google.gwt.logging.Logging" />
+  <set-property name="gwt.logging.enabled" value="TRUE" />
+  <set-property name="gwt.logging.logLevel" value="ALL" />
+  <set-property name="gwt.logging.consoleHandler" value="ENABLED" />
+  <set-property name="gwt.logging.developmentModeHandler" value="DISABLED" />
+  <set-property name="gwt.logging.firebugHandler" value="DISABLED" />
+  <set-property name="gwt.logging.hasWidgetsHandler" value="DISABLED" />
+  <set-property name="gwt.logging.popupHandler" value="DISABLED" />
+  <set-property name="gwt.logging.systemHandler" value="ENABLED" />
+  <set-property name="gwt.logging.simpleRemoteHandler" value="DISABLED" />
+  
+  <entry-point class="com.goodow.realtime.model.util.impl.JsModelFactory"/>
+
+  <add-linker name="xsiframe"/>
+  <set-property name="export" value="yes"/>
+  <set-configuration-property name="devModeRedirectEnabled" value="true"/>
+</module>

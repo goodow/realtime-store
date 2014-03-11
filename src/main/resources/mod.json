@@ -1,0 +1,15 @@
+{
+  "main":"com.goodow.realtime.store.server.StoreVerticle",
+  "auto-redeploy": true,
+  
+  "deploys": "com.goodow.realtime~realtime-channel~0.5.5-SNAPSHOT, io.vertx~mod-redis~1.1.4-SNAPSHOT",
+  "includes": "com.goodow.vertx~mod-guice~1.0.0-beta1, io.vertx~mod-redis-client~1.1.3"
+
+  "description":"Google Docs–style collaboration via the use of operational transforms",
+  "licenses": ["The Apache Software License Version 2.0"],
+  "author": "Larry Tin",
+
+  "developers": ["Larry Tin"],
+  "keywords": ["realtime", "collaboration", "operational", "transformation", "ot", "android", "ios", "javascript", "gwt", "j2objc"],
+  "homepage": "https://github.com/goodow/realtime-store/"
+}

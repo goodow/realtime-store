@@ -5,8 +5,8 @@
     <artifactId>realtime-parent</artifactId>
     <version>0.5.5-SNAPSHOT</version>
   </parent>
-  <artifactId>realtime-api</artifactId>
-  <url>https://github.com/goodow/realtime-api/</url>
+  <artifactId>realtime-store</artifactId>
+  <url>https://github.com/goodow/realtime-store/</url>
   <inceptionYear>2013</inceptionYear>
   
   <properties>
@@ -15,6 +15,17 @@
   </properties>
   
   <repositories>
+    <repository>
+      <id>sonatype-nexus-snapshots</id>
+      <name>Sonatype Nexus Snapshots</name>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
     <repository>
       <id>google-diff-match-patch</id>
       <url>http://google-diff-match-patch.googlecode.com/svn/trunk/maven/</url>
@@ -37,10 +48,20 @@
       <version>${project.version}</version>
     </dependency>
     
+    <!-- Guice -->
     <dependency>
-      <groupId>com.google.inject</groupId>
-      <artifactId>guice</artifactId>
-      <optional>true</optional>
+      <groupId>com.goodow.vertx</groupId>
+      <artifactId>mod-guice</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>mod-redis</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>mod-redis-client</artifactId>
+      <version>1.1.4-SNAPSHOT</version>
     </dependency>
     
     <dependency>
@@ -70,8 +91,8 @@
     
     <!-- Test -->
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
+      <groupId>io.vertx</groupId>
+      <artifactId>testtools</artifactId>
     </dependency>
   </dependencies>
   
