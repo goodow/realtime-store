@@ -15,6 +15,7 @@ package com.goodow.realtime.store;
 
 import com.goodow.realtime.core.Handler;
 import com.goodow.realtime.core.HandlerRegistration;
+import com.goodow.realtime.json.JsonArray;
 import com.goodow.realtime.operation.Operation;
 import com.goodow.realtime.operation.create.CreateOperation;
 import com.goodow.realtime.operation.cursor.ReferenceShiftedOperation;
@@ -25,8 +26,6 @@ import com.google.common.annotations.GwtIncompatible;
 import org.timepedia.exporter.client.Export;
 import org.timepedia.exporter.client.ExportAfterCreateMethod;
 import org.timepedia.exporter.client.ExportPackage;
-
-import java.util.Set;
 
 /**
  * An IndexReference is a pointer to a specific location in a collaborative list or string. This
@@ -178,12 +177,12 @@ public class IndexReference extends CollaborativeObject {
   }
 
   @Override
-  void toString(Set<String> seen, StringBuilder sb) {
-    if (seen.contains(id)) {
+  void toString(JsonArray seen, StringBuilder sb) {
+    if (seen.indexOf(id) != -1) {
       sb.append("<IndexReference: ").append(id).append(">");
       return;
     }
-    seen.add(id);
+    seen.push(id);
     sb.append("DefaultIndexReference [");
     sb.append("id=").append(getId());
     sb.append(", objectId=").append(referencedObjectId);

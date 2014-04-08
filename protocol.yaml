@@ -6,12 +6,16 @@ accessToken: token
 autoCreate: true
 --- # reply
 sessionId: sid
-revision: 0
+v: 0
 snapshot: 
   - [7, "gde23jpazhfqiy50e", 0]
   
 --- # writeSnapshot
 action: put
+id: docId
+doc:
+  v: 1
+  snapshot: abc
 --- # reply
 status: ok
 ...
@@ -29,7 +33,7 @@ end: 11 # noninclusively
 action: put
 id: docId
 sessionId: sid
-revision: 1
+v: 1
 operations: {}
 --- # reply
 appliedRevision: 2

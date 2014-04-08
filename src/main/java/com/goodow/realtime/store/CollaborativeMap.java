@@ -33,8 +33,6 @@ import org.timepedia.exporter.client.ExportAfterCreateMethod;
 import org.timepedia.exporter.client.ExportPackage;
 import org.timepedia.exporter.client.NoExport;
 
-import java.util.Set;
-
 /**
  * A collaborative map. A map's key must be a string. The values can contain other Realtime
  * collaborative objects, custom collaborative objects, primitive values or objects that can be
@@ -290,12 +288,12 @@ public class CollaborativeMap extends CollaborativeObject {
   }
 
   @Override
-  void toString(final Set<String> seen, final StringBuilder sb) {
-    if (seen.contains(id)) {
+  void toString(final JsonArray seen, final StringBuilder sb) {
+    if (seen.indexOf(id) != -1) {
       sb.append("<Map: ").append(id).append(">");
       return;
     }
-    seen.add(id);
+    seen.push(id);
     sb.append("{");
     snapshot.forEach(new MapIterator<JsonArray>() {
       boolean isFirst = true;

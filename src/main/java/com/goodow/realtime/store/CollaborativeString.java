@@ -15,6 +15,7 @@ package com.goodow.realtime.store;
 
 import com.goodow.realtime.core.Handler;
 import com.goodow.realtime.core.HandlerRegistration;
+import com.goodow.realtime.json.JsonArray;
 import com.goodow.realtime.operation.Operation;
 import com.goodow.realtime.operation.create.CreateOperation;
 import com.goodow.realtime.operation.list.ListTarget;
@@ -27,8 +28,6 @@ import com.google.common.annotations.GwtIncompatible;
 import org.timepedia.exporter.client.Export;
 import org.timepedia.exporter.client.ExportAfterCreateMethod;
 import org.timepedia.exporter.client.ExportPackage;
-
-import java.util.Set;
 
 /**
  * Creates a new collaborative string. Unlike regular strings, collaborative strings are mutable.
@@ -207,12 +206,12 @@ public class CollaborativeString extends CollaborativeObject {
   }
 
   @Override
-  void toString(Set<String> seen, StringBuilder sb) {
-    if (seen.contains(id)) {
+  void toString(JsonArray seen, StringBuilder sb) {
+    if (seen.indexOf(id) != -1) {
       sb.append("<EditableString: ").append(id).append(">");
       return;
     }
-    seen.add(id);
+    seen.push(id);
     sb.append(getText());
   }
 

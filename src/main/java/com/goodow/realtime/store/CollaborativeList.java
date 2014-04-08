@@ -36,7 +36,6 @@ import org.timepedia.exporter.client.ExportPackage;
 import org.timepedia.exporter.client.NoExport;
 
 import java.util.Comparator;
-import java.util.Set;
 
 /**
  * A collaborative list. A list can contain other Realtime collaborative objects, custom
@@ -459,12 +458,12 @@ public class CollaborativeList extends CollaborativeObject {
   }
 
   @Override
-  void toString(final Set<String> seen, final StringBuilder sb) {
-    if (seen.contains(id)) {
+  void toString(final JsonArray seen, final StringBuilder sb) {
+    if (seen.indexOf(id) != -1) {
       sb.append("<List: ").append(id).append(">");
       return;
     }
-    seen.add(id);
+    seen.push(id);
     sb.append("[");
     snapshot.forEach(new ListIterator<JsonArray>() {
       boolean isFirst = true;

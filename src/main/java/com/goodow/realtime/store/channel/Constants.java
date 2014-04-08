@@ -45,7 +45,7 @@ public interface Constants {
     String AUTO_CREATE = "autoCreate";
     String TOKEN = "token";
     String HAS_MORE = "more";
-    String REVISION = "revision";
+    String REVISION = "v";
     String START_REVISION = "startRev";
     String END_REVISION = "endRev";
 

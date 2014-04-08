@@ -15,14 +15,13 @@ package com.goodow.realtime.store;
 
 import com.goodow.realtime.core.Handler;
 import com.goodow.realtime.core.HandlerRegistration;
+import com.goodow.realtime.json.Json;
+import com.goodow.realtime.json.JsonArray;
 import com.goodow.realtime.operation.Operation;
 import com.goodow.realtime.store.util.ModelFactory;
 
 import org.timepedia.exporter.client.Export;
 import org.timepedia.exporter.client.ExportPackage;
-
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * CollaborativeObject contains behavior common to all built in collaborative types. This class
@@ -77,7 +76,7 @@ public abstract class CollaborativeObject implements Disposable {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    toString(new HashSet<String>(), sb);
+    toString(Json.createArray(), sb);
     return sb.toString();
   }
 
@@ -93,5 +92,5 @@ public abstract class CollaborativeObject implements Disposable {
 
   abstract Operation<?>[] toInitialization();
 
-  abstract void toString(Set<String> seen, StringBuilder sb);
+  abstract void toString(JsonArray seen, StringBuilder sb);
 }
