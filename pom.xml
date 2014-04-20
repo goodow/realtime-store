@@ -12,6 +12,14 @@
   <properties>
     <maven.compiler.source>1.6</maven.compiler.source>
     <maven.compiler.target>1.6</maven.compiler.target>
+    
+    <!-- Set pullInDeps to true if you want any modules specified in the 'includes' and 'deploys' fields
+        in your mod.json to be automatically pulled in during packaging and added inside your module. Doing this means your
+        module won't download and install those dependencies at run-time when they're first requested. -->
+    <vertx.pullInDeps>false</vertx.pullInDeps>
+    <!-- Set createFatJar to true if you want to create a fat executable jar which contains the Vert.x binaries
+        along with the module so it can be run with java -jar <jarname> -->
+    <vertx.createFatJar>false</vertx.createFatJar>
   </properties>
   
   <repositories>
@@ -47,27 +55,47 @@
       <artifactId>realtime-channel</artifactId>
       <version>${project.version}</version>
     </dependency>
+
+    <dependency>
+      <groupId>diff_match_patch</groupId>
+      <artifactId>diff_match_patch</artifactId>
+      <version>current</version>
+    </dependency>
     
-    <!-- Guice -->
     <dependency>
       <groupId>com.goodow.vertx</groupId>
       <artifactId>mod-guice</artifactId>
     </dependency>
     
+    <!-- Allow vertx to use these mods in local maven repository -->
     <dependency>
-      <groupId>io.vertx</groupId>
-      <artifactId>mod-redis</artifactId>
+      <groupId>com.goodow.vertx</groupId>
+      <artifactId>vertx-mod-elasticsearch</artifactId>
+      <version>${elasticsearch.version}</version>
+      <scope>test</scope>
+      <classifier>mod</classifier>
+      <type>zip</type>
+      <exclusions>
+        <exclusion>
+          <groupId>org.elasticsearch</groupId>
+          <artifactId>elasticsearch</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
+    <dependency>
+      <groupId>com.goodow.vertx</groupId>
+      <artifactId>mod-guice</artifactId>
+      <version>1.0.0-beta1</version>
+      <scope>test</scope>
+      <classifier>mod</classifier>
+      <type>zip</type>
+    </dependency>
+    
+    <!-- Redis -->
     <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>mod-redis-client</artifactId>
       <version>1.1.4-SNAPSHOT</version>
-    </dependency>
-    
-    <dependency>
-      <groupId>diff_match_patch</groupId>
-      <artifactId>diff_match_patch</artifactId>
-      <version>current</version>
     </dependency>
     
     <!-- Google Web Toolkit (GWT) -->
@@ -150,6 +178,8 @@
             <configuration>
               <outputDirectory>${vertx.mods.directory}/${vertx.module.name}/lib</outputDirectory>
               <includeScope>runtime</includeScope>
+              <excludeGroupIds>com.fasterxml.jackson.core</excludeGroupIds>
+              <excludeArtifactIds>realtime-json</excludeArtifactIds>
             </configuration>
           </execution>
           <execution>
@@ -183,7 +213,6 @@
         </executions>
       </plugin>
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
         <configuration>
           <excludes>
@@ -193,7 +222,6 @@
       </plugin>
 
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-source-plugin</artifactId>
       </plugin>
       <!-- GWT Maven Plugin -->

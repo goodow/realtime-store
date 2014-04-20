@@ -1,64 +1,49 @@
-# realtime.store.snapshot
----
+# address: realtime.store
+--- # Fetch document
 action: get
 id: docId
 accessToken: token
 autoCreate: true
---- # reply
-sessionId: sid
+--- &snapshotData # reply
 v: 0
-snapshot: 
-  - [7, "gde23jpazhfqiy50e", 0]
-  
---- # writeSnapshot
-action: put
-id: docId
-doc:
-  v: 1
-  snapshot: abc
---- # reply
-status: ok
-...
+snapshot: []
 
-
-# realtime.store.delta
----
-action: get
-start: 10
-end: 11 # noninclusively
---- # reply
-[]
-
---- # writeOp
-action: put
-id: docId
-sessionId: sid
-v: 1
-operations: {}
---- # reply
-appliedRevision: 2
-
---- # getVersion
+--- # Fetch version
 action: head
 --- # reply
-...
+0
 
---- &delta # realtime.store.delta:id publish
-sessionId: sid
-resultingRevision: 1
-operation: {}
-...
-
---- # realtime.store.delta.ack
+--- # Submit Operations
+action: post
 id: docId
-_seq: 3
+source: &opData
+  v: 1
+  op: []
+  sid: sid
+  seq: 3 # optional, seq and sid uniquely globally identify an operation
+  uid: userId
 --- # reply
-- *delta
+v: 2 # the version at which this operation was applied
+ops: # operations by which this operation was transformed, if someone else's operation reaches the server before this
+- *opData
+...
+  
+# address: realtime.store.ops
+--- # Get ops
+id: docId
+from: 10
+to: 11 # noninclusively
+--- # reply
+- *opData
+
+# address: realtime.store:id
+--- # publish channel
+<<: *opData
 ...
 
 
-# realtime.store.collaborator:id Presence publish
---- &collaborator
+# address: realtime.store.collaborator:id
+--- &collaborator # Presence publish channel
 isJoined: false
 sessionId: sid
 userId: uid
@@ -69,9 +54,9 @@ isAnonymous: false
 photoUrl: http://xx
 ...
 
---- # @realtime.store.event.EventType:id:objectId Event publish
+--- # address: @realtime.store.event.EventType:id:objectId Event publish
 *Event
 
---- # @realtime.store.event.document_error:id Document error event publish
+--- # address: @realtime.store.event.document_error:id Document error event publish
 *com.goodow.realtime.Error
 ...

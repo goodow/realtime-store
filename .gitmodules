@@ -1,0 +1,3 @@
+[submodule "GDStore"]
+  path = GDStore
+  url = https://github.com/goodow/GDStore.git
