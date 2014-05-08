@@ -20,9 +20,10 @@ import com.goodow.realtime.json.JsonArray;
 import com.goodow.realtime.json.JsonObject;
 import com.goodow.realtime.json.JsonObject.MapIterator;
 import com.goodow.realtime.operation.Operation;
-import com.goodow.realtime.operation.create.CreateOperation;
+import com.goodow.realtime.operation.OperationComponent;
+import com.goodow.realtime.operation.create.CreateComponent;
 import com.goodow.realtime.operation.map.MapTarget;
-import com.goodow.realtime.operation.map.json.JsonMapOperation;
+import com.goodow.realtime.operation.map.json.JsonMapComponent;
 import com.goodow.realtime.store.util.JsonSerializer;
 import com.goodow.realtime.store.util.ModelFactory;
 
@@ -203,7 +204,7 @@ public class CollaborativeMap extends CollaborativeObject {
     if (oldValue == null) {
       return null;
     }
-    JsonMapOperation op = new JsonMapOperation(id, key, snapshot.getArray(key), null);
+    JsonMapComponent op = new JsonMapComponent(id, key, snapshot.getArray(key), null);
     consumeAndSubmit(op);
     return oldValue;
   }
@@ -222,8 +223,8 @@ public class CollaborativeMap extends CollaborativeObject {
     JsonArray serializedValue = JsonSerializer.serializeObject(value);
     T oldObject = this.<T> get(key);
     JsonArray oldValue = snapshot.getArray(key);
-    if (!JsonMapOperation.jsonEquals(oldValue, serializedValue)) {
-      JsonMapOperation op = new JsonMapOperation(id, key, oldValue, serializedValue);
+    if (!JsonMapComponent.jsonEquals(oldValue, serializedValue)) {
+      JsonMapComponent op = new JsonMapComponent(id, key, oldValue, serializedValue);
       consumeAndSubmit(op);
     }
     return oldObject;
@@ -255,13 +256,14 @@ public class CollaborativeMap extends CollaborativeObject {
 
   @SuppressWarnings("unchecked")
   @Override
-  protected void consume(final String userId, final String sessionId, final Operation<?> operation) {
-    ((Operation<MapTarget<JsonArray>>) operation).apply(new MapTarget<JsonArray>() {
+  protected void consume(final String userId, final String sessionId,
+      final OperationComponent<?> component) {
+    ((Operation<MapTarget<JsonArray>>) component).apply(new MapTarget<JsonArray>() {
       @Override
       public void set(String key, JsonArray newValue) {
         if (newValue == null) {
           removeAndFireEvent(key, sessionId, userId);
-          model.bytesUsed -= operation.toString().length();
+          model.bytesUsed -= component.toString().length();
           model.bytesUsed -= 2;
         } else {
           putAndFireEvent(key, newValue, sessionId, userId);
@@ -271,16 +273,16 @@ public class CollaborativeMap extends CollaborativeObject {
   }
 
   @Override
-  Operation<?>[] toInitialization() {
-    final Operation<?>[] toRtn = new Operation[1 + size()];
-    toRtn[0] = new CreateOperation(id, CreateOperation.MAP);
+  OperationComponent<?>[] toInitialization() {
+    final OperationComponent<?>[] toRtn = new OperationComponent[1 + size()];
+    toRtn[0] = new CreateComponent(id, CreateComponent.MAP);
     if (!isEmpty()) {
       snapshot.forEach(new MapIterator<JsonArray>() {
         int i = 1;
 
         @Override
         public void call(String key, JsonArray value) {
-          toRtn[i++] = new JsonMapOperation(id, key, null, snapshot.getArray(key));
+          toRtn[i++] = new JsonMapComponent(id, key, null, snapshot.getArray(key));
         }
       });
     }

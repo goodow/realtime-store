@@ -20,9 +20,9 @@ import com.goodow.realtime.core.Handler;
 import com.goodow.realtime.core.HandlerRegistration;
 import com.goodow.realtime.json.Json;
 import com.goodow.realtime.json.JsonObject;
-import com.goodow.realtime.operation.RealtimeOperation;
 import com.goodow.realtime.operation.Transformer;
-import com.goodow.realtime.operation.TransformerImpl;
+import com.goodow.realtime.operation.impl.CollaborativeOperation;
+import com.goodow.realtime.operation.impl.CollaborativeTransformer;
 import com.goodow.realtime.store.Document;
 import com.goodow.realtime.store.DocumentBridge;
 import com.goodow.realtime.store.DocumentBridge.OutputSink;
@@ -48,12 +48,12 @@ public class SubscribeOnlyStore extends SimpleStore {
     this(new ReliableBus(new WebSocketBus(serverAddress, options)) {
       @Override
       protected double getSequenceNumber(String address, Object body) {
-        return ((JsonObject) body).getNumber(Key.REVISION);
+        return ((JsonObject) body).getNumber(Key.VERSION);
       }
 
       @Override
       protected boolean requireReliable(String address) {
-        return address.startsWith(Addr.DELTA + ":");
+        return address.startsWith(Addr.STORE + ":");
       }
     });
   }
@@ -80,7 +80,7 @@ public class SubscribeOnlyStore extends SimpleStore {
   @Override
   public void load(final String docId, final Handler<Document> onLoaded,
       final Handler<Model> opt_initializer, final Handler<Error> opt_error) {
-    bus.send(Addr.SNAPSHOT, Json.createObject().set(Key.ID, docId).set(Key.ACCESS_TOKEN, token),
+    bus.send(Addr.STORE, Json.createObject().set(Key.ID, docId).set(Key.ACCESS_TOKEN, token),
         new Handler<Message<JsonObject>>() {
           @Override
           public void handle(Message<JsonObject> message) {
@@ -97,18 +97,16 @@ public class SubscribeOnlyStore extends SimpleStore {
 
   protected void onLoad(final String docId, Handler<Model> opt_initializer, JsonObject snapshot,
       final DocumentBridge bridge) {
-    String address = Addr.DELTA + ":" + docId;
-    getBus().synchronizeSequenceNumber(address, snapshot.getNumber(Key.REVISION));
+    String address = Addr.STORE + ":" + docId;
+    getBus().synchronizeSequenceNumber(address, snapshot.getNumber(Key.VERSION) - 1);
     final HandlerRegistration handlerReg =
         bus.registerHandler(address, new Handler<Message<JsonObject>>() {
-          Transformer<RealtimeOperation> transformer = new TransformerImpl<RealtimeOperation>();
+          Transformer<CollaborativeOperation> transformer = new CollaborativeTransformer();
 
           @Override
           public void handle(Message<JsonObject> message) {
             JsonObject body = message.body();
-            RealtimeOperation op =
-                transformer.createOperation(body.getString(Key.USER_ID), body
-                    .getString(Key.SESSION_ID), body.getArray(Key.DELTAS));
+            CollaborativeOperation op = transformer.createOperation(body);
             bridge.consume(op);
           }
         });
@@ -119,7 +117,7 @@ public class SubscribeOnlyStore extends SimpleStore {
       }
 
       @Override
-      public void consume(RealtimeOperation op) {
+      public void consume(CollaborativeOperation op) {
       }
     });
   }

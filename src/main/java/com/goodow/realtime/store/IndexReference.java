@@ -16,9 +16,9 @@ package com.goodow.realtime.store;
 import com.goodow.realtime.core.Handler;
 import com.goodow.realtime.core.HandlerRegistration;
 import com.goodow.realtime.json.JsonArray;
-import com.goodow.realtime.operation.Operation;
-import com.goodow.realtime.operation.create.CreateOperation;
-import com.goodow.realtime.operation.cursor.ReferenceShiftedOperation;
+import com.goodow.realtime.operation.OperationComponent;
+import com.goodow.realtime.operation.create.CreateComponent;
+import com.goodow.realtime.operation.cursor.ReferenceShiftedComponent;
 import com.goodow.realtime.store.util.ModelFactory;
 
 import com.google.common.annotations.GwtIncompatible;
@@ -126,14 +126,15 @@ public class IndexReference extends CollaborativeObject {
     if (index == this.index) {
       return;
     }
-    ReferenceShiftedOperation op =
-        new ReferenceShiftedOperation(id, referencedObjectId, index, canBeDeleted, this.index);
+    ReferenceShiftedComponent op =
+        new ReferenceShiftedComponent(id, referencedObjectId, index, canBeDeleted, this.index);
     consumeAndSubmit(op);
   }
 
   @Override
-  protected void consume(final String userId, final String sessionId, Operation<?> operation) {
-    ReferenceShiftedOperation op = (ReferenceShiftedOperation) operation;
+  protected void consume(final String userId, final String sessionId,
+      OperationComponent<?> component) {
+    ReferenceShiftedComponent op = (ReferenceShiftedComponent) component;
     assert op.oldIndex == getIndex();
     referencedObjectId = op.referencedObjectId;
     index = op.newIndex;
@@ -164,16 +165,16 @@ public class IndexReference extends CollaborativeObject {
         newIndex = cursor - length;
       }
     }
-    ReferenceShiftedOperation op =
-        new ReferenceShiftedOperation(id, referencedObjectId, newIndex, canBeDeleted, cursor);
+    ReferenceShiftedComponent op =
+        new ReferenceShiftedComponent(id, referencedObjectId, newIndex, canBeDeleted, cursor);
     consume(userId, sessionId, op);
   }
 
   @Override
-  Operation<?>[] toInitialization() {
-    ReferenceShiftedOperation op =
-        new ReferenceShiftedOperation(id, referencedObjectId, index, canBeDeleted, index);
-    return new Operation[] {new CreateOperation(id, CreateOperation.INDEX_REFERENCE), op};
+  OperationComponent<?>[] toInitialization() {
+    ReferenceShiftedComponent op =
+        new ReferenceShiftedComponent(id, referencedObjectId, index, canBeDeleted, index);
+    return new OperationComponent[] {new CreateComponent(id, CreateComponent.INDEX_REFERENCE), op};
   }
 
   @Override

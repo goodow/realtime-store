@@ -41,7 +41,7 @@ public class ChannelStore extends SubscribeOnlyStore {
   @Override
   protected void onLoad(String docId, Handler<Model> opt_initializer, JsonObject snapshot,
       DocumentBridge bridge) {
-    if (snapshot.getNumber(Key.REVISION) == 0 && opt_initializer != null) {
+    if (snapshot.getNumber(Key.VERSION) == 0 && opt_initializer != null) {
       Platform.scheduler().handle(opt_initializer, bridge.getDocument().getModel());
     }
 

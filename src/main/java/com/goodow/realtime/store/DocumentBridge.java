@@ -19,27 +19,27 @@ import com.goodow.realtime.core.Handler;
 import com.goodow.realtime.core.Platform;
 import com.goodow.realtime.json.Json;
 import com.goodow.realtime.json.JsonArray;
-import com.goodow.realtime.operation.AbstractOperation;
-import com.goodow.realtime.operation.Operation;
+import com.goodow.realtime.operation.OperationComponent;
 import com.goodow.realtime.operation.OperationSink;
-import com.goodow.realtime.operation.RealtimeOperation;
-import com.goodow.realtime.operation.TransformerImpl;
-import com.goodow.realtime.operation.create.CreateOperation;
+import com.goodow.realtime.operation.create.CreateComponent;
+import com.goodow.realtime.operation.impl.AbstractComponent;
+import com.goodow.realtime.operation.impl.CollaborativeOperation;
+import com.goodow.realtime.operation.impl.CollaborativeTransformer;
 import com.goodow.realtime.operation.undo.UndoManager;
 import com.goodow.realtime.operation.undo.UndoManagerFactory;
 import com.goodow.realtime.store.channel.Constants.Addr;
 
 import java.util.List;
 
-public class DocumentBridge implements OperationSink<RealtimeOperation> {
-  public interface OutputSink extends OperationSink<RealtimeOperation> {
+public class DocumentBridge implements OperationSink<CollaborativeOperation> {
+  public interface OutputSink extends OperationSink<CollaborativeOperation> {
     OutputSink VOID = new OutputSink() {
       @Override
       public void close() {
       }
 
       @Override
-      public void consume(RealtimeOperation op) {
+      public void consume(CollaborativeOperation op) {
       }
     };
 
@@ -47,22 +47,22 @@ public class DocumentBridge implements OperationSink<RealtimeOperation> {
   }
 
   final Store store;
-  final String id;
+  final String docId;
   private final Document document;
   private final Model model;
-  private UndoManager<RealtimeOperation> undoManager = UndoManagerFactory.getNoOp();
+  private UndoManager<CollaborativeOperation> undoManager = UndoManagerFactory.getNoOp();
   OutputSink outputSink = OutputSink.VOID;
 
-  public DocumentBridge(Store store, String id, JsonArray snapshot,
+  public DocumentBridge(Store store, String docId, JsonArray components,
       final Handler<Error> errorHandler) {
     this.store = store;
-    this.id = id;
+    this.docId = docId;
     document = new Document(this);
     model = document.getModel();
 
     if (errorHandler != null) {
       document.handlerRegs.wrap(store.getBus().registerHandler(
-          Addr.EVENT + Addr.DOCUMENT_ERROR + ":" + id, new Handler<Message<Error>>() {
+          Addr.EVENT + Addr.DOCUMENT_ERROR + ":" + docId, new Handler<Message<Error>>() {
             @Override
             public void handle(Message<Error> message) {
               errorHandler.handle(message.body());
@@ -70,17 +70,13 @@ public class DocumentBridge implements OperationSink<RealtimeOperation> {
           }));
     }
 
-    if (snapshot == null || snapshot.length() == 0) {
+    if (components == null || components.length() == 0) {
       model.createRoot();
     } else {
-      TransformerImpl<AbstractOperation<?>> transformer =
-          new TransformerImpl<AbstractOperation<?>>();
-      for (int i = 0, len = snapshot.length(); i < len; i++) {
-        JsonArray serializedOp = snapshot.getArray(i);
-        Operation<?> op = transformer.createOperation(serializedOp);
-        RealtimeOperation operation = new RealtimeOperation(null, null, op);
-        applyLocally(operation);
-      }
+      final CollaborativeTransformer transformer = new CollaborativeTransformer();
+      CollaborativeOperation operation =
+          transformer.createOperation(Json.createObject().set("op", components));
+      applyLocally(operation);
     }
   }
 
@@ -88,7 +84,7 @@ public class DocumentBridge implements OperationSink<RealtimeOperation> {
    * Incoming operations from remote
    */
   @Override
-  public void consume(RealtimeOperation operation) {
+  public void consume(CollaborativeOperation operation) {
     applyLocally(operation);
     nonUndoableOp(operation);
   }
@@ -117,25 +113,25 @@ public class DocumentBridge implements OperationSink<RealtimeOperation> {
   public void setUndoEnabled(boolean undoEnabled) {
     undoManager =
         undoEnabled ? UndoManagerFactory.createUndoManager() : UndoManagerFactory
-            .<RealtimeOperation> getNoOp();
+            .<CollaborativeOperation> getNoOp();
   }
 
   public JsonArray toJson() {
-    JsonArray ops = Json.createArray();
+    JsonArray components = Json.createArray();
     int createOpIdx = 0;
     for (CollaborativeObject object : model.objects.values()) {
-      Operation<?>[] initializeOp = object.toInitialization();
+      OperationComponent<?>[] initializeOp = object.toInitialization();
       boolean isCreateOp = true;
-      for (Operation<?> op : initializeOp) {
+      for (OperationComponent<?> op : initializeOp) {
         if (isCreateOp) {
-          ops.insert(createOpIdx++, op.toJson());
+          components.insert(createOpIdx++, op.toJson());
           isCreateOp = false;
         } else {
-          ops.push(op.toJson());
+          components.push(op.toJson());
         }
       }
     }
-    return ops;
+    return components;
   }
 
   @Override
@@ -143,9 +139,10 @@ public class DocumentBridge implements OperationSink<RealtimeOperation> {
     return toJson().toJsonString();
   }
 
-  void consumeAndSubmit(Operation<?> op) {
-    RealtimeOperation operation =
-        new RealtimeOperation(store.getUserId(), store.getSessionId(), op);
+  void consumeAndSubmit(OperationComponent<?> component) {
+    CollaborativeOperation operation =
+        new CollaborativeOperation(store.getUserId(), store.getSessionId(), Json.createArray()
+            .push(component));
     applyLocally(operation);
     undoManager.checkpoint();
     undoableOp(operation);
@@ -166,34 +163,34 @@ public class DocumentBridge implements OperationSink<RealtimeOperation> {
   }
 
   @SuppressWarnings("unchecked")
-  private void applyLocally(RealtimeOperation operation) {
-    List<AbstractOperation<?>> ops = (List<AbstractOperation<?>>) operation.operations;
-    for (AbstractOperation<?> op : ops) {
-      if (op.type == CreateOperation.TYPE) {
+  private void applyLocally(CollaborativeOperation operation) {
+    List<AbstractComponent<?>> components = (List<AbstractComponent<?>>) operation.components;
+    for (AbstractComponent<?> component : components) {
+      if (component.type == CreateComponent.TYPE) {
         CollaborativeObject obj;
-        switch (((CreateOperation) op).subType) {
-          case CreateOperation.MAP:
+        switch (((CreateComponent) component).subType) {
+          case CreateComponent.MAP:
             obj = new CollaborativeMap(model);
             break;
-          case CreateOperation.LIST:
+          case CreateComponent.LIST:
             obj = new CollaborativeList(model);
             break;
-          case CreateOperation.STRING:
+          case CreateComponent.STRING:
             obj = new CollaborativeString(model);
             break;
-          case CreateOperation.INDEX_REFERENCE:
+          case CreateComponent.INDEX_REFERENCE:
             obj = new IndexReference(model);
             break;
           default:
             throw new RuntimeException("Shouldn't reach here!");
         }
-        obj.id = op.id;
+        obj.id = component.id;
         model.objects.put(obj.id, obj);
-        model.bytesUsed += op.toString().length();
+        model.bytesUsed += component.toString().length();
         model.bytesUsed++;
         continue;
       }
-      model.getObject(op.id).consume(operation.userId, operation.sessionId, op);
+      model.getObject(component.id).consume(operation.userId, operation.sessionId, component);
     }
   }
 
@@ -203,11 +200,9 @@ public class DocumentBridge implements OperationSink<RealtimeOperation> {
    * 
    * @param operations
    */
-  private void bypassUndoStack(List<RealtimeOperation> operations) {
-    for (RealtimeOperation operation : operations) {
-      applyLocally(operation);
-      outputSink.consume(operation);
-    }
+  private void bypassUndoStack(CollaborativeOperation operation) {
+    applyLocally(operation);
+    outputSink.consume(operation);
     mayUndoRedoStateChanged();
   }
 
@@ -218,16 +213,16 @@ public class DocumentBridge implements OperationSink<RealtimeOperation> {
       model.canUndo = canUndo;
       model.canRedo = canRedo;
       UndoRedoStateChangedEvent event = new UndoRedoStateChangedEvent(model, canUndo, canRedo);
-      store.getBus().publish(Bus.LOCAL + Addr.EVENT + EventType.UNDO_REDO_STATE_CHANGED + ":" + id,
-          event);
+      store.getBus().publish(
+          Bus.LOCAL + Addr.EVENT + EventType.UNDO_REDO_STATE_CHANGED + ":" + docId, event);
     }
   }
 
-  private void nonUndoableOp(RealtimeOperation op) {
+  private void nonUndoableOp(CollaborativeOperation op) {
     undoManager.nonUndoableOp(op);
   }
 
-  private void undoableOp(RealtimeOperation op) {
+  private void undoableOp(CollaborativeOperation op) {
     undoManager.undoableOp(op);
     mayUndoRedoStateChanged();
   }

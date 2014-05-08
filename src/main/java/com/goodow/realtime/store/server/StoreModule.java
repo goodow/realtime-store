@@ -13,6 +13,9 @@
  */
 package com.goodow.realtime.store.server;
 
+import com.goodow.realtime.operation.Transformer;
+import com.goodow.realtime.operation.impl.CollaborativeTransformer;
+
 import com.alienos.guice.VertxModule;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -41,6 +44,7 @@ public class StoreModule extends AbstractModule implements VertxModule {
   @Override
   protected void configure() {
     // bind(Store.class).to(RedisStore.class);
+    bind(Transformer.class).to(CollaborativeTransformer.class);
   }
 
   @Provides

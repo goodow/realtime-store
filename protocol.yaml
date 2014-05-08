@@ -16,7 +16,7 @@ action: head
 --- # Submit Operations
 action: post
 id: docId
-source: &opData
+opData: &opData
   v: 1
   op: []
   sid: sid

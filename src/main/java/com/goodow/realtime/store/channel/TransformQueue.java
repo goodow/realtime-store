@@ -13,13 +13,12 @@
  */
 package com.goodow.realtime.store.channel;
 
+import com.goodow.realtime.json.Json;
+import com.goodow.realtime.json.JsonArray;
+import com.goodow.realtime.json.JsonArray.ListIterator;
+import com.goodow.realtime.operation.Operation;
 import com.goodow.realtime.operation.Transformer;
 import com.goodow.realtime.operation.util.Pair;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
 
 /**
  * Simple implementation of main concurrency control logic, independent of transport concerns.
@@ -27,166 +26,152 @@ import java.util.List;
  * <p>
  * For efficiency, client ops are also compacted before transforming and before sending.
  */
-public class TransformQueue<M> {
+@SuppressWarnings("rawtypes")
+public class TransformQueue<O extends Operation> {
 
-  private final Transformer<M> transformer;
+  private final Transformer<O> transformer;
+  private double version = -1;
+  private double expectedAckedClientOps = 0;
+  private JsonArray serverOps = Json.createArray();
+  private JsonArray queuedClientOps = Json.createArray();
+  private O unackedClientOp;
 
-  private int revision = -1;
-
-  int expectedAckedClientOps = 0;
-  List<M> serverOps = new LinkedList<M>();
-  List<M> queuedClientOps = new LinkedList<M>();
-  List<M> unackedClientOps = Collections.emptyList();
-  boolean newClientOpSinceTransform = false;
-
-  public TransformQueue(Transformer<M> transformer) {
+  public TransformQueue(Transformer<O> transformer) {
     this.transformer = transformer;
   }
 
-  /**
-   * @param resultingRevision
-   * @return true if all unacked ops are now acked
-   */
-  public boolean ackClientOp(int resultingRevision) {
-    checkRevision(resultingRevision);
-
+  public void ackClientOp(double appliedAt) {
+    checkAppliedVersion(appliedAt);
     assert expectedAckedClientOps == 0 : "must call expectedAck, there are "
         + expectedAckedClientOps + " expectedAckedClientOps";
-    assert !unackedClientOps.isEmpty() : this + ": unackedClientOps is empty; resultingRevision="
-        + resultingRevision;
+    assert unackedClientOp != null : this + ": unackedClientOp is null; applied @" + appliedAt;
 
-    this.revision = resultingRevision;
-
-    unackedClientOps.remove(0);
-
-    return unackedClientOps.isEmpty();
+    version++;
+    unackedClientOp = null;
   }
 
-  public List<M> ackOpsIfVersionMatches(int newRevision) {
-    if (newRevision == revision + unackedClientOps.size()) {
-      List<M> expectedAckingClientOps = unackedClientOps;
-      expectedAckedClientOps += expectedAckingClientOps.size();
-      unackedClientOps = new LinkedList<M>();
-      revision = newRevision;
-      return expectedAckingClientOps;
+  public O ackOpIfVersionMatches(double appliedAt) {
+    if (appliedAt == version) {
+      assert unackedClientOp != null;
+      O toRtn = unackedClientOp;
+      unackedClientOp = null;
+      expectedAckedClientOps++;
+      version++;
+      return toRtn;
     }
-
     return null;
   }
 
-  public void clientOp(M clientOp) {
-    transformer.transform(queuedClientOps, clientOp, serverOps, 0, true);
-    newClientOpSinceTransform = true;
+  public void clientOp(O clientOp) {
+    if (serverOps.length() > 0) {
+      final JsonArray newServerOps = Json.createArray().push(clientOp);
+      serverOps.forEach(new ListIterator<O>() {
+        @SuppressWarnings("unchecked")
+        @Override
+        public void call(int index, O serverOp) {
+          Pair<O, O> pair =
+              transformer.transform((O) newServerOps.remove(newServerOps.length() - 1), serverOp);
+          newServerOps.push(pair.second).push(pair.first);
+        }
+      });
+      clientOp = newServerOps.remove(newServerOps.length() - 1);
+      serverOps = newServerOps;
+    }
+
+    queuedClientOps.push(clientOp);
   }
 
-  public boolean expectedAck(int resultingRevision) {
+  public boolean expectedAck(double appliedAt) {
     if (expectedAckedClientOps == 0) {
       return false;
     }
-
-    assert resultingRevision == revision - expectedAckedClientOps + 1 : "bad rev "
-        + resultingRevision + ", current rev " + revision + ", expected remaining "
-        + expectedAckedClientOps;
+    assert appliedAt == version - expectedAckedClientOps : "bad applied @" + appliedAt
+        + ", current @" + version + ", expected remaining " + expectedAckedClientOps;
 
     expectedAckedClientOps--;
-
     return true;
   }
 
   public boolean hasQueuedClientOps() {
-    return !queuedClientOps.isEmpty();
+    return queuedClientOps.length() > 0;
   }
 
   public boolean hasServerOp() {
-    return !serverOps.isEmpty();
+    return serverOps.length() > 0;
   }
 
-  public boolean hasUnacknowledgedClientOps() {
-    return !unackedClientOps.isEmpty();
+  public void init(double version) {
+    assert this.version == -1 : "Already at a version (" + this.version + "), can't init at "
+        + version + ")";
+    assert version >= 0 : "Initial version must be >= 0, not " + version;
+    this.version = version;
   }
 
-  public void init(int revision) {
-    assert this.revision == -1 : "Already at a revision (" + this.revision + "), can't init at "
-        + revision + ")";
-    assert revision >= 0 : "Initial revision must be >= 0, not " + revision;
-    this.revision = revision;
-  }
-
-  public M peekServerOp() {
+  public O peekServerOp() {
     assert hasServerOp() : "No server ops";
-    return serverOps.get(0);
+    return serverOps.<O> get(0);
   }
 
   /**
    * Pushes the queued client ops into the unacked ops, clearing the queued ops.
    * 
-   * @return see {@link #unackedClientOps()}
+   * @return see {@link #unackedClientOp()}
    */
-  public List<M> pushQueuedOpsToUnacked() {
-    assert unackedClientOps.isEmpty() : "Queue contains unacknowledged operations: "
-        + unackedClientOps;
+  public O pushQueuedOpsToUnacked() {
+    assert unackedClientOp == null : "Queue contains unacknowledged operation: " + unackedClientOp;
 
-    unackedClientOps = new LinkedList<M>(transformer.compact(queuedClientOps));
-    queuedClientOps = new LinkedList<M>();
+    unackedClientOp = transformer.compose(queuedClientOps);
+    queuedClientOps = Json.createArray();
 
-    return unackedClientOps();
+    return unackedClientOp();
   }
 
-  public M removeServerOp() {
+  public O removeServerOp() {
     assert hasServerOp() : "No server ops";
-    return serverOps.remove(0);
+    return serverOps.<O> remove(0);
   }
 
-  public int revision() {
-    return revision;
-  }
-
-  public void serverOp(int resultingRevision, M serverOp) {
-    checkRevision(resultingRevision);
-
-    assert expectedAckedClientOps == 0 : "server op arrived @" + resultingRevision
+  public void serverOp(double appliedVersion, O serverOp) {
+    checkAppliedVersion(appliedVersion);
+    assert expectedAckedClientOps == 0 : "server op applied @" + appliedVersion
         + " while expecting " + expectedAckedClientOps + " client ops";
+    version++;
 
-    this.revision = resultingRevision;
-
-    List<M> transformedServerOps = new ArrayList<M>();
-    transformer.transform(transformedServerOps, serverOp, unackedClientOps, 0, false);
-
-    if (!queuedClientOps.isEmpty()) {
-      if (newClientOpSinceTransform) {
-        queuedClientOps = transformer.compact(queuedClientOps);
-        newClientOpSinceTransform = false;
-      }
-      Pair<List<M>, List<M>> pair = transformer.transform(queuedClientOps, transformedServerOps);
-      queuedClientOps = pair.first;
-      transformedServerOps = pair.second;
+    if (unackedClientOp != null) {
+      Pair<O, O> pair = transformer.transform(unackedClientOp, serverOp);
+      unackedClientOp = pair.first;
+      serverOp = pair.second;
     }
-
-    serverOps.addAll(transformedServerOps);
+    if (queuedClientOps.length() > 0) {
+      O composedClientOp = transformer.compose(queuedClientOps);
+      Pair<O, O> pair = transformer.transform(composedClientOp, serverOp);
+      queuedClientOps = Json.createArray().push(pair.first);
+      serverOps.push(pair.second);
+    }
   }
 
   @Override
   public String toString() {
-    return "TQ{ " + revision + "\n  s:" + serverOps + "\n  exp: " + expectedAckedClientOps
-        + "\n  u:" + unackedClientOps + "\n  q:" + queuedClientOps + "\n}";
+    return "TQ{ " + version + "\n  s:" + serverOps + "\n  exp: " + expectedAckedClientOps
+        + "\n  u:" + unackedClientOp + "\n  q:" + queuedClientOps + "\n}";
   }
 
   /**
-   * @return the current unacked client ops. Note: the behavior of this list after calling mutating
+   * @return the current unacked client op. Note: the behavior of this op after calling mutating
    *         methods on the transform queue is undefined. This method should be called each time
    *         immediately before use.
    */
-  public List<M> unackedClientOps() {
-    return Collections.unmodifiableList(unackedClientOps);
+  public O unackedClientOp() {
+    return unackedClientOp;
   }
 
-  public int unackedClientOpsCount() {
-    return unackedClientOps.size();
+  public double version() {
+    return version;
   }
 
-  private void checkRevision(int resultingRevision) {
-    assert resultingRevision >= 1 : "New revision " + resultingRevision + " must be >= 1";
-    assert this.revision == resultingRevision - 1 : "Revision mismatch: at " + this.revision
-        + ", received " + resultingRevision;
+  private void checkAppliedVersion(double appliedVersion) {
+    assert appliedVersion >= 0 : "Applied version " + appliedVersion + " must be >= 0";
+    assert this.version == appliedVersion : "Version mismatch: @" + this.version + ", applied @"
+        + appliedVersion;
   }
 }

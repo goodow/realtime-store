@@ -19,12 +19,13 @@ import com.goodow.realtime.json.Json;
 import com.goodow.realtime.json.JsonArray;
 import com.goodow.realtime.json.JsonArray.ListIterator;
 import com.goodow.realtime.operation.Operation;
-import com.goodow.realtime.operation.create.CreateOperation;
+import com.goodow.realtime.operation.OperationComponent;
+import com.goodow.realtime.operation.create.CreateComponent;
 import com.goodow.realtime.operation.list.ListTarget;
-import com.goodow.realtime.operation.list.json.JsonDeleteOperation;
-import com.goodow.realtime.operation.list.json.JsonInsertOperation;
-import com.goodow.realtime.operation.list.json.JsonReplaceOperation;
-import com.goodow.realtime.operation.map.json.JsonMapOperation;
+import com.goodow.realtime.operation.list.json.JsonDeleteComponent;
+import com.goodow.realtime.operation.list.json.JsonInsertComponent;
+import com.goodow.realtime.operation.list.json.JsonReplaceComponent;
+import com.goodow.realtime.operation.map.json.JsonMapComponent;
 import com.goodow.realtime.store.util.JsonSerializer;
 import com.goodow.realtime.store.util.ModelFactory;
 
@@ -213,7 +214,7 @@ public class CollaborativeList extends CollaborativeObject {
         return -1;
       }
       for (int i = 0, len = length(); i < len; i++) {
-        if (JsonMapOperation.jsonEquals(serializedValue, snapshot.getArray(i))) {
+        if (JsonMapComponent.jsonEquals(serializedValue, snapshot.getArray(i))) {
           return i;
         }
       }
@@ -253,7 +254,7 @@ public class CollaborativeList extends CollaborativeObject {
       return;
     } else {
       JsonArray[] array = JsonSerializer.serializeObjects(values);
-      JsonInsertOperation op = new JsonInsertOperation(id, index, array);
+      JsonInsertComponent op = new JsonInsertComponent(id, index, array);
       consumeAndSubmit(op);
     }
   }
@@ -275,7 +276,7 @@ public class CollaborativeList extends CollaborativeObject {
         return -1;
       }
       for (int i = length() - 1; i >= 0; i--) {
-        if (JsonMapOperation.jsonEquals(serializedValue, snapshot.getArray(i))) {
+        if (JsonMapComponent.jsonEquals(serializedValue, snapshot.getArray(i))) {
           return i;
         }
       }
@@ -358,7 +359,7 @@ public class CollaborativeList extends CollaborativeObject {
           + endIndex + ", Size: " + length());
     }
     JsonArray[] values = subValues(startIndex, endIndex - startIndex);
-    JsonDeleteOperation op = new JsonDeleteOperation(id, startIndex, values);
+    JsonDeleteComponent op = new JsonDeleteComponent(id, startIndex, values);
     consumeAndSubmit(op);
   }
 
@@ -392,8 +393,8 @@ public class CollaborativeList extends CollaborativeObject {
           "At least one value must be specified for a set mutation.");
     }
     checkIndex(index + values.length, true);
-    JsonReplaceOperation op =
-        new JsonReplaceOperation(id, index, subValues(index, values.length), JsonSerializer
+    JsonReplaceComponent op =
+        new JsonReplaceComponent(id, index, subValues(index, values.length), JsonSerializer
             .serializeObjects(values));
     consumeAndSubmit(op);
   }
@@ -427,8 +428,9 @@ public class CollaborativeList extends CollaborativeObject {
 
   @SuppressWarnings("unchecked")
   @Override
-  protected void consume(final String userId, final String sessionId, Operation<?> operation) {
-    ((Operation<ListTarget<JsonArray[]>>) operation).apply(new ListTarget<JsonArray[]>() {
+  protected void consume(final String userId, final String sessionId,
+      OperationComponent<?> component) {
+    ((Operation<ListTarget<JsonArray[]>>) component).apply(new ListTarget<JsonArray[]>() {
       @Override
       public void delete(int startIndex, int length) {
         removeAndFireEvent(startIndex, length, sessionId, userId);
@@ -447,12 +449,12 @@ public class CollaborativeList extends CollaborativeObject {
   }
 
   @Override
-  Operation<?>[] toInitialization() {
+  OperationComponent<?>[] toInitialization() {
     int length = length();
-    Operation<?>[] toRtn = new Operation[1 + (length == 0 ? 0 : 1)];
-    toRtn[0] = new CreateOperation(id, CreateOperation.LIST);
+    OperationComponent<?>[] toRtn = new OperationComponent[1 + (length == 0 ? 0 : 1)];
+    toRtn[0] = new CreateComponent(id, CreateComponent.LIST);
     if (length != 0) {
-      toRtn[1] = new JsonInsertOperation(id, 0, subValues(0, length));
+      toRtn[1] = new JsonInsertComponent(id, 0, subValues(0, length));
     }
     return toRtn;
   }

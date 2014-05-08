@@ -17,7 +17,7 @@ import com.goodow.realtime.core.Handler;
 import com.goodow.realtime.core.HandlerRegistration;
 import com.goodow.realtime.json.Json;
 import com.goodow.realtime.json.JsonArray;
-import com.goodow.realtime.operation.Operation;
+import com.goodow.realtime.operation.OperationComponent;
 import com.goodow.realtime.store.util.ModelFactory;
 
 import org.timepedia.exporter.client.Export;
@@ -80,17 +80,17 @@ public abstract class CollaborativeObject implements Disposable {
     return sb.toString();
   }
 
-  abstract void consume(String userId, String sessionId, Operation<?> operation);
+  abstract void consume(String userId, String sessionId, OperationComponent<?> component);
 
-  <T> void consumeAndSubmit(Operation<T> op) {
-    model.bridge.consumeAndSubmit(op);
+  <T> void consumeAndSubmit(OperationComponent<T> component) {
+    model.bridge.consumeAndSubmit(component);
   }
 
   void fireEvent(BaseModelEvent event) {
     model.document.scheduleEvent(event);
   }
 
-  abstract Operation<?>[] toInitialization();
+  abstract OperationComponent<?>[] toInitialization();
 
   abstract void toString(JsonArray seen, StringBuilder sb);
 }

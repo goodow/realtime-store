@@ -21,12 +21,10 @@ import com.goodow.realtime.channel.Bus;
 public interface Constants {
 
   public interface Addr {
-    String STORE_PREFIX = "realtime.store.";
+    String STORE = "realtime.store";
+    String OPS = STORE + ".ops";
 
-    String SNAPSHOT = STORE_PREFIX + "snapshot";
-    String DELTA = STORE_PREFIX + "delta";
-
-    String EVENT = Bus.LOCAL + STORE_PREFIX + "event.";
+    String EVENT = Bus.LOCAL + STORE + ".event.";
     String DOCUMENT_ERROR = "document_error";
     String COLLABORATOR = "realtime.store.collaborator:";
   }
@@ -36,18 +34,13 @@ public interface Constants {
    */
   public interface Key {
     String ID = "id";
-    String IDS = "ids";
-    String SNAPSHOT = "snapshot";
-    String DELTAS = "mu";
-    String SESSION_ID = "sessionId";
+    String OP_DATA = "opData";
+    String SESSION_ID = "sid";
+    String VERSION = "v";
 
+    String SNAPSHOT = "snapshot";
     String ACCESS_TOKEN = "accessToken";
     String AUTO_CREATE = "autoCreate";
-    String TOKEN = "token";
-    String HAS_MORE = "more";
-    String REVISION = "v";
-    String START_REVISION = "startRev";
-    String END_REVISION = "endRev";
 
     String IS_JOINED = "isJoined";
     String USER_ID = "userId";

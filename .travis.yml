@@ -6,7 +6,7 @@ services:
   - elasticsearch
 
 before_install: wget -P target/travis https://raw.githubusercontent.com/goodow/maven/master/settings.xml
-script: '[ ${TRAVIS_PULL_REQUEST} = ''false'' ]
+after_success: '[ ${TRAVIS_PULL_REQUEST} = ''false'' ]
   && mvn clean deploy -Psonatype-oss-release -Dgpg.skip=true --settings target/travis/settings.xml
   || mvn clean verify --settings target/travis/settings.xml'
 

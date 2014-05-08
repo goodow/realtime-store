@@ -17,10 +17,11 @@ import com.goodow.realtime.core.Handler;
 import com.goodow.realtime.core.HandlerRegistration;
 import com.goodow.realtime.json.JsonArray;
 import com.goodow.realtime.operation.Operation;
-import com.goodow.realtime.operation.create.CreateOperation;
+import com.goodow.realtime.operation.OperationComponent;
+import com.goodow.realtime.operation.create.CreateComponent;
 import com.goodow.realtime.operation.list.ListTarget;
-import com.goodow.realtime.operation.list.string.StringDeleteOperation;
-import com.goodow.realtime.operation.list.string.StringInsertOperation;
+import com.goodow.realtime.operation.list.string.StringDeleteComponent;
+import com.goodow.realtime.operation.list.string.StringInsertComponent;
 import com.goodow.realtime.store.util.ModelFactory;
 
 import com.google.common.annotations.GwtIncompatible;
@@ -113,7 +114,7 @@ public class CollaborativeString extends CollaborativeObject {
           "At least one value must be specified for an insert mutation. text: " + text);
     }
     checkIndex(index);
-    StringInsertOperation op = new StringInsertOperation(id, index, text);
+    StringInsertComponent op = new StringInsertComponent(id, index, text);
     consumeAndSubmit(op);
   }
 
@@ -152,8 +153,8 @@ public class CollaborativeString extends CollaborativeObject {
       throw new StringIndexOutOfBoundsException("StartIndex: " + startIndex + ", EndIndex: "
           + endIndex + ", Size: " + length);
     }
-    StringDeleteOperation op =
-        new StringDeleteOperation(id, startIndex, snapshot.substring(startIndex, endIndex));
+    StringDeleteComponent op =
+        new StringDeleteComponent(id, startIndex, snapshot.substring(startIndex, endIndex));
     consumeAndSubmit(op);
   }
 
@@ -176,8 +177,9 @@ public class CollaborativeString extends CollaborativeObject {
 
   @SuppressWarnings("unchecked")
   @Override
-  protected void consume(final String userId, final String sessionId, Operation<?> operation) {
-    ((Operation<ListTarget<String>>) operation).apply(new ListTarget<String>() {
+  protected void consume(final String userId, final String sessionId,
+      OperationComponent<?> component) {
+    ((Operation<ListTarget<String>>) component).apply(new ListTarget<String>() {
       @Override
       public void delete(int startIndex, int length) {
         deleteAndFireEvent(startIndex, length, sessionId, userId);
@@ -196,11 +198,11 @@ public class CollaborativeString extends CollaborativeObject {
   }
 
   @Override
-  Operation<?>[] toInitialization() {
-    Operation<?>[] toRtn = new Operation[1 + (length() == 0 ? 0 : 1)];
-    toRtn[0] = new CreateOperation(id, CreateOperation.STRING);
+  OperationComponent<?>[] toInitialization() {
+    OperationComponent<?>[] toRtn = new OperationComponent[1 + (length() == 0 ? 0 : 1)];
+    toRtn[0] = new CreateComponent(id, CreateComponent.STRING);
     if (length() != 0) {
-      toRtn[1] = new StringInsertOperation(id, 0, getText());
+      toRtn[1] = new StringInsertComponent(id, 0, getText());
     }
     return toRtn;
   }

@@ -19,9 +19,9 @@ import com.goodow.realtime.channel.impl.ReliableBus;
 import com.goodow.realtime.core.Handler;
 import com.goodow.realtime.core.HandlerRegistration;
 import com.goodow.realtime.json.JsonObject;
-import com.goodow.realtime.operation.RealtimeOperation;
 import com.goodow.realtime.operation.Transformer;
-import com.goodow.realtime.operation.TransformerImpl;
+import com.goodow.realtime.operation.impl.CollaborativeOperation;
+import com.goodow.realtime.operation.impl.CollaborativeTransformer;
 import com.goodow.realtime.store.Collaborator;
 import com.goodow.realtime.store.DocumentBridge;
 import com.goodow.realtime.store.DocumentBridge.OutputSink;
@@ -35,12 +35,12 @@ import com.goodow.realtime.store.channel.Constants.Key;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class OperationSucker implements OperationChannel.Listener<RealtimeOperation> {
+public class OperationSucker implements OperationChannel.Listener<CollaborativeOperation> {
   private static final Logger logger = Logger.getLogger(OperationSucker.class.getName());
 
   private final String id;
-  private final OperationChannel<RealtimeOperation> channel;
-  private final Transformer<RealtimeOperation> transformer;
+  private final OperationChannel<CollaborativeOperation> channel;
+  private final Transformer<CollaborativeOperation> transformer;
 
   private final Bus bus;
   private HandlerRegistration collaboratorChangedReg;
@@ -49,8 +49,8 @@ public class OperationSucker implements OperationChannel.Listener<RealtimeOperat
   public OperationSucker(ReliableBus bus, final String id) {
     this.bus = bus;
     this.id = id;
-    transformer = new TransformerImpl<RealtimeOperation>();
-    channel = new OperationChannel<RealtimeOperation>(id, transformer, bus, this);
+    transformer = new CollaborativeTransformer();
+    channel = new OperationChannel<CollaborativeOperation>(id, transformer, bus, this);
   }
 
   public void load(final DocumentBridge bridge, JsonObject snapshot) {
@@ -63,7 +63,7 @@ public class OperationSucker implements OperationChannel.Listener<RealtimeOperat
       }
 
       @Override
-      public void consume(RealtimeOperation op) {
+      public void consume(CollaborativeOperation op) {
         channel.send(op);
       }
     });
@@ -82,11 +82,11 @@ public class OperationSucker implements OperationChannel.Listener<RealtimeOperat
           }
         });
 
-    channel.connect((int) snapshot.getNumber(Key.REVISION), snapshot.getString(Key.SESSION_ID));
+    channel.connect((int) snapshot.getNumber(Key.VERSION), snapshot.getString(Key.SESSION_ID));
   }
 
   @Override
-  public void onAck(RealtimeOperation serverHistoryOp, boolean clean) {
+  public void onAck(CollaborativeOperation serverHistoryOp, boolean clean) {
   }
 
   @Override
@@ -97,7 +97,7 @@ public class OperationSucker implements OperationChannel.Listener<RealtimeOperat
   }
 
   @Override
-  public void onRemoteOp(RealtimeOperation serverHistoryOp) {
+  public void onRemoteOp(CollaborativeOperation serverHistoryOp) {
     while (channel.peek() != null) {
       bridge.consume(channel.receive());
     }

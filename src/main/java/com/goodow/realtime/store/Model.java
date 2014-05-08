@@ -17,11 +17,11 @@ import com.goodow.realtime.channel.util.IdGenerator;
 import com.goodow.realtime.core.Handler;
 import com.goodow.realtime.core.HandlerRegistration;
 import com.goodow.realtime.json.JsonArray;
-import com.goodow.realtime.operation.create.CreateOperation;
-import com.goodow.realtime.operation.cursor.ReferenceShiftedOperation;
-import com.goodow.realtime.operation.list.json.JsonInsertOperation;
-import com.goodow.realtime.operation.list.string.StringInsertOperation;
-import com.goodow.realtime.operation.map.json.JsonMapOperation;
+import com.goodow.realtime.operation.create.CreateComponent;
+import com.goodow.realtime.operation.cursor.ReferenceShiftedComponent;
+import com.goodow.realtime.operation.list.json.JsonInsertComponent;
+import com.goodow.realtime.operation.list.string.StringInsertComponent;
+import com.goodow.realtime.operation.map.json.JsonMapComponent;
 import com.goodow.realtime.store.util.JsonSerializer;
 import com.goodow.realtime.store.util.ModelFactory;
 
@@ -180,10 +180,10 @@ public class Model implements Disposable {
   public CollaborativeList createList(Object... opt_initialValue) {
     String id = generateObjectId();
     beginCreationCompoundOperation();
-    bridge.consumeAndSubmit(new CreateOperation(id, CreateOperation.LIST));
+    bridge.consumeAndSubmit(new CreateComponent(id, CreateComponent.LIST));
     if (opt_initialValue != null && opt_initialValue.length > 0) {
       JsonArray[] values = JsonSerializer.serializeObjects(opt_initialValue);
-      JsonInsertOperation op = new JsonInsertOperation(id, 0, values);
+      JsonInsertComponent op = new JsonInsertComponent(id, 0, values);
       bridge.consumeAndSubmit(op);
     }
     endCompoundOperation();
@@ -200,14 +200,14 @@ public class Model implements Disposable {
   public CollaborativeMap createMap(Map<String, ?> opt_initialValue) {
     String id = generateObjectId();
     beginCreationCompoundOperation();
-    bridge.consumeAndSubmit(new CreateOperation(id, CreateOperation.MAP));
+    bridge.consumeAndSubmit(new CreateComponent(id, CreateComponent.MAP));
     if (opt_initialValue != null && !opt_initialValue.isEmpty()) {
       for (Map.Entry<String, ?> entry : opt_initialValue.entrySet()) {
         JsonArray serializedValue = JsonSerializer.serializeObject(entry.getValue());
         if (serializedValue == null) {
           continue;
         }
-        JsonMapOperation op = new JsonMapOperation(id, entry.getKey(), null, serializedValue);
+        JsonMapComponent op = new JsonMapComponent(id, entry.getKey(), null, serializedValue);
         bridge.consumeAndSubmit(op);
       }
     }
@@ -224,9 +224,9 @@ public class Model implements Disposable {
   public CollaborativeString createString(String opt_initialValue) {
     String id = generateObjectId();
     beginCreationCompoundOperation();
-    bridge.consumeAndSubmit(new CreateOperation(id, CreateOperation.STRING));
+    bridge.consumeAndSubmit(new CreateComponent(id, CreateComponent.STRING));
     if (opt_initialValue != null && !opt_initialValue.isEmpty()) {
-      StringInsertOperation op = new StringInsertOperation(id, 0, opt_initialValue);
+      StringInsertComponent op = new StringInsertComponent(id, 0, opt_initialValue);
       bridge.consumeAndSubmit(op);
     }
     endCompoundOperation();
@@ -325,10 +325,10 @@ public class Model implements Disposable {
 
   IndexReference createIndexReference(String referencedObjectId, int index, boolean canBeDeleted) {
     String id = generateObjectId();
-    ReferenceShiftedOperation op =
-        new ReferenceShiftedOperation(id, referencedObjectId, index, canBeDeleted, -1);
+    ReferenceShiftedComponent op =
+        new ReferenceShiftedComponent(id, referencedObjectId, index, canBeDeleted, -1);
     beginCreationCompoundOperation();
-    bridge.consumeAndSubmit(new CreateOperation(id, CreateOperation.INDEX_REFERENCE));
+    bridge.consumeAndSubmit(new CreateComponent(id, CreateComponent.INDEX_REFERENCE));
     bridge.consumeAndSubmit(op);
     registerIndexReference(id, referencedObjectId);
     endCompoundOperation();
@@ -337,7 +337,7 @@ public class Model implements Disposable {
 
   void createRoot() {
     beginCreationCompoundOperation();
-    bridge.consumeAndSubmit(new CreateOperation(ROOT_ID, CreateOperation.MAP));
+    bridge.consumeAndSubmit(new CreateComponent(ROOT_ID, CreateComponent.MAP));
     endCompoundOperation();
   }
 

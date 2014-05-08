@@ -110,7 +110,7 @@ public class Document implements Disposable {
 
     private void fireEvent(BaseModelEvent event) {
       model.bridge.store.getBus().publish(
-          Bus.LOCAL + Addr.EVENT + event.type + ":" + model.bridge.id + ":" + event.target.id,
+          Bus.LOCAL + Addr.EVENT + event.type + ":" + model.bridge.docId + ":" + event.target.id,
           event);
     }
   };
@@ -179,7 +179,7 @@ public class Document implements Disposable {
       throw new NullPointerException((type == null ? "type" : "handler") + " was null.");
     }
     return handlerRegs.wrap(model.bridge.store.getBus().registerHandler(
-        Addr.EVENT + type + ":" + model.bridge.id + (objectId == null ? "" : (":" + objectId)),
+        Addr.EVENT + type + ":" + model.bridge.docId + (objectId == null ? "" : (":" + objectId)),
         new Handler<Message<?>>() {
           @SuppressWarnings("unchecked")
           @Override
@@ -195,14 +195,14 @@ public class Document implements Disposable {
       if (index == -1) {
         collaborators.push(collaborator);
         model.bridge.store.getBus().publish(
-            Bus.LOCAL + Addr.EVENT + EventType.COLLABORATOR_JOINED + ":" + model.bridge.id,
+            Bus.LOCAL + Addr.EVENT + EventType.COLLABORATOR_JOINED + ":" + model.bridge.docId,
             new CollaboratorJoinedEvent(this, collaborator));
       }
     } else {
       if (index != -1) {
         collaborators.remove(index);
         model.bridge.store.getBus().publish(
-            Bus.LOCAL + Addr.EVENT + EventType.COLLABORATOR_LEFT + ":" + model.bridge.id,
+            Bus.LOCAL + Addr.EVENT + EventType.COLLABORATOR_LEFT + ":" + model.bridge.docId,
             new CollaboratorLeftEvent(this, collaborator));
       }
     }

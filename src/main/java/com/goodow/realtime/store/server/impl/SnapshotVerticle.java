@@ -13,6 +13,7 @@
  */
 package com.goodow.realtime.store.server.impl;
 
+import com.goodow.realtime.store.channel.Constants.Key;
 import com.goodow.realtime.store.server.StoreModule;
 import com.goodow.realtime.store.server.StoreVerticle;
 
@@ -73,7 +74,7 @@ public class SnapshotVerticle extends BusModBase {
         if ("head".equals(action)) {
           doHead(type, id, message);
         } else if ("post".equals(action)) {
-          JsonObject opData = getMandatoryObject("source", message);
+          JsonObject opData = getMandatoryObject(Key.OP_DATA, message);
           if (opData == null) {
             return;
           }
@@ -103,6 +104,6 @@ public class SnapshotVerticle extends BusModBase {
   }
 
   private void doPost(String type, String id, JsonObject opData, Message<JsonObject> resp) {
-    opsSubmitter.submit(type, id, opData, SnapshotVerticle.<Void> handleAsyncResult(resp));
+    // opsSubmitter.submit(type, id, opData, SnapshotVerticle.<Void> handleAsyncResult(resp));
   }
 }
