@@ -237,6 +237,23 @@ public class CollaborativeMap extends CollaborativeObject {
     return snapshot.size();
   }
 
+  @Override
+  public JsonObject toJson() {
+    final JsonObject json = Json.createObject();
+    snapshot.forEach(new MapIterator<JsonArray>() {
+      @Override
+      public void call(String key, JsonArray value) {
+        Object val = get(key);
+        if (val instanceof CollaborativeObject) {
+          json.set(key, ((CollaborativeObject) val).toJson());
+        } else {
+          json.set(key, snapshot.getArray(key).get(1));
+        }
+      }
+    });
+    return json;
+  }
+
   /**
    * Returns an array containing a copy of the values in this map. Modifications to the returned
    * array do not modify this collaborative map.
@@ -287,37 +304,6 @@ public class CollaborativeMap extends CollaborativeObject {
       });
     }
     return toRtn;
-  }
-
-  @Override
-  void toString(final JsonArray seen, final StringBuilder sb) {
-    if (seen.indexOf(id) != -1) {
-      sb.append("<Map: ").append(id).append(">");
-      return;
-    }
-    seen.push(id);
-    sb.append("{");
-    snapshot.forEach(new MapIterator<JsonArray>() {
-      boolean isFirst = true;
-
-      @Override
-      public void call(String key, JsonArray value) {
-        if (!isFirst) {
-          sb.append(", ");
-        } else {
-          isFirst = false;
-        }
-        sb.append(key).append(": ");
-        Object val = get(key);
-        if (val instanceof CollaborativeObject) {
-          CollaborativeObject obj = (CollaborativeObject) val;
-          obj.toString(seen, sb);
-        } else {
-          sb.append("[JsonValue " + snapshot.getArray(key).get(1) + "]");
-        }
-      }
-    });
-    sb.append("}");
   }
 
   private void checkKey(String key) {

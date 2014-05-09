@@ -15,6 +15,7 @@ package com.goodow.realtime.store.server;
 
 import com.goodow.realtime.store.server.impl.OpsVerticle;
 import com.goodow.realtime.store.server.impl.RedisDriver;
+import com.goodow.realtime.store.server.impl.RestVerticle;
 import com.goodow.realtime.store.server.impl.SnapshotVerticle;
 
 import com.alienos.guice.GuiceVerticleHelper;
@@ -44,7 +45,7 @@ public class StoreVerticle extends BusModBase {
     super.start();
 
     final CountingCompletionHandler<Void> countDownLatch =
-        new CountingCompletionHandler<Void>((VertxInternal) vertx, 5);
+        new CountingCompletionHandler<Void>((VertxInternal) vertx, 6);
     countDownLatch.setHandler(new Handler<AsyncResult<Void>>() {
       @Override
       public void handle(AsyncResult<Void> ar) {
@@ -66,13 +67,17 @@ public class StoreVerticle extends BusModBase {
       }
     };
 
-    container.deployModule("com.goodow.realtime~realtime-search~0.5.5-SNAPSHOT", config,
-        doneHandler);
-    redis.deployModule(container, getOptionalObjectConfig("redis", new JsonObject()), doneHandler);
+    JsonObject empty = new JsonObject();
     container.deployModule("com.goodow.realtime~realtime-channel~0.5.5-SNAPSHOT", config
         .getObject("realtime_channel"), doneHandler);
-    container.deployVerticle(SnapshotVerticle.class.getName(), config, doneHandler);
-    container.deployVerticle(OpsVerticle.class.getName(), config, doneHandler);
+    container.deployModule("com.goodow.realtime~realtime-search~0.5.5-SNAPSHOT",
+        getOptionalObjectConfig("realtime_search", empty), doneHandler);
+
+    JsonObject store = getOptionalObjectConfig("realtime_store", empty);
+    redis.deployModule(container, store.getObject("redis", empty), doneHandler);
+    container.deployVerticle(SnapshotVerticle.class.getName(), store, doneHandler);
+    container.deployVerticle(OpsVerticle.class.getName(), store, doneHandler);
+    container.deployVerticle(RestVerticle.class.getName(), store, doneHandler);
 
     redisDriver.start(countDownLatch);
   }

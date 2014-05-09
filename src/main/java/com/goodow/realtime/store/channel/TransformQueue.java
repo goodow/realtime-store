@@ -26,9 +26,7 @@ import com.goodow.realtime.operation.util.Pair;
  * <p>
  * For efficiency, client ops are also compacted before transforming and before sending.
  */
-@SuppressWarnings("rawtypes")
-public class TransformQueue<O extends Operation> {
-
+public class TransformQueue<O extends Operation<?>> {
   private final Transformer<O> transformer;
   private double version = -1;
   private double expectedAckedClientOps = 0;

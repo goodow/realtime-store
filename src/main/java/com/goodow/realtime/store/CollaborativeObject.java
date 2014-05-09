@@ -15,8 +15,6 @@ package com.goodow.realtime.store;
 
 import com.goodow.realtime.core.Handler;
 import com.goodow.realtime.core.HandlerRegistration;
-import com.goodow.realtime.json.Json;
-import com.goodow.realtime.json.JsonArray;
 import com.goodow.realtime.operation.OperationComponent;
 import com.goodow.realtime.store.util.ModelFactory;
 
@@ -70,14 +68,14 @@ public abstract class CollaborativeObject implements Disposable {
     return id;
   }
 
+  public abstract Object toJson();
+
   /**
    * Returns a string representation of this collaborative object.
    */
   @Override
   public String toString() {
-    StringBuilder sb = new StringBuilder();
-    toString(Json.createArray(), sb);
-    return sb.toString();
+    return toJson().toString();
   }
 
   abstract void consume(String userId, String sessionId, OperationComponent<?> component);
@@ -91,6 +89,4 @@ public abstract class CollaborativeObject implements Disposable {
   }
 
   abstract OperationComponent<?>[] toInitialization();
-
-  abstract void toString(JsonArray seen, StringBuilder sb);
 }

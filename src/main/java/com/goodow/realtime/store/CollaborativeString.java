@@ -15,7 +15,6 @@ package com.goodow.realtime.store;
 
 import com.goodow.realtime.core.Handler;
 import com.goodow.realtime.core.HandlerRegistration;
-import com.goodow.realtime.json.JsonArray;
 import com.goodow.realtime.operation.Operation;
 import com.goodow.realtime.operation.OperationComponent;
 import com.goodow.realtime.operation.create.CreateComponent;
@@ -175,6 +174,11 @@ public class CollaborativeString extends CollaborativeObject {
     model.endCompoundOperation();
   }
 
+  @Override
+  public Object toJson() {
+    return getText();
+  }
+
   @SuppressWarnings("unchecked")
   @Override
   protected void consume(final String userId, final String sessionId,
@@ -205,16 +209,6 @@ public class CollaborativeString extends CollaborativeObject {
       toRtn[1] = new StringInsertComponent(id, 0, getText());
     }
     return toRtn;
-  }
-
-  @Override
-  void toString(JsonArray seen, StringBuilder sb) {
-    if (seen.indexOf(id) != -1) {
-      sb.append("<EditableString: ").append(id).append(">");
-      return;
-    }
-    seen.push(id);
-    sb.append(getText());
   }
 
   private void checkIndex(int index) {

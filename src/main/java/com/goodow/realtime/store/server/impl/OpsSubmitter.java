@@ -44,7 +44,8 @@ public class OpsSubmitter {
    */
   public void submit(String type, String id, final JsonObject opData,
       final AsyncResultHandler<JsonObject> callback) {
-    retrySubmit(type, id, opData, callback);
+    retrySubmit(new ArrayList<Object>(), type, id, createOperation(opData), opData.getLong("v"),
+        callback);
   }
 
   private CollaborativeOperation createOperation(JsonObject opData) {
@@ -58,6 +59,57 @@ public class OpsSubmitter {
             .toList()) : null;
     final DocumentBridge bridge = new DocumentBridge(null, type + "/" + id, snapshot, null);
     return bridge;
+  }
+
+  /**
+   * Great - now we're in the situation that we can actually submit the operation to the database.
+   * If this method succeeds, it should update any persistant oplogs before calling the callback to
+   * tell us about the successful commit. I could make this API more complicated, enabling the
+   * function to return actual operations and whatnot, but its quite rare to actually need to
+   * transform data on the server at this point.
+   */
+  private void doSubmit(final List<Object> transformedOps, final String type, final String id,
+      final CollaborativeOperation operation, final long applyAt, final DocumentBridge snapshot,
+      final AsyncResultHandler<JsonObject> callback) {
+    final JsonObject opData =
+        new JsonObject(((JreJsonObject) operation.toJson()).toNative()).putNumber("v", applyAt);
+    redis.atomicSubmit(type, id, opData, new AsyncResultHandler<Void>() {
+      @Override
+      public void handle(AsyncResult<Void> ar) {
+        if (ar.failed()) {
+          if ("Transform needed".equals(ar.cause().getMessage())) {
+            retrySubmit(transformedOps, type, id, operation, applyAt, callback);
+          } else {
+            callback.handle(new DefaultFutureResult<JsonObject>(ar.cause()));
+          }
+          return;
+        }
+        final JsonObject root = new JsonObject(((JreJsonObject) snapshot.toJson()).toNative());
+        JsonObject snapshotData =
+            new JsonObject().putNumber("v", applyAt + 1).putObject("root", root).putArray(
+                "snapshot", new JsonArray(((JreJsonArray) snapshot.toSnapshot()).toNative()));
+        writeSnapshotAfterSubmit(type, id, snapshotData, opData, new AsyncResultHandler<Void>() {
+          @Override
+          public void handle(AsyncResult<Void> ar) {
+            // What do we do if the snapshot write fails? We've already committed the operation -
+            // its done and dusted. We probably shouldn't re-run polling queries now. Really, no
+            // matter what we do here things are going to be a little bit broken, depending on the
+            // behaviour we trap in finish.
+
+            // Its sort of too late to error out if the snapshotdb can't take our op - the op has
+            // been commited.
+
+            // postSubmit is for things like publishing the operation over pubsub. We should
+            // probably make this asyncronous.
+            redis.postSubmit(type, id, opData, root);
+            callback
+                .handle(new DefaultFutureResult<JsonObject>(new JsonObject()
+                    .putNumber("v", applyAt).putArray("ops", new JsonArray(transformedOps))
+                    .putObject("snapshot", root)));
+          }
+        });
+      }
+    });
   }
 
   /**
@@ -78,7 +130,8 @@ public class OpsSubmitter {
   }
 
   @SuppressWarnings("unchecked")
-  private void retrySubmit(final String type, final String id, final JsonObject opData,
+  private void retrySubmit(final List<Object> transformedOps, final String type, final String id,
+      final CollaborativeOperation operation, final Long applyAt,
       final AsyncResultHandler<JsonObject> callback) {
     // First we'll get a doc snapshot. This wouldn't be necessary except that we need to check that
     // the operation is valid against the current document before accepting it.
@@ -90,13 +143,10 @@ public class OpsSubmitter {
           return;
         }
         final JsonObject snapshotData = ar.result();
-        final DocumentBridge snapshot = createSnapshot(type, id, snapshotData);
+        final long snapshotVersion = snapshotData.getLong("v");
         // Get all operations that might be relevant. We'll float the snapshot and the operation up
         // to the most recent version of the document, then try submitting.
-        final Long opVersion = opData.getLong("v");
-        final long from =
-            opVersion != null ? Math.min(snapshotData.getLong("v"), opVersion) : snapshotData
-                .getLong("v");
+        final long from = applyAt != null ? Math.min(snapshotVersion, applyAt) : snapshotVersion;
         redis.getOps(type, id, from, null, new AsyncResultHandler<JsonObject>() {
           @Override
           public void handle(AsyncResult<JsonObject> ar) {
@@ -104,59 +154,77 @@ public class OpsSubmitter {
               callback.handle(ar);
               return;
             }
-            List<JsonObject> transformedOps = new ArrayList<JsonObject>();
+            final DocumentBridge snapshot = createSnapshot(type, id, snapshotData);
             JsonArray ops = ar.result().getArray("ops");
-            int transformStart =
-                opVersion == null ? ops.size() : from == opVersion ? 0
-                    : (int) (opVersion - snapshotData.getLong("v"));
-            for (int i = 0, len = ops.size(); i < len; i++) {
-              JsonObject op = ops.get(i);
-              if (opData.containsField("seq") && opData.getString("sid") == op.getString("sid")
-                  && opData.getLong("seq") == op.getLong("seq")) {
-                // The op has already been submitted. There's a variety of ways this can happen. Its
-                // important we don't transform it by itself & submit again.
-                callback.handle(new DefaultFutureResult<JsonObject>(new ReplyException(
-                    ReplyFailure.RECIPIENT_FAILURE, "Op already submitted")));
-                return;
-              }
+            long snapshotV = snapshotVersion;
+            long opV = applyAt == null ? snapshotV + ops.size() : applyAt;
+            for (Object op : ops) {
+              JsonObject opData = (JsonObject) op;
+              // if (opData.containsField("seq") && opData.getString("sid") == op.getString("sid")
+              // && opData.getLong("seq") == op.getLong("seq")) {
+              // // The op has already been submitted. There's a variety of ways this can happen.
+              // Its
+              // // important we don't transform it by itself & submit again.
+              // callback.handle(new DefaultFutureResult<JsonObject>(new ReplyException(
+              // ReplyFailure.RECIPIENT_FAILURE, "Op already submitted")));
+              // return;
+              // }
 
               // Bring both the op and the snapshot up to date. At least one of these two
               // conditionals should be true.
-              if (snapshotData.getLong("v").longValue() == op.getLong("v")) {
+              long opVersion = opData.getLong("v");
+              if (snapshotV == opVersion) {
                 try {
-                  snapshot.consume(createOperation(op));
+                  snapshot.consume(createOperation(opData));
                 } catch (Exception e) {
-                  callback.handle(new DefaultFutureResult<JsonObject>(e));
+                  callback.handle(new DefaultFutureResult<JsonObject>(new ReplyException(
+                      ReplyFailure.RECIPIENT_FAILURE, e.getMessage())));
                   return;
                 }
-                snapshotData.putNumber("v", snapshotData.getLong("v") + 1);
+                snapshotV++;
               }
-              if (i >= transformStart) {
-                transformedOps.add(op);
+              if (opV == opVersion) {
+                transformedOps.add(opData);
+                opV++;
               }
             }
-            if (transformStart < ops.size()) {
+            if (opV != snapshotV) {
+              callback.handle(new DefaultFutureResult<JsonObject>(new ReplyException(
+                  ReplyFailure.RECIPIENT_FAILURE, "Invalid opData version")));
+              return;
+            }
+            CollaborativeOperation transformed = operation;
+            if (applyAt != null && ops.size() > 0
+                && applyAt <= ops.<JsonObject> get(ops.size() - 1).getLong("v")) {
               try {
                 CollaborativeOperation applied =
-                    transformer.compose(new JreJsonArray(ops.toList().subList(transformStart,
-                        ops.size())));
-                CollaborativeOperation transformed =
-                    createOperation(opData).transform(applied, false);
+                    transformer.compose(new JreJsonArray(ops.toList().subList(
+                        (int) (applyAt - ops.<JsonObject> get(0).getLong("v")), ops.size())));
+                transformed = operation.transform(applied, false);
               } catch (Exception e) {
-                callback.handle(new DefaultFutureResult<JsonObject>(e));
+                callback.handle(new DefaultFutureResult<JsonObject>(new ReplyException(
+                    ReplyFailure.RECIPIENT_FAILURE, e.getMessage())));
                 return;
               }
             }
-          }
 
+            // Ok, now we can try to apply the op.
+            try {
+              snapshot.consume(transformed);
+            } catch (Exception e) {
+              callback.handle(new DefaultFutureResult<JsonObject>(new ReplyException(
+                  ReplyFailure.RECIPIENT_FAILURE, e.getMessage())));
+              return;
+            }
+            doSubmit(transformedOps, type, id, transformed, opV, snapshot, callback);
+          }
         });
       }
-
     });
   }
 
-  private void writeSnapshotAfterSubmit(String type, String id, JsonObject snapshot,
+  private void writeSnapshotAfterSubmit(String type, String id, JsonObject snapshotData,
       JsonObject opData, AsyncResultHandler<Void> callback) {
-    persistence.writeSnapshot(type, id, snapshot, callback);
+    persistence.writeSnapshot(type, id, snapshotData, callback);
   }
 }

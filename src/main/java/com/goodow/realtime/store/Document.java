@@ -89,7 +89,7 @@ public class Document implements Disposable {
       eventsById = null;
     }
 
-    private void bubblingToAncestors(String id, BaseModelEvent event, JsonArray seen) {
+    private void bubblingToAncestors(String id, final BaseModelEvent event, final JsonArray seen) {
       if (seen.indexOf(id) != -1) {
         return;
       }
@@ -100,12 +100,12 @@ public class Document implements Disposable {
       }
       seen.push(id);
 
-      String[] parents = model.getParents(id);
-      if (parents != null) {
-        for (String parent : parents) {
+      model.getParents(id).forEach(new ListIterator<String>() {
+        @Override
+        public void call(int index, String parent) {
           bubblingToAncestors(parent, event, seen);
         }
-      }
+      });
     }
 
     private void fireEvent(BaseModelEvent event) {

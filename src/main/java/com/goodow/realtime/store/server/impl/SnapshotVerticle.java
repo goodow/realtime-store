@@ -55,9 +55,7 @@ public class SnapshotVerticle extends BusModBase {
   public void start(final Future<Void> startedResult) {
     GuiceVerticleHelper.inject(this, vertx, container);
     super.start();
-    address =
-        getOptionalObjectConfig("realtime_store", new JsonObject()).getString("address",
-            StoreVerticle.DEFAULT_ADDRESS);
+    address = getOptionalStringConfig("address", StoreVerticle.DEFAULT_ADDRESS);
 
     eb.registerHandler(address, new Handler<Message<JsonObject>>() {
       @Override
@@ -103,7 +101,19 @@ public class SnapshotVerticle extends BusModBase {
     redis.getVersion(type, id, SnapshotVerticle.<Long> handleAsyncResult(resp));
   }
 
-  private void doPost(String type, String id, JsonObject opData, Message<JsonObject> resp) {
-    // opsSubmitter.submit(type, id, opData, SnapshotVerticle.<Void> handleAsyncResult(resp));
+  private void doPost(String type, String id, JsonObject opData, final Message<JsonObject> resp) {
+    opsSubmitter.submit(type, id, opData, new AsyncResultHandler<JsonObject>() {
+      @Override
+      public void handle(AsyncResult<JsonObject> ar) {
+        if (ar.failed()) {
+          ReplyException cause = (ReplyException) ar.cause();
+          resp.fail(cause.failureCode(), cause.getMessage());
+          return;
+        }
+        JsonObject result = ar.result();
+        result.removeField("snapshot");
+        resp.reply(result);
+      }
+    });
   }
 }

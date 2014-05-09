@@ -45,10 +45,7 @@ public class OpsVerticle extends BusModBase {
   public void start(final Future<Void> startedResult) {
     GuiceVerticleHelper.inject(this, vertx, container);
     super.start();
-    address =
-        getOptionalObjectConfig("realtime_store", new JsonObject()).getString("address",
-            StoreVerticle.DEFAULT_ADDRESS)
-            + ".ops";
+    address = getOptionalStringConfig("address", StoreVerticle.DEFAULT_ADDRESS) + ".ops";
 
     eb.registerHandler(address, new Handler<Message<JsonObject>>() {
       @Override
@@ -61,7 +58,7 @@ public class OpsVerticle extends BusModBase {
         String[] typeAndId = getTypeAndId(docId);
         String type = typeAndId[0];
         String id = typeAndId[1];
-        doGet(type, id, body.getLong("from"), body.getLong("to"), message);
+        doGet(type, id, body.getLong("from", 0), body.getLong("to"), message);
       }
     }, new Handler<AsyncResult<Void>>() {
       @Override

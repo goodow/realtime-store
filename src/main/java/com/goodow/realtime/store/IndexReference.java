@@ -15,7 +15,8 @@ package com.goodow.realtime.store;
 
 import com.goodow.realtime.core.Handler;
 import com.goodow.realtime.core.HandlerRegistration;
-import com.goodow.realtime.json.JsonArray;
+import com.goodow.realtime.json.Json;
+import com.goodow.realtime.json.JsonObject;
 import com.goodow.realtime.operation.OperationComponent;
 import com.goodow.realtime.operation.create.CreateComponent;
 import com.goodow.realtime.operation.cursor.ReferenceShiftedComponent;
@@ -132,6 +133,14 @@ public class IndexReference extends CollaborativeObject {
   }
 
   @Override
+  public JsonObject toJson() {
+    JsonObject json = Json.createObject();
+    json.set("id", id).set("referencedObjectId", referencedObjectId).set("index", index).set(
+        "canBeDeleted", canBeDeleted);
+    return json;
+  }
+
+  @Override
   protected void consume(final String userId, final String sessionId,
       OperationComponent<?> component) {
     ReferenceShiftedComponent op = (ReferenceShiftedComponent) component;
@@ -175,20 +184,5 @@ public class IndexReference extends CollaborativeObject {
     ReferenceShiftedComponent op =
         new ReferenceShiftedComponent(id, referencedObjectId, index, canBeDeleted, index);
     return new OperationComponent[] {new CreateComponent(id, CreateComponent.INDEX_REFERENCE), op};
-  }
-
-  @Override
-  void toString(JsonArray seen, StringBuilder sb) {
-    if (seen.indexOf(id) != -1) {
-      sb.append("<IndexReference: ").append(id).append(">");
-      return;
-    }
-    seen.push(id);
-    sb.append("DefaultIndexReference [");
-    sb.append("id=").append(getId());
-    sb.append(", objectId=").append(referencedObjectId);
-    sb.append(", index=").append(getIndex());
-    sb.append(", canBeDeleted=").append(canBeDeleted);
-    sb.append("]");
   }
 }

@@ -426,6 +426,25 @@ public class CollaborativeList extends CollaborativeObject {
     removeRange(length, total);
   }
 
+  @Override
+  public JsonArray toJson() {
+    final JsonArray json = Json.createArray();
+    snapshot.forEach(new ListIterator<JsonArray>() {
+      @Override
+      public void call(int index, JsonArray value) {
+        Object val = get(index);
+        if (val == null) {
+          json.push(null);
+        } else if (val instanceof CollaborativeObject) {
+          json.push(((CollaborativeObject) val).toJson());
+        } else {
+          json.push(snapshot.getArray(index).get(1));
+        }
+      }
+    });
+    return json;
+  }
+
   @SuppressWarnings("unchecked")
   @Override
   protected void consume(final String userId, final String sessionId,
@@ -457,38 +476,6 @@ public class CollaborativeList extends CollaborativeObject {
       toRtn[1] = new JsonInsertComponent(id, 0, subValues(0, length));
     }
     return toRtn;
-  }
-
-  @Override
-  void toString(final JsonArray seen, final StringBuilder sb) {
-    if (seen.indexOf(id) != -1) {
-      sb.append("<List: ").append(id).append(">");
-      return;
-    }
-    seen.push(id);
-    sb.append("[");
-    snapshot.forEach(new ListIterator<JsonArray>() {
-      boolean isFirst = true;
-
-      @Override
-      public void call(int index, JsonArray value) {
-        if (!isFirst) {
-          sb.append(", ");
-        } else {
-          isFirst = false;
-        }
-        Object val = get(index);
-        if (val == null) {
-          sb.append((String) null);
-        } else if (val instanceof CollaborativeObject) {
-          CollaborativeObject obj = (CollaborativeObject) val;
-          obj.toString(seen, sb);
-        } else {
-          sb.append("[JsonValue " + snapshot.getArray(index).get(1) + "]");
-        }
-      }
-    });
-    sb.append("]");
   }
 
   // @formatter:off

@@ -19,6 +19,9 @@ import com.goodow.realtime.core.Handler;
 import com.goodow.realtime.core.Platform;
 import com.goodow.realtime.json.Json;
 import com.goodow.realtime.json.JsonArray;
+import com.goodow.realtime.json.JsonArray.ListIterator;
+import com.goodow.realtime.json.JsonObject;
+import com.goodow.realtime.json.JsonObject.MapIterator;
 import com.goodow.realtime.operation.OperationComponent;
 import com.goodow.realtime.operation.OperationSink;
 import com.goodow.realtime.operation.create.CreateComponent;
@@ -28,8 +31,6 @@ import com.goodow.realtime.operation.impl.CollaborativeTransformer;
 import com.goodow.realtime.operation.undo.UndoManager;
 import com.goodow.realtime.operation.undo.UndoManagerFactory;
 import com.goodow.realtime.store.channel.Constants.Addr;
-
-import java.util.List;
 
 public class DocumentBridge implements OperationSink<CollaborativeOperation> {
   public interface OutputSink extends OperationSink<CollaborativeOperation> {
@@ -116,21 +117,34 @@ public class DocumentBridge implements OperationSink<CollaborativeOperation> {
             .<CollaborativeOperation> getNoOp();
   }
 
-  public JsonArray toJson() {
-    JsonArray components = Json.createArray();
-    int createOpIdx = 0;
-    for (CollaborativeObject object : model.objects.values()) {
-      OperationComponent<?>[] initializeOp = object.toInitialization();
-      boolean isCreateOp = true;
-      for (OperationComponent<?> op : initializeOp) {
-        if (isCreateOp) {
-          components.insert(createOpIdx++, op.toJson());
-          isCreateOp = false;
-        } else {
-          components.push(op.toJson());
+  public JsonObject toJson() {
+    return model.getRoot().toJson();
+  }
+
+  public JsonArray toSnapshot() {
+    final JsonArray createComponents = Json.createArray();
+    final JsonArray components = Json.createArray();
+    model.objects.forEach(new MapIterator<CollaborativeObject>() {
+      @Override
+      public void call(String key, CollaborativeObject object) {
+        OperationComponent<?>[] initializeComponents = object.toInitialization();
+        boolean isCreateOp = true;
+        for (OperationComponent<?> component : initializeComponents) {
+          if (isCreateOp) {
+            createComponents.push(component.toJson());
+            isCreateOp = false;
+          } else {
+            components.push(component.toJson());
+          }
         }
       }
-    }
+    });
+    components.forEach(new ListIterator<OperationComponent<?>>() {
+      @Override
+      public void call(int index, OperationComponent<?> component) {
+        createComponents.push(component);
+      }
+    });
     return components;
   }
 
@@ -162,11 +176,14 @@ public class DocumentBridge implements OperationSink<CollaborativeOperation> {
     bypassUndoStack(undoManager.undo());
   }
 
-  @SuppressWarnings("unchecked")
-  private void applyLocally(CollaborativeOperation operation) {
-    List<AbstractComponent<?>> components = (List<AbstractComponent<?>>) operation.components;
-    for (AbstractComponent<?> component : components) {
-      if (component.type == CreateComponent.TYPE) {
+  private void applyLocally(final CollaborativeOperation operation) {
+    operation.components.forEach(new ListIterator<AbstractComponent<?>>() {
+      @Override
+      public void call(int index, AbstractComponent<?> component) {
+        if (component.type != CreateComponent.TYPE) {
+          model.getObject(component.id).consume(operation.userId, operation.sessionId, component);
+          return;
+        }
         CollaborativeObject obj;
         switch (((CreateComponent) component).subType) {
           case CreateComponent.MAP:
@@ -185,13 +202,11 @@ public class DocumentBridge implements OperationSink<CollaborativeOperation> {
             throw new RuntimeException("Shouldn't reach here!");
         }
         obj.id = component.id;
-        model.objects.put(obj.id, obj);
+        model.objects.set(obj.id, obj);
         model.bytesUsed += component.toString().length();
         model.bytesUsed++;
-        continue;
       }
-      model.getObject(component.id).consume(operation.userId, operation.sessionId, component);
-    }
+    });
   }
 
   /**

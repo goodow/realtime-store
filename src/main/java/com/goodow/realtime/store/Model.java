@@ -16,7 +16,10 @@ package com.goodow.realtime.store;
 import com.goodow.realtime.channel.util.IdGenerator;
 import com.goodow.realtime.core.Handler;
 import com.goodow.realtime.core.HandlerRegistration;
+import com.goodow.realtime.json.Json;
 import com.goodow.realtime.json.JsonArray;
+import com.goodow.realtime.json.JsonArray.ListIterator;
+import com.goodow.realtime.json.JsonObject;
 import com.goodow.realtime.operation.create.CreateComponent;
 import com.goodow.realtime.operation.cursor.ReferenceShiftedComponent;
 import com.goodow.realtime.operation.list.json.JsonInsertComponent;
@@ -32,13 +35,7 @@ import org.timepedia.exporter.client.ExportAfterCreateMethod;
 import org.timepedia.exporter.client.ExportPackage;
 import org.timepedia.exporter.client.NoExport;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.logging.Logger;
 
 /**
@@ -109,9 +106,9 @@ public class Model implements Disposable {
   private boolean isReadOnly;
   boolean canUndo;
   boolean canRedo;
-  final Map<String, CollaborativeObject> objects = new LinkedHashMap<String, CollaborativeObject>();
-  private final Map<String, List<String>> parents = new HashMap<String, List<String>>();
-  private Map<String, List<String>> indexReferences;
+  final JsonObject objects = Json.createObject(); // LinkedHashMap<String, CollaborativeObject>
+  private final JsonObject parents = Json.createObject(); // HashMap<String, List<String>>
+  private JsonObject indexReferences; // HashMap<String, List<String>>
   final Document document;
   final DocumentBridge bridge;
   double bytesUsed;
@@ -245,20 +242,25 @@ public class Model implements Disposable {
     return bytesUsed;
   }
 
-  @SuppressWarnings("unchecked")
   @NoExport
   public <T extends CollaborativeObject> T getObject(String objectId) {
-    return (T) objects.get(objectId);
+    return objects.<T> get(objectId);
   }
 
-  // @Export("extra.getParents")
-  public String[] getParents(String objectId) {
-    List<String> list = parents.get(objectId);
-    if (list == null) {
-      return null;
+  public JsonArray getParents(String objectId) {
+    JsonArray list = parents.getArray(objectId);
+    final JsonArray toRtn = Json.createArray();
+    if (list != null) {
+      list.forEach(new ListIterator<String>() {
+        @Override
+        public void call(int index, String parent) {
+          if (toRtn.indexOf(parent) == -1) {
+            toRtn.push(parent);
+          }
+        }
+      });
     }
-    Set<String> set = new HashSet<String>(list);
-    return set.toArray(new String[0]);
+    return toRtn;
   }
 
   /**
@@ -306,17 +308,17 @@ public class Model implements Disposable {
     }
     if (childOrNull.getNumber(0) == JsonSerializer.REFERENCE_TYPE) {
       String childId = childOrNull.getString(1);
-      List<String> list = parents.get(childId);
+      JsonArray list = parents.getArray(childId);
       if (isAdd) {
         if (list == null) {
-          list = new ArrayList<String>();
-          parents.put(childId, list);
+          list = Json.createArray();
+          parents.set(childId, list);
         }
-        list.add(parentId);
+        list.push(parentId);
       } else {
-        assert list != null && list.contains(parentId);
-        list.remove(parentId);
-        if (list.isEmpty()) {
+        assert list != null && list.indexOf(parentId) != -1;
+        list.remove(list.indexOf(parentId));
+        if (list.length() == 0) {
           parents.remove(childId);
         }
       }
@@ -341,17 +343,20 @@ public class Model implements Disposable {
     endCompoundOperation();
   }
 
-  void setIndexReferenceIndex(String referencedObject, boolean isInsert, int index, int length,
-      String sessionId, String userId) {
+  void setIndexReferenceIndex(String referencedObject, final boolean isInsert, final int index,
+      final int length, final String sessionId, final String userId) {
     if (indexReferences == null) {
       return;
     }
-    List<String> list = indexReferences.get(referencedObject);
-    if (list != null) {
-      for (String indexReferenceId : list) {
-        IndexReference indexReference = getObject(indexReferenceId);
-        indexReference.setIndex(isInsert, index, length, sessionId, userId);
-      }
+    JsonArray cursors = indexReferences.getArray(referencedObject);
+    if (cursors != null) {
+      cursors.forEach(new ListIterator<String>() {
+        @Override
+        public void call(int idx, String indexReferenceId) {
+          IndexReference indexReference = getObject(indexReferenceId);
+          indexReference.setIndex(isInsert, index, length, sessionId, userId);
+        }
+      });
     }
   }
 
@@ -382,13 +387,13 @@ public class Model implements Disposable {
 
   private void registerIndexReference(String indexReference, String referencedObject) {
     if (indexReferences == null) {
-      indexReferences = new HashMap<String, List<String>>();
+      indexReferences = Json.createObject();
     }
-    List<String> list = indexReferences.get(referencedObject);
+    JsonArray list = indexReferences.getArray(referencedObject);
     if (list == null) {
-      list = new ArrayList<String>();
-      indexReferences.put(referencedObject, list);
+      list = Json.createArray();
+      indexReferences.set(referencedObject, list);
     }
-    list.add(indexReference);
+    list.push(indexReference);
   }
 }

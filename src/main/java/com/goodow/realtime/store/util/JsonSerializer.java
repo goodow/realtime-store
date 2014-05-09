@@ -16,16 +16,14 @@ package com.goodow.realtime.store.util;
 import com.goodow.realtime.json.Json;
 import com.goodow.realtime.json.JsonArray;
 import com.goodow.realtime.json.JsonElement;
+import com.goodow.realtime.json.JsonObject;
 import com.goodow.realtime.store.CollaborativeObject;
-
-import java.util.Map;
 
 public class JsonSerializer {
   public static final int REFERENCE_TYPE = 2;
   private static final int VALUE_TYPE = 21;
 
-  public static Object deserializeObject(JsonArray arrayOrNull,
-      Map<String, CollaborativeObject> objects) {
+  public static Object deserializeObject(JsonArray arrayOrNull, JsonObject objects) {
     if (arrayOrNull == null) {
       return null;
     }
@@ -59,20 +57,15 @@ public class JsonSerializer {
     }
     JsonArray array = Json.createArray();
     if (obj instanceof Number) {
-      array.push(VALUE_TYPE);
-      array.push(((Number) obj).doubleValue());
+      array.push(VALUE_TYPE).push(((Number) obj).doubleValue());
     } else if (obj instanceof Boolean) {
-      array.push(VALUE_TYPE);
-      array.push(((Boolean) obj).booleanValue());
+      array.push(VALUE_TYPE).push(((Boolean) obj).booleanValue());
     } else if (obj instanceof CollaborativeObject) {
-      array.push(REFERENCE_TYPE);
-      array.push(((CollaborativeObject) obj).getId());
+      array.push(REFERENCE_TYPE).push(((CollaborativeObject) obj).getId());
     } else if (obj instanceof String) {
-      array.push(VALUE_TYPE);
-      array.push(obj);
+      array.push(VALUE_TYPE).push(obj);
     } else if (obj instanceof JsonElement) {
-      array.push(VALUE_TYPE);
-      array.push(((JsonElement) obj).copy());
+      array.push(VALUE_TYPE).push(((JsonElement) obj).copy());
     } else {
       throw new IllegalArgumentException("Invalid JSON type: " + obj.getClass().getName());
     }
