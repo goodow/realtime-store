@@ -39,9 +39,7 @@ public class ElasticSearchDriver {
   @Inject
   ElasticSearchDriver(Vertx vertx, final Container container) {
     eb = vertx.eventBus();
-    address =
-        container.config().getObject("realtime_search", new JsonObject()).getString("address",
-            DEFAULT_SEARCH_ADDRESS);
+    address = container.config().getString("persistor_address", DEFAULT_SEARCH_ADDRESS);
   }
 
   public void getOps(String type, String id, long from, long to,

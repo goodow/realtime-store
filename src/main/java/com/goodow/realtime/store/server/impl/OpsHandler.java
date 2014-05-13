@@ -13,24 +13,21 @@
  */
 package com.goodow.realtime.store.server.impl;
 
-import com.goodow.realtime.store.server.StoreModule;
 import com.goodow.realtime.store.server.StoreVerticle;
 
-import com.alienos.guice.GuiceVerticleHelper;
-import com.alienos.guice.GuiceVertxBinding;
 import com.google.inject.Inject;
 
-import org.vertx.java.busmods.BusModBase;
 import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.AsyncResultHandler;
-import org.vertx.java.core.Future;
 import org.vertx.java.core.Handler;
+import org.vertx.java.core.Vertx;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.eventbus.ReplyException;
+import org.vertx.java.core.impl.CountingCompletionHandler;
 import org.vertx.java.core.json.JsonObject;
+import org.vertx.java.platform.Container;
 
-@GuiceVertxBinding(modules = {StoreModule.class})
-public class OpsVerticle extends BusModBase {
+public class OpsHandler {
   static String[] getTypeAndId(String docId) {
     int idx = docId.indexOf('/');
     boolean hasType = idx != -1 && idx != docId.length() - 1;
@@ -38,21 +35,22 @@ public class OpsVerticle extends BusModBase {
         : new String[] {"test", docId};
   }
 
-  private String address;
   @Inject private RedisDriver redis;
+  @Inject private Vertx vertx;
+  @Inject private Container container;
+  private String address;
 
-  @Override
-  public void start(final Future<Void> startedResult) {
-    GuiceVerticleHelper.inject(this, vertx, container);
-    super.start();
-    address = getOptionalStringConfig("address", StoreVerticle.DEFAULT_ADDRESS) + ".ops";
+  public void start(final CountingCompletionHandler<Void> countDownLatch) {
+    address = container.config().getString("address", StoreVerticle.DEFAULT_ADDRESS) + ".ops";
 
-    eb.registerHandler(address, new Handler<Message<JsonObject>>() {
+    countDownLatch.incRequired();
+    vertx.eventBus().registerHandler(address, new Handler<Message<JsonObject>>() {
       @Override
       public void handle(Message<JsonObject> message) {
         JsonObject body = message.body();
-        String docId = getMandatoryString("id", message);
+        String docId = body.getString("id");
         if (docId == null) {
+          message.fail(-1, "id must be specified");
           return;
         }
         String[] typeAndId = getTypeAndId(docId);
@@ -64,9 +62,9 @@ public class OpsVerticle extends BusModBase {
       @Override
       public void handle(AsyncResult<Void> ar) {
         if (ar.succeeded()) {
-          startedResult.setResult(null);
+          countDownLatch.complete();
         } else {
-          startedResult.setFailure(ar.cause());
+          countDownLatch.failed(ar.cause());
         }
       }
     });

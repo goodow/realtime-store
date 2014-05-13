@@ -13,14 +13,6 @@
  */
 package com.goodow.realtime.store.server;
 
-import com.goodow.realtime.store.server.impl.OpsHandler;
-import com.goodow.realtime.store.server.impl.RedisDriver;
-import com.goodow.realtime.store.server.impl.SnapshotHandler;
-
-import com.alienos.guice.GuiceVerticleHelper;
-import com.alienos.guice.GuiceVertxBinding;
-import com.google.inject.Inject;
-
 import org.vertx.java.busmods.BusModBase;
 import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.AsyncResultHandler;
@@ -28,22 +20,15 @@ import org.vertx.java.core.Future;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.impl.CountingCompletionHandler;
 import org.vertx.java.core.impl.VertxInternal;
+import org.vertx.java.core.json.JsonObject;
 
-@GuiceVertxBinding(modules = {StoreModule.class})
-public class StoreVerticle extends BusModBase {
-  public static final String DEFAULT_ADDRESS = "realtime.store";
-
-  @Inject private RedisDriver redisDriver;
-  @Inject private SnapshotHandler snapshotHandler;
-  @Inject private OpsHandler opsHandler;
-
+public class BootstrapVerticle extends BusModBase {
   @Override
   public void start(final Future<Void> startedResult) {
-    GuiceVerticleHelper.inject(this, vertx, container);
     super.start();
 
     final CountingCompletionHandler<Void> countDownLatch =
-        new CountingCompletionHandler<Void>((VertxInternal) vertx, 1);
+        new CountingCompletionHandler<Void>((VertxInternal) vertx, 5);
     countDownLatch.setHandler(new Handler<AsyncResult<Void>>() {
       @Override
       public void handle(AsyncResult<Void> ar) {
@@ -65,9 +50,17 @@ public class StoreVerticle extends BusModBase {
       }
     };
 
-    redisDriver.start(countDownLatch);
-    snapshotHandler.start(countDownLatch);
-    opsHandler.start(countDownLatch);
-    container.deployVerticle(RestVerticle.class.getName(), config, doneHandler);
+    JsonObject empty = new JsonObject();
+    container.deployModule("com.goodow.realtime~realtime-channel~0.5.5-SNAPSHOT",
+        getOptionalObjectConfig("realtime_channel", empty), doneHandler);
+    container.deployModule("com.goodow.realtime~realtime-search~0.5.5-SNAPSHOT",
+        getOptionalObjectConfig("realtime_search", empty), doneHandler);
+    container.deployModule("com.goodow.realtime~realtime-auth~0.5.5-SNAPSHOT",
+        getOptionalObjectConfig("realtime_auth", empty), doneHandler);
+    container.deployModule("io.vertx~mod-redis~1.1.4-SNAPSHOT", getOptionalObjectConfig("redis",
+        empty), doneHandler);
+
+    container.deployVerticle(StoreVerticle.class.getName(), getOptionalObjectConfig(
+        "realtime_store", empty), doneHandler);
   }
 }

@@ -1,9 +1,9 @@
 {
-  "main":"com.goodow.realtime.store.server.StoreVerticle",
+  "main":"com.goodow.realtime.store.server.BootstrapVerticle",
   "auto-redeploy": true,
   
   "includes": "com.goodow.vertx~mod-guice~1.0.0-beta1, io.vertx~mod-redis-client~1.1.4-SNAPSHOT, com.goodow.realtime~realtime-json~0.5.5-SNAPSHOT",
-  "deploys": "com.goodow.realtime~realtime-channel~0.5.5-SNAPSHOT, io.vertx~mod-redis~1.1.3, com.goodow.realtime~realtime-search~0.5.5-SNAPSHOT",
+  "deploys": "com.goodow.realtime~realtime-channel~0.5.5-SNAPSHOT, io.vertx~mod-redis~1.1.3, com.goodow.realtime~realtime-auth~0.5.5-SNAPSHOT",
 
   "description":"Google Docs–style collaboration via the use of operational transforms",
   "licenses": ["The Apache Software License Version 2.0"],

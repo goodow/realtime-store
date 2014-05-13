@@ -32,9 +32,9 @@ import org.vertx.java.core.json.JsonObject;
 import java.util.ArrayList;
 import java.util.List;
 
-public class OpsSubmitter {
+public class OpSubmitter {
   @Inject private RedisDriver redis;
-  @Inject private ElasticSearchDriver persistence;
+  @Inject private ElasticSearchDriver persistor;
   @Inject private Transformer<CollaborativeOperation> transformer;
 
   /**
@@ -117,7 +117,7 @@ public class OpsSubmitter {
    * higher performance, but in some error conditions it may return an outdated snapshot.
    */
   private void lazyFetch(String type, String id, final AsyncResultHandler<JsonObject> callback) {
-    persistence.getSnapshot(type, id, new AsyncResultHandler<JsonObject>() {
+    persistor.getSnapshot(type, id, new AsyncResultHandler<JsonObject>() {
       @Override
       public void handle(AsyncResult<JsonObject> ar) {
         if (ar.succeeded() && ar.result() == null) {
@@ -225,6 +225,6 @@ public class OpsSubmitter {
 
   private void writeSnapshotAfterSubmit(String type, String id, JsonObject snapshotData,
       JsonObject opData, AsyncResultHandler<Void> callback) {
-    persistence.writeSnapshot(type, id, snapshotData, callback);
+    persistor.writeSnapshot(type, id, snapshotData, callback);
   }
 }

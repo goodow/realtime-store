@@ -11,10 +11,9 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package com.goodow.realtime.store.server.impl;
+package com.goodow.realtime.store.server;
 
 import com.goodow.realtime.store.channel.Constants.Key;
-import com.goodow.realtime.store.server.StoreVerticle;
 
 import org.vertx.java.busmods.BusModBase;
 import org.vertx.java.core.AsyncResult;
@@ -37,7 +36,7 @@ public class RestVerticle extends BusModBase {
     super.start();
     address = getOptionalStringConfig("address", StoreVerticle.DEFAULT_ADDRESS);
     JsonObject rest = getOptionalObjectConfig("rest", new JsonObject());
-    String path = rest.getString("path", "/store");
+    String path = rest.getString("prefix", "/store");
     HttpServer server = vertx.createHttpServer().setCompressionSupported(true);
     RouteMatcher matcher = new RouteMatcher();
 

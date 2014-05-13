@@ -24,7 +24,6 @@ import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 
 import org.vertx.java.core.Vertx;
-import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.platform.Container;
 
 import io.vertx.java.redis.RedisClient;
@@ -54,8 +53,8 @@ public class StoreModule extends AbstractModule implements VertxModule {
   @Singleton
   RedisClient provideRedisClient() {
     RedisClient redis =
-        new RedisClient(vertx.eventBus(), container.config().getObject("redis", new JsonObject())
-            .getString("address", "realtime.redis"));
+        new RedisClient(vertx.eventBus(), container.config().getString("redis_address",
+            "realtime.redis"));
     return redis;
   }
 }

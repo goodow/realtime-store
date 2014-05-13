@@ -16,6 +16,7 @@ package com.goodow.realtime.store.server.impl;
 import com.goodow.realtime.store.server.StoreVerticle;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.AsyncResultHandler;
@@ -38,13 +39,14 @@ import java.util.List;
 
 import io.vertx.java.redis.RedisClient;
 
+@Singleton
 public class RedisDriver {
   private final String address;
   private String getOpsScript;
   private String submitScript;
   private String setExpireScript;
   @Inject private RedisClient redis;
-  @Inject private ElasticSearchDriver persistence;
+  @Inject private ElasticSearchDriver persistor;
   private final Vertx vertx;
   private final EventBus eb;
   private final Logger logger;
@@ -54,9 +56,7 @@ public class RedisDriver {
     this.vertx = vertx;
     eb = vertx.eventBus();
     logger = container.logger();
-    address =
-        container.config().getObject("realtime_store", new JsonObject()).getString("address",
-            StoreVerticle.DEFAULT_ADDRESS);
+    address = container.config().getString("address", StoreVerticle.DEFAULT_ADDRESS);
   }
 
   public void atomicSubmit(final String type, final String id, final JsonObject opData,
@@ -95,7 +95,7 @@ public class RedisDriver {
         // from oplog redis and retry.
 
         // The data in redis has been dumped. Fill redis with data from the oplog and retry.
-        persistence.getVersion(type, id, new AsyncResultHandler<Long>() {
+        persistor.getVersion(type, id, new AsyncResultHandler<Long>() {
           @Override
           public void handle(AsyncResult<Long> ar) {
             if (ar.failed()) {
@@ -183,7 +183,7 @@ public class RedisDriver {
               }
               if (docVersion == null && to == null) {
                 // I'm going to do a sneaky cache here if its not in redis.
-                persistence.getVersion(type, id, new AsyncResultHandler<Long>() {
+                persistor.getVersion(type, id, new AsyncResultHandler<Long>() {
                   @Override
                   public void handle(AsyncResult<Long> ar) {
                     if (ar.succeeded()) {
@@ -216,7 +216,7 @@ public class RedisDriver {
           callback.handle(new DefaultFutureResult<Long>(Long.valueOf(docVersion)));
           return;
         }
-        persistence.getVersion(type, id, callback);
+        persistor.getVersion(type, id, callback);
       }
     });
   }
@@ -303,7 +303,7 @@ public class RedisDriver {
       callback.handle(new DefaultFutureResult<JsonArray>(new JsonArray()));
       return;
     }
-    persistence.getOps(type, id, from, to, new AsyncResultHandler<JsonArray>() {
+    persistor.getOps(type, id, from, to, new AsyncResultHandler<JsonArray>() {
       @Override
       public void handle(AsyncResult<JsonArray> ar) {
         if (ar.succeeded()) {
@@ -462,7 +462,7 @@ public class RedisDriver {
    */
   private void writeOpToPersistence(final String type, final String id, final JsonObject opData,
       final AsyncResultHandler<Void> callback) {
-    persistence.getVersion(type, id, new AsyncResultHandler<Long>() {
+    persistor.getVersion(type, id, new AsyncResultHandler<Long>() {
       @Override
       public void handle(AsyncResult<Long> ar) {
         if (ar.failed()) {
@@ -472,7 +472,7 @@ public class RedisDriver {
         long docVersion = ar.result().longValue();
         long opVersion = opData.getLong("v").longValue();
         if (docVersion == opVersion) {
-          persistence.writeOp(type, id, opData, callback);
+          persistor.writeOp(type, id, opData, callback);
         } else {
           assert docVersion < opVersion;
           // Its possible (though unlikely) that ops will be missing from the oplog if the redis
@@ -490,7 +490,7 @@ public class RedisDriver {
                   new CountingCompletionHandler<Void>((VertxInternal) vertx, ops.size());
               countDownLatch.setHandler(callback);
               for (Object op : ops) {
-                persistence.writeOp(type, id, (JsonObject) op, new AsyncResultHandler<Void>() {
+                persistor.writeOp(type, id, (JsonObject) op, new AsyncResultHandler<Void>() {
                   @Override
                   public void handle(AsyncResult<Void> ar) {
                     if (ar.failed()) {
