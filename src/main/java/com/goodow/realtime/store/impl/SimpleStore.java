@@ -17,26 +17,19 @@ import com.goodow.realtime.channel.Bus;
 import com.goodow.realtime.channel.impl.SimpleBus;
 import com.goodow.realtime.core.Handler;
 import com.goodow.realtime.core.Platform;
-import com.goodow.realtime.json.Json;
 import com.goodow.realtime.store.Document;
 import com.goodow.realtime.store.DocumentBridge;
 import com.goodow.realtime.store.Error;
 import com.goodow.realtime.store.Model;
 import com.goodow.realtime.store.Store;
-import com.goodow.realtime.store.util.ModelFactory;
 
-import org.timepedia.exporter.client.Export;
-import org.timepedia.exporter.client.ExportPackage;
-
-@ExportPackage(ModelFactory.PACKAGE_PREFIX_REALTIME)
-@Export
 public class SimpleStore implements Store {
-  protected final Bus bus;
+  public final Bus bus;
   protected String userId;
   protected String sessionId;
 
   public SimpleStore() {
-    this(new SimpleBus(Json.createObject().set(SimpleBus.MODE_MIX, true)));
+    this(new SimpleBus());
   }
 
   public SimpleStore(Bus bus) {

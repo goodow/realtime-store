@@ -13,6 +13,7 @@
  */
 package com.goodow.realtime.store;
 
+import com.goodow.realtime.json.JsonObject;
 import com.goodow.realtime.store.util.ModelFactory;
 
 import org.timepedia.exporter.client.Export;
@@ -38,19 +39,13 @@ public class ValueChangedEvent extends BaseModelEvent {
   public final String property;
 
   /**
-   * @param target The target object that generated the event.
-   * @param sessionId The id of the session that initiated the event.
-   * @param userId The user id of the user that initiated the event.
-   * @param property The property whose value changed.
-   * @param newValue The new property value.
-   * @param oldValue The old property value.
+   * @param serialized The serialized event object.
    */
-  public ValueChangedEvent(CollaborativeMap target, String sessionId, String userId,
-      String property, Object newValue, Object oldValue) {
-    super(EventType.VALUE_CHANGED, target, sessionId, userId, false);
-    this.property = property;
-    this.newValue = newValue;
-    this.oldValue = oldValue;
+  public ValueChangedEvent(JsonObject serialized) {
+    super(serialized.set("type", EventType.VALUE_CHANGED.name()).set("bubbles", false));
+    this.property = serialized.getString("property");
+    this.newValue = serialized.get("newValue");
+    this.oldValue = serialized.get("oldValue");
   }
 
   public Object getNewValue() {

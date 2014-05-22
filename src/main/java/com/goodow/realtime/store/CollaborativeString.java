@@ -14,7 +14,7 @@
 package com.goodow.realtime.store;
 
 import com.goodow.realtime.core.Handler;
-import com.goodow.realtime.core.HandlerRegistration;
+import com.goodow.realtime.core.Registration;
 import com.goodow.realtime.operation.Operation;
 import com.goodow.realtime.operation.OperationComponent;
 import com.goodow.realtime.operation.create.CreateComponent;
@@ -72,11 +72,11 @@ public class CollaborativeString extends CollaborativeObject {
     snapshot = new StringBuilder();
   }
 
-  public HandlerRegistration addTextDeletedListener(Handler<TextDeletedEvent> handler) {
+  public Registration addTextDeletedListener(Handler<TextDeletedEvent> handler) {
     return addEventListener(EventType.TEXT_DELETED, handler, false);
   }
 
-  public HandlerRegistration addTextInsertedListener(Handler<TextInsertedEvent> handler) {
+  public Registration addTextInsertedListener(Handler<TextInsertedEvent> handler) {
     return addEventListener(EventType.TEXT_INSERTED, handler, false);
   }
 
@@ -222,7 +222,9 @@ public class CollaborativeString extends CollaborativeObject {
     int endIndex = startIndex + length;
     assert length > 0 && endIndex <= length();
     String toDelete = snapshot.substring(startIndex, endIndex);
-    TextDeletedEvent event = new TextDeletedEvent(this, sessionId, userId, startIndex, toDelete);
+    TextDeletedEvent event =
+        new TextDeletedEvent(event(sessionId, userId).set("index", startIndex)
+            .set("text", toDelete));
     snapshot.delete(startIndex, endIndex);
     fireEvent(event);
     model.setIndexReferenceIndex(id, false, startIndex, length, sessionId, userId);
@@ -231,7 +233,8 @@ public class CollaborativeString extends CollaborativeObject {
 
   private void insertAndFireEvent(int index, String text, String sessionId, String userId) {
     assert index <= length();
-    TextInsertedEvent event = new TextInsertedEvent(this, sessionId, userId, index, text);
+    TextInsertedEvent event =
+        new TextInsertedEvent(event(sessionId, userId).set("index", index).set("text", text));
     snapshot.insert(index, text);
     fireEvent(event);
     model.setIndexReferenceIndex(id, true, index, text.length(), sessionId, userId);

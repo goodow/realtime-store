@@ -13,9 +13,10 @@
  */
 package com.goodow.realtime.store.impl;
 
-import com.goodow.realtime.channel.impl.ReliableBus;
+import com.goodow.realtime.channel.Bus;
 import com.goodow.realtime.core.Handler;
 import com.goodow.realtime.core.Platform;
+import com.goodow.realtime.json.Json;
 import com.goodow.realtime.json.JsonObject;
 import com.goodow.realtime.store.DocumentBridge;
 import com.goodow.realtime.store.Model;
@@ -28,25 +29,26 @@ import org.timepedia.exporter.client.ExportPackage;
 
 @ExportPackage(ModelFactory.PACKAGE_PREFIX_REALTIME)
 @Export
-public class ChannelStore extends SubscribeOnlyStore {
+public class DefaultStore extends SubscribeOnlyStore {
 
-  public ChannelStore(ReliableBus bus) {
+  public DefaultStore(Bus bus) {
     super(bus);
   }
 
-  public ChannelStore(String serverAddress, JsonObject options) {
+  public DefaultStore(String serverAddress, JsonObject options) {
     super(serverAddress, options);
   }
 
   @Override
-  protected void onLoad(String docId, Handler<Model> opt_initializer, JsonObject snapshot,
+  protected void onLoaded(String docId, Handler<Model> opt_initializer, JsonObject snapshot,
       DocumentBridge bridge) {
+    bridge.setUndoEnabled(true);
+
+    snapshot = snapshot == null ? Json.createObject().set(Key.VERSION, 0).set(Key.SESSION_ID, sessionId) : snapshot;
+    OperationSucker operationSucker = new OperationSucker(bus, docId);
+    operationSucker.load(bridge, snapshot);
     if (snapshot.getNumber(Key.VERSION) == 0 && opt_initializer != null) {
       Platform.scheduler().handle(opt_initializer, bridge.getDocument().getModel());
     }
-
-    bridge.setUndoEnabled(true);
-    OperationSucker operationSucker = new OperationSucker(getBus(), docId);
-    operationSucker.load(bridge, snapshot);
   }
 }

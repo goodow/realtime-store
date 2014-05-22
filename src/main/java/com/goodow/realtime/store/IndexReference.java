@@ -14,7 +14,7 @@
 package com.goodow.realtime.store;
 
 import com.goodow.realtime.core.Handler;
-import com.goodow.realtime.core.HandlerRegistration;
+import com.goodow.realtime.core.Registration;
 import com.goodow.realtime.json.Json;
 import com.goodow.realtime.json.JsonObject;
 import com.goodow.realtime.operation.OperationComponent;
@@ -88,7 +88,7 @@ public class IndexReference extends CollaborativeObject {
     super(model);
   }
 
-  public HandlerRegistration addReferenceShiftedListener(Handler<ReferenceShiftedEvent> handler) {
+  public Registration addReferenceShiftedListener(Handler<ReferenceShiftedEvent> handler) {
     return addEventListener(EventType.REFERENCE_SHIFTED, handler, false);
   }
 
@@ -150,7 +150,8 @@ public class IndexReference extends CollaborativeObject {
     canBeDeleted = op.canBeDeleted;
     if (op.oldIndex != -1) {
       ReferenceShiftedEvent event =
-          new ReferenceShiftedEvent(this, op.oldIndex, op.newIndex, sessionId, userId);
+          new ReferenceShiftedEvent(event(sessionId, userId).set("oldIndex", op.oldIndex).set(
+              "newIndex", op.newIndex));
       fireEvent(event);
     }
   }

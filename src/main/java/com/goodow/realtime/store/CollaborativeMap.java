@@ -14,7 +14,7 @@
 package com.goodow.realtime.store;
 
 import com.goodow.realtime.core.Handler;
-import com.goodow.realtime.core.HandlerRegistration;
+import com.goodow.realtime.core.Registration;
 import com.goodow.realtime.json.Json;
 import com.goodow.realtime.json.JsonArray;
 import com.goodow.realtime.json.JsonObject;
@@ -107,7 +107,7 @@ public class CollaborativeMap extends CollaborativeObject {
     snapshot = Json.createObject();
   }
 
-  public HandlerRegistration addValueChangedListener(Handler<ValueChangedEvent> handler) {
+  public Registration addValueChangedListener(Handler<ValueChangedEvent> handler) {
     return addEventListener(EventType.VALUE_CHANGED, handler, false);
   }
 
@@ -316,7 +316,8 @@ public class CollaborativeMap extends CollaborativeObject {
     assert null != newValue;
     Object newObject = JsonSerializer.deserializeObject(newValue, model.objects);
     ValueChangedEvent event =
-        new ValueChangedEvent(this, sessionId, userId, key, newObject, get(key));
+        new ValueChangedEvent(event(sessionId, userId).set("property", key).set("oldValue",
+            get(key)).set("newValue", newObject));
     if (snapshot.has(key)) {
       JsonArray oldValue = snapshot.getArray(key);
       model.addOrRemoveParent(oldValue, id, false);
@@ -331,7 +332,9 @@ public class CollaborativeMap extends CollaborativeObject {
   private void removeAndFireEvent(String key, String sessionId, String userId) {
     assert has(key);
     JsonArray oldValue = snapshot.getArray(key);
-    ValueChangedEvent event = new ValueChangedEvent(this, sessionId, userId, key, null, get(key));
+    ValueChangedEvent event =
+        new ValueChangedEvent(event(sessionId, userId).set("property", key).set("oldValue",
+            get(key)).set("newValue", null));
     snapshot.remove(key);
     model.addOrRemoveParent(oldValue, id, false);
     fireEvent(event);

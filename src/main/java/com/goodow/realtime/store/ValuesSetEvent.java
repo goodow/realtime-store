@@ -13,6 +13,8 @@
  */
 package com.goodow.realtime.store;
 
+import com.goodow.realtime.json.JsonArray;
+import com.goodow.realtime.json.JsonObject;
 import com.goodow.realtime.store.util.ModelFactory;
 
 import com.google.common.annotations.GwtIncompatible;
@@ -57,28 +59,22 @@ public class ValuesSetEvent extends BaseModelEvent {
    */
   public final int index;
   /**
-   * The new values.
-   */
-  public final Object[] oldValues;
-  /**
    * The old values.
    */
-  public final Object[] newValues;
+  public final JsonArray oldValues;
+  /**
+   * The new values.
+   */
+  public final JsonArray newValues;
 
   /**
-   * @param target The target object that generated the event.
-   * @param sessionId The id of the session that initiated the event.
-   * @param userId The user id of the user that initiated the event.
-   * @param index The index of the change.
-   * @param oldValues The old values.
-   * @param newValues The new values.
+   * @param serialized The serialized event object.
    */
-  public ValuesSetEvent(CollaborativeList target, String sessionId, String userId, int index,
-      Object[] oldValues, Object[] newValues) {
-    super(EventType.VALUES_SET, target, sessionId, userId, false);
-    this.index = index;
-    this.oldValues = oldValues;
-    this.newValues = newValues;
+  public ValuesSetEvent(JsonObject serialized) {
+    super(serialized.set("type", EventType.VALUES_SET.name()).set("bubbles", false));
+    this.index = (int) serialized.getNumber("index");
+    this.oldValues = serialized.getArray("oldValues");
+    this.newValues = serialized.getArray("newValues");
   }
 
   public int getIndex() {
@@ -86,12 +82,12 @@ public class ValuesSetEvent extends BaseModelEvent {
   }
 
   @NoExport
-  public Object[] getNewValues() {
+  public JsonArray getNewValues() {
     return newValues;
   }
 
   @NoExport
-  public Object[] getOldValues() {
+  public JsonArray getOldValues() {
     return oldValues;
   }
 }

@@ -14,8 +14,11 @@
 package com.goodow.realtime.store;
 
 import com.goodow.realtime.core.Handler;
-import com.goodow.realtime.core.HandlerRegistration;
+import com.goodow.realtime.core.Registration;
+import com.goodow.realtime.json.Json;
+import com.goodow.realtime.json.JsonObject;
 import com.goodow.realtime.operation.OperationComponent;
+import com.goodow.realtime.store.channel.Constants.Key;
 import com.goodow.realtime.store.util.ModelFactory;
 
 import org.timepedia.exporter.client.Export;
@@ -50,12 +53,12 @@ public abstract class CollaborativeObject implements Disposable {
    * @param opt_capture In DOM-compliant browsers, this determines whether the listener is fired
    *          during the capture or bubble phase of the event.
    */
-  public HandlerRegistration addEventListener(EventType type, Handler<?> handler,
+  public Registration addEventListener(EventType type, Handler<?> handler,
       boolean opt_capture) {
     return model.document.addEventListener(id, type, handler, opt_capture);
   }
 
-  public HandlerRegistration addObjectChangedListener(Handler<ObjectChangedEvent> handler) {
+  public Registration addObjectChangedListener(Handler<ObjectChangedEvent> handler) {
     return addEventListener(EventType.OBJECT_CHANGED, handler, false);
   }
 
@@ -82,6 +85,11 @@ public abstract class CollaborativeObject implements Disposable {
 
   <T> void consumeAndSubmit(OperationComponent<T> component) {
     model.bridge.consumeAndSubmit(component);
+  }
+
+  JsonObject event(String sessionId, String userId) {
+    return Json.createObject().set("target", id).set("sessionId", sessionId).set(Key.USER_ID,
+        userId).set("isLocal", model.bridge.isLocalSession(sessionId));
   }
 
   void fireEvent(BaseModelEvent event) {

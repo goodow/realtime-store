@@ -15,7 +15,7 @@ package com.goodow.realtime.store;
 
 import com.goodow.realtime.channel.util.IdGenerator;
 import com.goodow.realtime.core.Handler;
-import com.goodow.realtime.core.HandlerRegistration;
+import com.goodow.realtime.core.Registration;
 import com.goodow.realtime.json.Json;
 import com.goodow.realtime.json.JsonArray;
 import com.goodow.realtime.json.JsonArray.ListIterator;
@@ -112,6 +112,14 @@ public class Model implements Disposable {
   final Document document;
   final DocumentBridge bridge;
   double bytesUsed;
+  /**
+   * The current server version number for this model. The version number begins at 1 (the initial
+   * empty model) and is incremented each time the model is changed on the server (either by the
+   * current session or any other collaborator). Because this version number includes only changes
+   * that the server knows about, it is only updated while this client is connected to the Realtime
+   * API server and it does not include changes that have not yet been saved to the server.
+   */
+  double serverVersion;
 
   /**
    * @param bridge The driver for the GWT collaborative libraries.
@@ -122,7 +130,7 @@ public class Model implements Disposable {
     this.document = document;
   }
 
-  public HandlerRegistration addUndoRedoStateChangedListener(
+  public Registration addUndoRedoStateChangedListener(
       final Handler<UndoRedoStateChangedEvent> handler) {
     return document.addEventListener(null, EventType.UNDO_REDO_STATE_CHANGED, handler, false);
   }
@@ -317,7 +325,7 @@ public class Model implements Disposable {
         list.push(parentId);
       } else {
         assert list != null && list.indexOf(parentId) != -1;
-        list.remove(list.indexOf(parentId));
+        list.removeValue(parentId);
         if (list.length() == 0) {
           parents.remove(childId);
         }

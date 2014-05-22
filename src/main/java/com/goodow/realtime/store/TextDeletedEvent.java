@@ -13,6 +13,7 @@
  */
 package com.goodow.realtime.store;
 
+import com.goodow.realtime.json.JsonObject;
 import com.goodow.realtime.store.util.ModelFactory;
 
 import org.timepedia.exporter.client.Export;
@@ -34,17 +35,12 @@ public class TextDeletedEvent extends BaseModelEvent {
   public final String text;
 
   /**
-   * @param target The target object that generated the event.
-   * @param sessionId The id of the session that initiated the event.
-   * @param userId The user id of the user that initiated the event.
-   * @param index The index of the change.
-   * @param text The deleted text.
+   * @param serialized The serialized event object.
    */
-  public TextDeletedEvent(CollaborativeString target, String sessionId, String userId, int index,
-      String text) {
-    super(EventType.TEXT_DELETED, target, sessionId, userId, false);
-    this.index = index;
-    this.text = text;
+  public TextDeletedEvent(JsonObject serialized) {
+    super(serialized.set("type", EventType.TEXT_DELETED.name()).set("bubbles", false));
+    this.index = (int) serialized.getNumber("index");
+    this.text = serialized.getString("text");
   }
 
   public int getIndex() {

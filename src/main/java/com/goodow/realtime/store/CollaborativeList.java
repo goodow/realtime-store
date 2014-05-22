@@ -14,7 +14,7 @@
 package com.goodow.realtime.store;
 
 import com.goodow.realtime.core.Handler;
-import com.goodow.realtime.core.HandlerRegistration;
+import com.goodow.realtime.core.Registration;
 import com.goodow.realtime.json.Json;
 import com.goodow.realtime.json.JsonArray;
 import com.goodow.realtime.json.JsonArray.ListIterator;
@@ -143,15 +143,15 @@ public class CollaborativeList extends CollaborativeObject {
     snapshot = Json.createArray();
   }
 
-  public HandlerRegistration addValuesAddedListener(Handler<ValuesAddedEvent> handler) {
+  public Registration addValuesAddedListener(Handler<ValuesAddedEvent> handler) {
     return addEventListener(EventType.VALUES_ADDED, handler, false);
   }
 
-  public HandlerRegistration addValuesRemovedListener(Handler<ValuesRemovedEvent> handler) {
+  public Registration addValuesRemovedListener(Handler<ValuesRemovedEvent> handler) {
     return addEventListener(EventType.VALUES_REMOVED, handler, false);
   }
 
-  public HandlerRegistration addValuesSetListener(Handler<ValuesSetEvent> handler) {
+  public Registration addValuesSetListener(Handler<ValuesSetEvent> handler) {
     return addEventListener(EventType.VALUES_SET, handler, false);
   }
 
@@ -504,42 +504,44 @@ public class CollaborativeList extends CollaborativeObject {
 
   private void insertAndFireEvent(int index, JsonArray[] values, String sessionId, String userId) {
     assert index <= length();
-    Object[] objects = new Object[values.length];
+    JsonArray objects = Json.createArray();
     int i = 0;
     for (JsonArray value : values) {
-      objects[i] = JsonSerializer.deserializeObject(value, model.objects);
+      objects.push(JsonSerializer.deserializeObject(value, model.objects));
       snapshot.insert(index + i++, value);
       model.addOrRemoveParent(value, id, true);
       model.bytesUsed += (value == null ? "null" : value.toJsonString()).length();
     }
-    ValuesAddedEvent event = new ValuesAddedEvent(this, sessionId, userId, index, objects);
+    ValuesAddedEvent event =
+        new ValuesAddedEvent(event(sessionId, userId).set("index", index).set("values", objects));
     fireEvent(event);
     model.setIndexReferenceIndex(id, true, index, values.length, sessionId, userId);
   }
 
   private void removeAndFireEvent(int index, int length, String sessionId, String userId) {
     assert index + length <= length();
-    Object[] objects = new Object[length];
+    JsonArray objects = Json.createArray();
     for (int i = 0; i < length; i++) {
-      objects[i] = get(index);
+      objects.push(get(index));
       JsonArray value = snapshot.getArray(index);
       snapshot.remove(index);
       model.addOrRemoveParent(value, id, false);
       model.bytesUsed -= value.toJsonString().length();
     }
-    ValuesRemovedEvent event = new ValuesRemovedEvent(this, sessionId, userId, index, objects);
+    ValuesRemovedEvent event =
+        new ValuesRemovedEvent(event(sessionId, userId).set("index", index).set("values", objects));
     fireEvent(event);
     model.setIndexReferenceIndex(id, false, index, length, sessionId, userId);
   }
 
   private void replaceAndFireEvent(int index, JsonArray[] values, String sessionId, String userId) {
     assert index + values.length <= length();
-    Object[] oldObjects = new Object[values.length];
-    Object[] newObjects = new Object[values.length];
+    JsonArray oldObjects = Json.createArray();
+    JsonArray newObjects = Json.createArray();
     int i = 0;
     for (JsonArray newValue : values) {
-      oldObjects[i] = get(index + i);
-      newObjects[i] = JsonSerializer.deserializeObject(newValue, model.objects);
+      oldObjects.push(get(index + i));
+      newObjects.push(JsonSerializer.deserializeObject(newValue, model.objects));
       JsonArray oldValue = snapshot.getArray(index + i);
       snapshot.remove(index + i);
       snapshot.insert(index + i++, newValue);
@@ -549,7 +551,8 @@ public class CollaborativeList extends CollaborativeObject {
       model.bytesUsed += newValue.toJsonString().length();
     }
     ValuesSetEvent event =
-        new ValuesSetEvent(this, sessionId, userId, index, oldObjects, newObjects);
+        new ValuesSetEvent(event(sessionId, userId).set("index", index).set("oldObjects",
+            oldObjects).set("newObjects", newObjects));
     fireEvent(event);
   }
 

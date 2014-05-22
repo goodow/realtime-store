@@ -13,7 +13,7 @@
  */
 package com.goodow.realtime.store;
 
-import com.goodow.realtime.channel.server.VertxPlatform;
+import com.goodow.realtime.channel.server.impl.VertxPlatform;
 import com.goodow.realtime.core.Handler;
 import com.goodow.realtime.json.Json;
 import com.goodow.realtime.json.JsonArray;

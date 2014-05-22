@@ -13,7 +13,7 @@
  */
 package com.goodow.realtime.store;
 
-import com.goodow.realtime.channel.server.VertxPlatform;
+import com.goodow.realtime.channel.server.impl.VertxPlatform;
 import com.goodow.realtime.core.Handler;
 import com.goodow.realtime.json.Json;
 import com.goodow.realtime.json.JsonArray;
@@ -64,7 +64,7 @@ public class CollaborativeMapTest extends TestVerticle {
     map.addValueChangedListener(new Handler<ValueChangedEvent>() {
       @Override
       public void handle(ValueChangedEvent event) {
-        VertxAssert.assertSame(map, event.target);
+        VertxAssert.assertSame(map.id, event.target);
         VertxAssert.assertEquals(EventType.VALUE_CHANGED, event.type);
         VertxAssert.assertTrue(event.isLocal);
         events.push(event);

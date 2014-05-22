@@ -13,6 +13,7 @@
  */
 package com.goodow.realtime.store;
 
+import com.goodow.realtime.json.JsonObject;
 import com.goodow.realtime.store.util.ModelFactory;
 
 import org.timepedia.exporter.client.Export;
@@ -38,12 +39,11 @@ public class DocumentSaveStateChangedEvent implements Disposable {
 
   /**
    * @param document The document being saved.
-   * @param isSaving The saving state.
-   * @param isPending The state of pending mutations.
+   * @param serialized The serialized event object.
    */
-  public DocumentSaveStateChangedEvent(Document document, boolean isSaving, boolean isPending) {
-    this.isSaving = isSaving;
-    this.isPending = isPending;
+  public DocumentSaveStateChangedEvent(Document document, JsonObject serialized) {
+    this.isSaving = serialized.getBoolean("isSaving");
+    this.isPending = serialized.getBoolean("isPending");;
   }
 
   public boolean isPending() {

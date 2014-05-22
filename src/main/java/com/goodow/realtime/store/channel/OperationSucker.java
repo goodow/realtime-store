@@ -15,9 +15,9 @@ package com.goodow.realtime.store.channel;
 
 import com.goodow.realtime.channel.Bus;
 import com.goodow.realtime.channel.Message;
-import com.goodow.realtime.channel.impl.ReliableBus;
 import com.goodow.realtime.core.Handler;
-import com.goodow.realtime.core.HandlerRegistration;
+import com.goodow.realtime.core.Registration;
+import com.goodow.realtime.json.Json;
 import com.goodow.realtime.json.JsonObject;
 import com.goodow.realtime.operation.Transformer;
 import com.goodow.realtime.operation.impl.CollaborativeOperation;
@@ -43,10 +43,10 @@ public class OperationSucker implements OperationChannel.Listener<CollaborativeO
   private final Transformer<CollaborativeOperation> transformer;
 
   private final Bus bus;
-  private HandlerRegistration collaboratorChangedReg;
+  private Registration presenceReg;
   private DocumentBridge bridge;
 
-  public OperationSucker(ReliableBus bus, final String id) {
+  public OperationSucker(Bus bus, final String id) {
     this.bus = bus;
     this.id = id;
     transformer = new CollaborativeTransformer();
@@ -58,7 +58,7 @@ public class OperationSucker implements OperationChannel.Listener<CollaborativeO
     bridge.setOutputSink(new OutputSink() {
       @Override
       public void close() {
-        collaboratorChangedReg.unregisterHandler();
+        presenceReg.unregister();
         channel.disconnect();
       }
 
@@ -67,22 +67,16 @@ public class OperationSucker implements OperationChannel.Listener<CollaborativeO
         channel.send(op);
       }
     });
-    collaboratorChangedReg =
-        bus.registerHandler(Addr.COLLABORATOR + id, new Handler<Message<JsonObject>>() {
-          @Override
-          public void handle(Message<JsonObject> message) {
-            JsonObject body = message.body();
-            Collaborator collaborator =
-                new Collaborator(body.getString(Key.USER_ID), body.getString(Key.SESSION_ID), body
-                    .getString(Key.DISPLAY_NAME), body.getString(Key.COLOR), body
-                    .getBoolean(Key.IS_ME), body.getBoolean(Key.IS_ANONYMOUS), body
-                    .getString(Key.PHOTO_URL));
-            boolean isJoined = !body.has(Key.IS_JOINED) || body.getBoolean(Key.IS_JOINED);
-            bridge.onCollaboratorChanged(isJoined, collaborator);
-          }
-        });
+    presenceReg = bus.registerHandler(Addr.PRESENCE + id, new Handler<Message<JsonObject>>() {
+      @Override
+      public void handle(Message<JsonObject> message) {
+        JsonObject body = message.body();
+        boolean isJoined = !body.has(Key.IS_JOINED) || body.getBoolean(Key.IS_JOINED);
+        bridge.onCollaboratorChanged(isJoined, new Collaborator(body));
+      }
+    });
 
-    channel.connect((int) snapshot.getNumber(Key.VERSION), snapshot.getString(Key.SESSION_ID));
+    channel.connect(snapshot.getNumber(Key.VERSION), snapshot.getString(Key.SESSION_ID));
   }
 
   @Override
@@ -92,8 +86,8 @@ public class OperationSucker implements OperationChannel.Listener<CollaborativeO
   @Override
   public void onError(Throwable e) {
     logger.log(Level.WARNING, "Channel error occurs", e);
-    bus.publish(Bus.LOCAL + Addr.EVENT + Addr.DOCUMENT_ERROR + ":" + id, new Error(
-        ErrorType.SERVER_ERROR, "Channel error occurs", true));
+    bus.publishLocal(Addr.EVENT + Addr.DOCUMENT_ERROR + ":" + id, new Error(ErrorType.SERVER_ERROR,
+        "Channel error occurs", true));
   }
 
   @Override
@@ -105,7 +99,8 @@ public class OperationSucker implements OperationChannel.Listener<CollaborativeO
 
   @Override
   public void onSaveStateChanged(boolean isSaving, boolean isPending) {
-    bus.publish(Bus.LOCAL + Addr.EVENT + EventType.DOCUMENT_SAVE_STATE_CHANGED + ":" + id,
-        new DocumentSaveStateChangedEvent(bridge.getDocument(), isSaving, isPending));
+    bus.publishLocal(Addr.EVENT + EventType.DOCUMENT_SAVE_STATE_CHANGED + ":" + id,
+        new DocumentSaveStateChangedEvent(bridge.getDocument(), Json.createObject().set("isSaving",
+            isSaving).set("isPending", isPending)));
   }
 }

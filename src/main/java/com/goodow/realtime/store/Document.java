@@ -13,11 +13,10 @@
  */
 package com.goodow.realtime.store;
 
-import com.goodow.realtime.channel.Bus;
 import com.goodow.realtime.channel.Message;
 import com.goodow.realtime.core.Handler;
-import com.goodow.realtime.core.HandlerRegistration;
-import com.goodow.realtime.core.HandlerRegistrations;
+import com.goodow.realtime.core.Registration;
+import com.goodow.realtime.core.Registrations;
 import com.goodow.realtime.core.Platform;
 import com.goodow.realtime.json.Json;
 import com.goodow.realtime.json.JsonArray;
@@ -25,6 +24,7 @@ import com.goodow.realtime.json.JsonArray.ListIterator;
 import com.goodow.realtime.json.JsonObject;
 import com.goodow.realtime.json.JsonObject.MapIterator;
 import com.goodow.realtime.store.channel.Constants.Addr;
+import com.goodow.realtime.store.channel.Constants.Key;
 import com.goodow.realtime.store.util.ModelFactory;
 
 import org.timepedia.exporter.client.Export;
@@ -53,7 +53,7 @@ import org.timepedia.exporter.client.ExportPackage;
 public class Document implements Disposable {
   private final JsonArray collaborators;
   private final Model model;
-  final HandlerRegistrations handlerRegs;
+  final Registrations handlerRegs;
 
   private boolean isEventsScheduled = false;
   private JsonArray eventsToFire; // ArrayList<BaseModelEvent>
@@ -71,7 +71,7 @@ public class Document implements Disposable {
         @Override
         public void call(int index, BaseModelEvent event) {
           assert !event.bubbles;
-          String id = event.target.id;
+          String id = event.target;
           bubblingToAncestors(id, event, Json.createArray());
           fireEvent(event);
         }
@@ -81,7 +81,9 @@ public class Document implements Disposable {
         public void call(String key, JsonArray events) {
           BaseModelEvent first = events.<BaseModelEvent> get(0);
           ObjectChangedEvent objectChangedEvent =
-              new ObjectChangedEvent(model.getObject(key), first.sessionId, first.userId, events);
+              new ObjectChangedEvent(Json.createObject().set("target", key).set("sessionId",
+                  first.sessionId).set(Key.USER_ID, first.userId).set("isLocal",
+                  model.bridge.isLocalSession(first.sessionId)).set("events", events));
           fireEvent(objectChangedEvent);
         }
       });
@@ -109,9 +111,8 @@ public class Document implements Disposable {
     }
 
     private void fireEvent(BaseModelEvent event) {
-      model.bridge.store.getBus().publish(
-          Bus.LOCAL + Addr.EVENT + event.type + ":" + model.bridge.docId + ":" + event.target.id,
-          event);
+      model.bridge.store.getBus().publishLocal(
+          Addr.EVENT + event.type + ":" + model.bridge.docId + ":" + event.target, event);
     }
   };
 
@@ -121,20 +122,20 @@ public class Document implements Disposable {
   Document(final DocumentBridge bridge) {
     model = new Model(bridge, this);
     collaborators = Json.createArray();
-    handlerRegs = new HandlerRegistrations();
+    handlerRegs = new Registrations();
   }
 
-  public HandlerRegistration addCollaboratorJoinedListener(
+  public Registration addCollaboratorJoinedListener(
       final Handler<CollaboratorJoinedEvent> handler) {
     return addEventListener(null, EventType.COLLABORATOR_JOINED, handler, false);
   }
 
-  public HandlerRegistration addCollaboratorLeftListener(
+  public Registration addCollaboratorLeftListener(
       final Handler<CollaboratorLeftEvent> handler) {
     return addEventListener(null, EventType.COLLABORATOR_LEFT, handler, false);
   }
 
-  public HandlerRegistration addDocumentSaveStateListener(
+  public Registration addDocumentSaveStateListener(
       final Handler<DocumentSaveStateChangedEvent> handler) {
     return addEventListener(null, EventType.DOCUMENT_SAVE_STATE_CHANGED, handler, false);
   }
@@ -150,7 +151,7 @@ public class Document implements Disposable {
   public void close() {
     model.bridge.outputSink.close();
     collaborators.clear();
-    handlerRegs.unregisterHandler();
+    handlerRegs.unregister();
   }
 
   /**
@@ -173,12 +174,12 @@ public class Document implements Disposable {
   }
 
   @SuppressWarnings("rawtypes")
-  HandlerRegistration addEventListener(String objectId, EventType type, final Handler handler,
+  Registration addEventListener(String objectId, EventType type, final Handler handler,
       boolean opt_capture) {
     if (type == null || handler == null) {
       throw new NullPointerException((type == null ? "type" : "handler") + " was null.");
     }
-    return handlerRegs.wrap(model.bridge.store.getBus().registerHandler(
+    return handlerRegs.wrap(model.bridge.store.getBus().registerLocalHandler(
         Addr.EVENT + type + ":" + model.bridge.docId + (objectId == null ? "" : (":" + objectId)),
         new Handler<Message<?>>() {
           @SuppressWarnings("unchecked")
@@ -194,15 +195,15 @@ public class Document implements Disposable {
     if (isJoined) {
       if (index == -1) {
         collaborators.push(collaborator);
-        model.bridge.store.getBus().publish(
-            Bus.LOCAL + Addr.EVENT + EventType.COLLABORATOR_JOINED + ":" + model.bridge.docId,
+        model.bridge.store.getBus().publishLocal(
+            Addr.EVENT + EventType.COLLABORATOR_JOINED + ":" + model.bridge.docId,
             new CollaboratorJoinedEvent(this, collaborator));
       }
     } else {
       if (index != -1) {
         collaborators.remove(index);
-        model.bridge.store.getBus().publish(
-            Bus.LOCAL + Addr.EVENT + EventType.COLLABORATOR_LEFT + ":" + model.bridge.docId,
+        model.bridge.store.getBus().publishLocal(
+            Addr.EVENT + EventType.COLLABORATOR_LEFT + ":" + model.bridge.docId,
             new CollaboratorLeftEvent(this, collaborator));
       }
     }

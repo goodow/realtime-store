@@ -13,11 +13,14 @@
  */
 package com.goodow.realtime.store.impl;
 
+import com.goodow.realtime.channel.Bus;
 import com.goodow.realtime.channel.Message;
-import com.goodow.realtime.channel.impl.ReliableBus;
+import com.goodow.realtime.channel.impl.BusProxy;
+import com.goodow.realtime.channel.impl.ReconnectBus;
+import com.goodow.realtime.channel.impl.ReliableSubscribeBus;
 import com.goodow.realtime.channel.impl.WebSocketBus;
 import com.goodow.realtime.core.Handler;
-import com.goodow.realtime.core.HandlerRegistration;
+import com.goodow.realtime.core.Registration;
 import com.goodow.realtime.json.Json;
 import com.goodow.realtime.json.JsonObject;
 import com.goodow.realtime.operation.Transformer;
@@ -28,6 +31,7 @@ import com.goodow.realtime.store.DocumentBridge;
 import com.goodow.realtime.store.DocumentBridge.OutputSink;
 import com.goodow.realtime.store.Error;
 import com.goodow.realtime.store.Model;
+import com.goodow.realtime.store.Store;
 import com.goodow.realtime.store.channel.Constants.Addr;
 import com.goodow.realtime.store.channel.Constants.Key;
 import com.goodow.realtime.store.util.ModelFactory;
@@ -38,68 +42,53 @@ import org.timepedia.exporter.client.ExportPackage;
 @ExportPackage(ModelFactory.PACKAGE_PREFIX_REALTIME)
 @Export
 public class SubscribeOnlyStore extends SimpleStore {
-  private String token;
-
-  public SubscribeOnlyStore(ReliableBus bus) {
+  public SubscribeOnlyStore(Bus bus) {
     super(bus);
   }
 
   public SubscribeOnlyStore(String serverAddress, JsonObject options) {
-    this(new ReliableBus(new WebSocketBus(serverAddress, options)) {
-      @Override
-      protected double getSequenceNumber(String address, Object body) {
-        return ((JsonObject) body).getNumber(Key.VERSION);
-      }
-
-      @Override
-      protected boolean requireReliable(String address) {
-        return address.startsWith(Addr.STORE + ":");
-      }
-    });
+    this(new ReliableSubscribeBus(new ReconnectBus(serverAddress, options), options));
   }
 
-  public void authorize(String userId, String token) {
+  public Store authorize(String userId, String sessionId) {
     this.userId = userId;
-    this.token = token;
-  }
-
-  @Override
-  public ReliableBus getBus() {
-    return (ReliableBus) super.getBus();
-  }
-
-  /**
-   * Returns an OAuth access token.
-   * 
-   * @return An OAuth 2.0 access token.
-   */
-  public String getToken() {
-    return token;
+    this.sessionId = sessionId;
+    return this;
   }
 
   @Override
   public void load(final String docId, final Handler<Document> onLoaded,
       final Handler<Model> opt_initializer, final Handler<Error> opt_error) {
-    bus.send(Addr.STORE, Json.createObject().set(Key.ID, docId).set(Key.ACCESS_TOKEN, token),
-        new Handler<Message<JsonObject>>() {
+    if (sessionId == null) {
+      WebSocketBus webSocketBus = null;
+      if (bus instanceof WebSocketBus) {
+        webSocketBus = (WebSocketBus) bus;
+      } else if (bus instanceof BusProxy && ((BusProxy) bus).getDelegate() instanceof WebSocketBus) {
+        webSocketBus = (WebSocketBus) ((BusProxy) bus).getDelegate();
+      }
+      if (webSocketBus != null) {
+        webSocketBus.login("", "", new Handler<JsonObject>() {
           @Override
-          public void handle(Message<JsonObject> message) {
-            JsonObject body = message.body();
-            sessionId = body.getString(Key.SESSION_ID);
-            final DocumentBridge bridge =
-                new DocumentBridge(SubscribeOnlyStore.this, docId, body.getArray(Key.SNAPSHOT),
-                    opt_error);
-            onLoad(docId, opt_initializer, body, bridge);
-            bridge.scheduleHandle(onLoaded);
+          public void handle(JsonObject msg) {
+            sessionId = msg.getString(Key.SESSION_ID);
+            userId = msg.getString(Key.USER_ID);
+            doLoad(docId, onLoaded, opt_initializer, opt_error);
           }
         });
+        return;
+      }
+    }
+    doLoad(docId, onLoaded, opt_initializer, opt_error);
   }
 
-  protected void onLoad(final String docId, Handler<Model> opt_initializer, JsonObject snapshot,
+  protected void onLoaded(final String docId, Handler<Model> opt_initializer, JsonObject snapshot,
       final DocumentBridge bridge) {
     String address = Addr.STORE + ":" + docId;
-    getBus().synchronizeSequenceNumber(address, snapshot.getNumber(Key.VERSION) - 1);
-    final HandlerRegistration handlerReg =
+    if (bus instanceof ReliableSubscribeBus) {
+      ((ReliableSubscribeBus) bus).synchronizeSequenceNumber(address, snapshot
+          .getNumber(Key.VERSION) - 1);
+    }
+    final Registration handlerReg =
         bus.registerHandler(address, new Handler<Message<JsonObject>>() {
           Transformer<CollaborativeOperation> transformer = new CollaborativeTransformer();
 
@@ -113,12 +102,28 @@ public class SubscribeOnlyStore extends SimpleStore {
     bridge.setOutputSink(new OutputSink() {
       @Override
       public void close() {
-        handlerReg.unregisterHandler();
+        handlerReg.unregister();
       }
 
       @Override
       public void consume(CollaborativeOperation op) {
       }
     });
+  }
+
+  private void doLoad(final String docId, final Handler<Document> onLoaded,
+      final Handler<Model> opt_initializer, final Handler<Error> opt_error) {
+    bus.send(Addr.STORE, Json.createObject().set(Key.ID, docId),
+        new Handler<Message<JsonObject>>() {
+          @Override
+          public void handle(Message<JsonObject> message) {
+            JsonObject body = message.body();
+            final DocumentBridge bridge =
+                new DocumentBridge(SubscribeOnlyStore.this, docId, body == null ? null : body
+                    .getArray(Key.SNAPSHOT), opt_error);
+            onLoaded(docId, opt_initializer, body, bridge);
+            bridge.scheduleHandle(onLoaded);
+          }
+        });
   }
 }

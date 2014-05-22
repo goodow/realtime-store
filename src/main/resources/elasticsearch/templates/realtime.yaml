@@ -1,0 +1,23 @@
+realtime:
+  template: "realtime"
+  order: 0
+  settings:
+    analysis:
+      analyzer:
+        ik_max_word:
+          type: ik
+          alias: [ik]
+          use_smart: false
+        ik_smart:
+          type: ik
+          use_smart: true
+  mappings:
+    _default_:
+      properties:
+        _snapshot:
+          store: yes
+          index: no
+          enabled: false
+      dynamic_templates:
+      - template_1:
+        match:

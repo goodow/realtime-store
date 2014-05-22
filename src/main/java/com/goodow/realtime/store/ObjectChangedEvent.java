@@ -14,6 +14,7 @@
 package com.goodow.realtime.store;
 
 import com.goodow.realtime.json.JsonArray;
+import com.goodow.realtime.json.JsonObject;
 import com.goodow.realtime.store.util.ModelFactory;
 
 import org.timepedia.exporter.client.Export;
@@ -32,15 +33,11 @@ public class ObjectChangedEvent extends BaseModelEvent {
   public final JsonArray events; // BaseModelEvent[]
 
   /**
-   * @param target The target object that generated the event.
-   * @param sessionId The source object that generated the event.
-   * @param userId The user id of the user that initiated the event.
-   * @param events The events that caused the object to change.
+   * @param serialized The serialized event object.
    */
-  public ObjectChangedEvent(CollaborativeObject target, String sessionId, String userId,
-      JsonArray events) {
-    super(EventType.OBJECT_CHANGED, target, sessionId, userId, true);
-    this.events = events;
+  public ObjectChangedEvent(JsonObject serialized) {
+    super(serialized.set("type", EventType.OBJECT_CHANGED.name()).set("bubbles", true));
+    this.events = serialized.getArray("events");
   }
 
   public JsonArray getEvents() {

@@ -13,8 +13,6 @@
  */
 package com.goodow.realtime.store.channel;
 
-import com.goodow.realtime.channel.Bus;
-
 /**
  * Shared constants between server and client.
  */
@@ -23,10 +21,10 @@ public interface Constants {
   public interface Addr {
     String STORE = "realtime.store";
     String OPS = STORE + ".ops";
+    String PRESENCE = "realtime.store.presence:";
 
-    String EVENT = Bus.LOCAL + STORE + ".event.";
+    String EVENT = STORE + ".event.";
     String DOCUMENT_ERROR = "document_error";
-    String COLLABORATOR = "realtime.store.collaborator:";
   }
 
   /**
@@ -35,12 +33,13 @@ public interface Constants {
   public interface Key {
     String ID = "id";
     String OP_DATA = "opData";
+    String OP = "op";
+    String OPS = "ops";
     String SESSION_ID = "sid";
     String VERSION = "v";
 
     String SNAPSHOT = "snapshot";
     String ACCESS_TOKEN = "accessToken";
-    String AUTO_CREATE = "autoCreate";
 
     String IS_JOINED = "isJoined";
     String USER_ID = "userId";
@@ -50,18 +49,4 @@ public interface Constants {
     String IS_ANONYMOUS = "isAnonymous";
     String PHOTO_URL = "photoUrl";
   }
-  /** Service names. */
-  public interface Services {
-    String SERVICE = "otservice/";
-    String SNAPSHOT = SERVICE + "gs";
-    String DELTA = SERVICE + "catchup";
-    String REVISION = SERVICE + "revision";
-    String SAVE = SERVICE + "save";
-    String POLL = SERVICE + "poll";
-    String PRESENCE = SERVICE + "presence/";
-    String PRESENCE_CONNECT = PRESENCE + "connect/";
-    String PRESENCE_DISCONNECT = PRESENCE + "disconnect/";
-  }
-
-  int SESSION_LENGTH = 15;
 }

@@ -13,6 +13,7 @@
  */
 package com.goodow.realtime.store;
 
+import com.goodow.realtime.json.JsonObject;
 import com.goodow.realtime.store.util.ModelFactory;
 
 import org.timepedia.exporter.client.Export;
@@ -24,9 +25,8 @@ import org.timepedia.exporter.client.ExportPackage;
 @ExportPackage(ModelFactory.PACKAGE_PREFIX_REALTIME)
 @Export
 public abstract class BaseModelEvent implements Disposable {
-
   /**
-   * Whether this event should bubble to ancestors.
+   * Whether this event bubbles.
    */
   public final boolean bubbles;
   /**
@@ -34,42 +34,36 @@ public abstract class BaseModelEvent implements Disposable {
    */
   public final boolean isLocal;
   /**
-   * The id of the session that initiated the event.
+   * The ID of the session that initiated the event.
    */
   public final String sessionId;
+  /**
+   * The user ID of the user that initiated the event.
+   */
+  public final String userId;
   /**
    * Event type.
    */
   public final EventType type;
   /**
-   * The user id of the user that initiated the event.
+   * The target object ID that generated the event.
    */
-  public final String userId;
-  final CollaborativeObject target;
+  final String target;
 
   /**
-   * @param type The event type.
-   * @param target The target object that generated the event.
-   * @param sessionId The id of the session that initiated the event.
-   * @param userId The user id of the user that initiated the event.
-   * @param bubbles Whether or not this event should bubble to ancestors.
+   * @param serialized The serialized event object.
    */
-  protected BaseModelEvent(EventType type, CollaborativeObject target, String sessionId,
-      String userId, boolean bubbles) {
-    this.type = type;
-    this.target = target;
-    this.sessionId = sessionId;
-    this.userId = userId;
-    this.isLocal = target.model.bridge.isLocalSession(sessionId);
-    this.bubbles = bubbles;
+  protected BaseModelEvent(JsonObject serialized) {
+    this.type = EventType.valueOf(serialized.getString("type"));
+    this.target = serialized.getString("target");
+    this.sessionId = serialized.getString("sessionId");
+    this.userId = serialized.getString("userId");
+    this.isLocal = serialized.getBoolean("isLocal");
+    this.bubbles = serialized.getBoolean("bubbles");
   }
 
   public String getSessionId() {
     return sessionId;
-  }
-
-  public CollaborativeObject getTarget() {
-    return target;
   }
 
   public EventType getType() {

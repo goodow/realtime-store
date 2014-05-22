@@ -13,6 +13,7 @@
  */
 package com.goodow.realtime.store;
 
+import com.goodow.realtime.json.JsonObject;
 import com.goodow.realtime.store.util.ModelFactory;
 
 import org.timepedia.exporter.client.Export;
@@ -34,13 +35,12 @@ public class UndoRedoStateChangedEvent implements Disposable {
   public final boolean canUndo;
 
   /**
-   * @param model The model whose state changed.
-   * @param canUndo True if you can currently undo.
-   * @param canRedo True if you can currently redo.
+   * @param source The source object.
+   * @param canUndo A serialized undo/redo state changed event.
    */
-  public UndoRedoStateChangedEvent(Model model, boolean canUndo, boolean canRedo) {
-    this.canUndo = canUndo;
-    this.canRedo = canRedo;
+  public UndoRedoStateChangedEvent(Model source, JsonObject serialized) {
+    this.canUndo = serialized.getBoolean("canUndo");
+    this.canRedo = serialized.getBoolean("canRedo");
   }
 
   public boolean canRedo() {

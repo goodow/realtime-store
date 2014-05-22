@@ -13,10 +13,11 @@
  */
 package com.goodow.realtime.store.channel;
 
+import com.goodow.realtime.channel.Bus;
 import com.goodow.realtime.channel.Message;
-import com.goodow.realtime.channel.impl.ReliableBus;
+import com.goodow.realtime.channel.impl.ReliableSubscribeBus;
 import com.goodow.realtime.core.Handler;
-import com.goodow.realtime.core.HandlerRegistration;
+import com.goodow.realtime.core.Registration;
 import com.goodow.realtime.core.Platform;
 import com.goodow.realtime.json.Json;
 import com.goodow.realtime.json.JsonObject;
@@ -120,12 +121,11 @@ public class OperationChannel<O extends Operation<?>> {
   private final TransformQueue<O> queue;
   private String sessionId;
   private final String id;
-  private final ReliableBus bus;
-  private HandlerRegistration handlerRegistration;
+  private final Bus bus;
+  private Registration handlerRegistration;
   private final Transformer<O> transformer;
 
-  public OperationChannel(String id, Transformer<O> transformer, ReliableBus bus,
-      Listener<O> listener) {
+  public OperationChannel(String id, Transformer<O> transformer, Bus bus, Listener<O> listener) {
     this.id = id;
     this.transformer = transformer;
     this.bus = bus;
@@ -139,7 +139,9 @@ public class OperationChannel<O extends Operation<?>> {
     assert version >= 0 : "Invalid version, " + version;
     this.sessionId = sessionId;
     String addr = Addr.STORE + ":" + id;
-    bus.synchronizeSequenceNumber(addr, version - 1);
+    if (bus instanceof ReliableSubscribeBus) {
+      ((ReliableSubscribeBus) bus).synchronizeSequenceNumber(addr, version - 1);
+    }
     handlerRegistration = bus.registerHandler(addr, new Handler<Message<JsonObject>>() {
       @Override
       public void handle(Message<JsonObject> message) {
@@ -163,7 +165,7 @@ public class OperationChannel<O extends Operation<?>> {
 
   public void disconnect() {
     checkConnected();
-    handlerRegistration.unregisterHandler();
+    handlerRegistration.unregister();
     sessionId = null;
     handlerRegistration = null;
     setState(State.UNINITIALISED);
@@ -307,7 +309,7 @@ public class OperationChannel<O extends Operation<?>> {
     JsonObject delta =
         Json.createObject().set("action", "post").set(Key.ID, id).set(Key.OP_DATA,
             ((JsonObject) unackedClientOp.toJson()).set(Key.VERSION, queue.version()));
-    bus.send(Addr.OPS, delta, new Handler<Message<JsonObject>>() {
+    bus.send(Addr.STORE, delta, new Handler<Message<JsonObject>>() {
       @Override
       public void handle(Message<JsonObject> message) {
         if (!isConnected()) {

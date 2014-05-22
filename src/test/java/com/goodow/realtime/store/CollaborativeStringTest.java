@@ -13,7 +13,7 @@
  */
 package com.goodow.realtime.store;
 
-import com.goodow.realtime.channel.server.VertxPlatform;
+import com.goodow.realtime.channel.server.impl.VertxPlatform;
 import com.goodow.realtime.core.Handler;
 import com.goodow.realtime.json.Json;
 import com.goodow.realtime.json.JsonArray;
@@ -61,7 +61,7 @@ public class CollaborativeStringTest extends TestVerticle {
       @Override
       public void handle(ObjectChangedEvent event) {
         count[0]++;
-        VertxAssert.assertSame(str, event.target);
+        VertxAssert.assertSame(str.id, event.target);
         VertxAssert.assertEquals(EventType.OBJECT_CHANGED, event.type);
         VertxAssert.assertTrue(event.isLocal);
         JsonArray events = event.events;
@@ -79,7 +79,7 @@ public class CollaborativeStringTest extends TestVerticle {
       public void handle(TextInsertedEvent event) {
         count[0]++;
         objectChanged[0] = event;
-        VertxAssert.assertSame(str, event.target);
+        VertxAssert.assertSame(str.id, event.target);
         VertxAssert.assertEquals(EventType.TEXT_INSERTED, event.type);
         VertxAssert.assertTrue(event.isLocal);
         VertxAssert.assertEquals(0, event.index);
@@ -93,7 +93,7 @@ public class CollaborativeStringTest extends TestVerticle {
       public void handle(TextDeletedEvent event) {
         count[0]++;
         objectChanged[1] = event;
-        VertxAssert.assertSame(str, event.target);
+        VertxAssert.assertSame(str.id, event.target);
         VertxAssert.assertEquals(EventType.TEXT_DELETED, event.type);
         VertxAssert.assertTrue(event.isLocal);
         VertxAssert.assertEquals(2, event.index);

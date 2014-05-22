@@ -13,7 +13,6 @@
  */
 package com.goodow.realtime.store;
 
-import com.goodow.realtime.channel.Bus;
 import com.goodow.realtime.channel.Message;
 import com.goodow.realtime.core.Handler;
 import com.goodow.realtime.core.Platform;
@@ -31,6 +30,7 @@ import com.goodow.realtime.operation.impl.CollaborativeTransformer;
 import com.goodow.realtime.operation.undo.UndoManager;
 import com.goodow.realtime.operation.undo.UndoManagerFactory;
 import com.goodow.realtime.store.channel.Constants.Addr;
+import com.goodow.realtime.store.impl.SimpleStore;
 
 public class DocumentBridge implements OperationSink<CollaborativeOperation> {
   public interface OutputSink extends OperationSink<CollaborativeOperation> {
@@ -56,13 +56,13 @@ public class DocumentBridge implements OperationSink<CollaborativeOperation> {
 
   public DocumentBridge(Store store, String docId, JsonArray components,
       final Handler<Error> errorHandler) {
-    this.store = store;
+    this.store = store == null ? new SimpleStore() : store;
     this.docId = docId;
     document = new Document(this);
     model = document.getModel();
 
     if (errorHandler != null) {
-      document.handlerRegs.wrap(store.getBus().registerHandler(
+      document.handlerRegs.wrap(store.getBus().registerLocalHandler(
           Addr.EVENT + Addr.DOCUMENT_ERROR + ":" + docId, new Handler<Message<Error>>() {
             @Override
             public void handle(Message<Error> message) {
@@ -227,9 +227,11 @@ public class DocumentBridge implements OperationSink<CollaborativeOperation> {
     if (model.canUndo() != canUndo || model.canRedo() != canRedo) {
       model.canUndo = canUndo;
       model.canRedo = canRedo;
-      UndoRedoStateChangedEvent event = new UndoRedoStateChangedEvent(model, canUndo, canRedo);
-      store.getBus().publish(
-          Bus.LOCAL + Addr.EVENT + EventType.UNDO_REDO_STATE_CHANGED + ":" + docId, event);
+      UndoRedoStateChangedEvent event =
+          new UndoRedoStateChangedEvent(model, Json.createObject().set("canUndo", canUndo).set(
+              "canRedo", canRedo));
+      store.getBus().publishLocal(Addr.EVENT + EventType.UNDO_REDO_STATE_CHANGED + ":" + docId,
+          event);
     }
   }
 

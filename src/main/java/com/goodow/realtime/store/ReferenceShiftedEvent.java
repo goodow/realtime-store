@@ -13,6 +13,7 @@
  */
 package com.goodow.realtime.store;
 
+import com.goodow.realtime.json.JsonObject;
 import com.goodow.realtime.store.util.ModelFactory;
 
 import org.timepedia.exporter.client.Export;
@@ -34,17 +35,12 @@ public class ReferenceShiftedEvent extends BaseModelEvent {
   public final int oldIndex;
 
   /**
-   * @param target The reference that shifted.
-   * @param oldIndex The previous index.
-   * @param newIndex The new index.
-   * @param sessionId The id of the session.
-   * @param userId The id of the user.
+   * @param serialized The serialized event object.
    */
-  public ReferenceShiftedEvent(IndexReference target, int oldIndex, int newIndex, String sessionId,
-      String userId) {
-    super(EventType.REFERENCE_SHIFTED, target, sessionId, userId, false);
-    this.oldIndex = oldIndex;
-    this.newIndex = newIndex;
+  public ReferenceShiftedEvent(JsonObject serialized) {
+    super(serialized.set("type", EventType.REFERENCE_SHIFTED.name()).set("bubbles", false));
+    this.oldIndex = (int) serialized.getNumber("oldIndex");
+    this.newIndex = (int) serialized.getNumber("newIndex");
   }
 
   public int getNewIndex() {
