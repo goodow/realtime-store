@@ -15,9 +15,9 @@ package com.goodow.realtime.store;
 
 import com.goodow.realtime.channel.Message;
 import com.goodow.realtime.core.Handler;
+import com.goodow.realtime.core.Platform;
 import com.goodow.realtime.core.Registration;
 import com.goodow.realtime.core.Registrations;
-import com.goodow.realtime.core.Platform;
 import com.goodow.realtime.json.Json;
 import com.goodow.realtime.json.JsonArray;
 import com.goodow.realtime.json.JsonArray.ListIterator;
@@ -112,7 +112,7 @@ public class Document implements Disposable {
 
     private void fireEvent(BaseModelEvent event) {
       model.bridge.store.getBus().publishLocal(
-          Addr.EVENT + event.type + ":" + model.bridge.docId + ":" + event.target, event);
+          Addr.EVENT + event.type + ":" + model.bridge.id + ":" + event.target, event);
     }
   };
 
@@ -125,13 +125,11 @@ public class Document implements Disposable {
     handlerRegs = new Registrations();
   }
 
-  public Registration addCollaboratorJoinedListener(
-      final Handler<CollaboratorJoinedEvent> handler) {
+  public Registration addCollaboratorJoinedListener(final Handler<CollaboratorJoinedEvent> handler) {
     return addEventListener(null, EventType.COLLABORATOR_JOINED, handler, false);
   }
 
-  public Registration addCollaboratorLeftListener(
-      final Handler<CollaboratorLeftEvent> handler) {
+  public Registration addCollaboratorLeftListener(final Handler<CollaboratorLeftEvent> handler) {
     return addEventListener(null, EventType.COLLABORATOR_LEFT, handler, false);
   }
 
@@ -180,7 +178,7 @@ public class Document implements Disposable {
       throw new NullPointerException((type == null ? "type" : "handler") + " was null.");
     }
     return handlerRegs.wrap(model.bridge.store.getBus().registerLocalHandler(
-        Addr.EVENT + type + ":" + model.bridge.docId + (objectId == null ? "" : (":" + objectId)),
+        Addr.EVENT + type + ":" + model.bridge.id + (objectId == null ? "" : (":" + objectId)),
         new Handler<Message<?>>() {
           @SuppressWarnings("unchecked")
           @Override
@@ -196,14 +194,14 @@ public class Document implements Disposable {
       if (index == -1) {
         collaborators.push(collaborator);
         model.bridge.store.getBus().publishLocal(
-            Addr.EVENT + EventType.COLLABORATOR_JOINED + ":" + model.bridge.docId,
+            Addr.EVENT + EventType.COLLABORATOR_JOINED + ":" + model.bridge.id,
             new CollaboratorJoinedEvent(this, collaborator));
       }
     } else {
       if (index != -1) {
         collaborators.remove(index);
         model.bridge.store.getBus().publishLocal(
-            Addr.EVENT + EventType.COLLABORATOR_LEFT + ":" + model.bridge.docId,
+            Addr.EVENT + EventType.COLLABORATOR_LEFT + ":" + model.bridge.id,
             new CollaboratorLeftEvent(this, collaborator));
       }
     }

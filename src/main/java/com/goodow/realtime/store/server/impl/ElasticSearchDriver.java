@@ -60,15 +60,16 @@ public class ElasticSearchDriver {
       range.putNumber("lt", to);
     }
     JsonObject filter =
-        new JsonObject().putObject("filter", new JsonObject().putArray("and", new JsonArray().add(
-            termFilter).add(rangeFilter)));
-
+        new JsonObject().putArray("and", new JsonArray().add(termFilter).add(rangeFilter));
+    JsonObject sort =
+        new JsonObject().putObject(Key.VERSION, new JsonObject()
+            .putBoolean("ignore_unmapped", true));
     JsonObject search =
         new JsonObject().putString("action", "search").putString("_index", INDEX).putString(
             "_type", getOpsType(docType)).putObject(
             "source",
-            new JsonObject().putString("sort", Key.VERSION).putNumber("size", Long.MAX_VALUE)
-                .putObject("filter", filter));
+            new JsonObject().putObject("sort", sort).putNumber("size", Long.MAX_VALUE).putObject(
+                "filter", filter));
 
     eb.sendWithTimeout(address, search, REPLY_TIMEOUT,
         new Handler<AsyncResult<Message<JsonObject>>>() {

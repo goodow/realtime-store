@@ -19,6 +19,7 @@ import com.goodow.realtime.core.Platform;
 import com.goodow.realtime.json.Json;
 import com.goodow.realtime.json.JsonArray;
 import com.goodow.realtime.json.JsonArray.ListIterator;
+import com.goodow.realtime.json.JsonElement;
 import com.goodow.realtime.json.JsonObject;
 import com.goodow.realtime.json.JsonObject.MapIterator;
 import com.goodow.realtime.operation.OperationComponent;
@@ -48,22 +49,22 @@ public class DocumentBridge implements OperationSink<CollaborativeOperation> {
   }
 
   final Store store;
-  final String docId;
+  final String id;
   private final Document document;
   private final Model model;
   private UndoManager<CollaborativeOperation> undoManager = UndoManagerFactory.getNoOp();
   OutputSink outputSink = OutputSink.VOID;
 
-  public DocumentBridge(Store store, String docId, JsonArray components,
+  public DocumentBridge(Store store, String id, JsonArray components,
       final Handler<Error> errorHandler) {
     this.store = store == null ? new SimpleStore() : store;
-    this.docId = docId;
+    this.id = id;
     document = new Document(this);
     model = document.getModel();
 
     if (errorHandler != null) {
       document.handlerRegs.wrap(store.getBus().registerLocalHandler(
-          Addr.EVENT + Addr.DOCUMENT_ERROR + ":" + docId, new Handler<Message<Error>>() {
+          Addr.EVENT + Addr.DOCUMENT_ERROR + ":" + id, new Handler<Message<Error>>() {
             @Override
             public void handle(Message<Error> message) {
               errorHandler.handle(message.body());
@@ -71,9 +72,7 @@ public class DocumentBridge implements OperationSink<CollaborativeOperation> {
           }));
     }
 
-    if (components == null || components.length() == 0) {
-      model.createRoot();
-    } else {
+    if (components != null && components.length() > 0) {
       final CollaborativeTransformer transformer = new CollaborativeTransformer();
       CollaborativeOperation operation =
           transformer.createOperation(Json.createObject().set("op", components));
@@ -90,6 +89,10 @@ public class DocumentBridge implements OperationSink<CollaborativeOperation> {
     nonUndoableOp(operation);
   }
 
+  public void createRoot() {
+    model.createRoot();
+  }
+
   public Document getDocument() {
     return document;
   }
@@ -98,11 +101,11 @@ public class DocumentBridge implements OperationSink<CollaborativeOperation> {
     document.onCollaboratorChanged(isJoined, collaborator);
   }
 
-  public void scheduleHandle(final Handler<Document> onLoaded) {
+  public <T> void scheduleHandle(final Handler<T> handler, final T event) {
     Platform.scheduler().scheduleDeferred(new Handler<Void>() {
       @Override
       public void handle(Void ignore) {
-        Platform.scheduler().handle(onLoaded, document);
+        Platform.scheduler().handle(handler, event);
       }
     });
   }
@@ -139,13 +142,13 @@ public class DocumentBridge implements OperationSink<CollaborativeOperation> {
         }
       }
     });
-    components.forEach(new ListIterator<OperationComponent<?>>() {
+    components.forEach(new ListIterator<JsonElement>() {
       @Override
-      public void call(int index, OperationComponent<?> component) {
+      public void call(int index, JsonElement component) {
         createComponents.push(component);
       }
     });
-    return components;
+    return createComponents;
   }
 
   @Override
@@ -230,8 +233,7 @@ public class DocumentBridge implements OperationSink<CollaborativeOperation> {
       UndoRedoStateChangedEvent event =
           new UndoRedoStateChangedEvent(model, Json.createObject().set("canUndo", canUndo).set(
               "canRedo", canRedo));
-      store.getBus().publishLocal(Addr.EVENT + EventType.UNDO_REDO_STATE_CHANGED + ":" + docId,
-          event);
+      store.getBus().publishLocal(Addr.EVENT + EventType.UNDO_REDO_STATE_CHANGED + ":" + id, event);
     }
   }
 

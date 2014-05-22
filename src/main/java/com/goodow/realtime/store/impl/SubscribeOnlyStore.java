@@ -20,6 +20,7 @@ import com.goodow.realtime.channel.impl.ReconnectBus;
 import com.goodow.realtime.channel.impl.ReliableSubscribeBus;
 import com.goodow.realtime.channel.impl.WebSocketBus;
 import com.goodow.realtime.core.Handler;
+import com.goodow.realtime.core.Platform;
 import com.goodow.realtime.core.Registration;
 import com.goodow.realtime.json.Json;
 import com.goodow.realtime.json.JsonObject;
@@ -57,7 +58,7 @@ public class SubscribeOnlyStore extends SimpleStore {
   }
 
   @Override
-  public void load(final String docId, final Handler<Document> onLoaded,
+  public void load(final String id, final Handler<Document> onLoaded,
       final Handler<Model> opt_initializer, final Handler<Error> opt_error) {
     if (sessionId == null) {
       WebSocketBus webSocketBus = null;
@@ -72,18 +73,18 @@ public class SubscribeOnlyStore extends SimpleStore {
           public void handle(JsonObject msg) {
             sessionId = msg.getString(Key.SESSION_ID);
             userId = msg.getString(Key.USER_ID);
-            doLoad(docId, onLoaded, opt_initializer, opt_error);
+            doLoad(id, onLoaded, opt_initializer, opt_error);
           }
         });
         return;
       }
     }
-    doLoad(docId, onLoaded, opt_initializer, opt_error);
+    doLoad(id, onLoaded, opt_initializer, opt_error);
   }
 
-  protected void onLoaded(final String docId, Handler<Model> opt_initializer, JsonObject snapshot,
+  protected void onLoaded(final String id, Handler<Model> opt_initializer, JsonObject snapshot,
       final DocumentBridge bridge) {
-    String address = Addr.STORE + ":" + docId;
+    String address = Addr.STORE + ":" + id;
     if (bus instanceof ReliableSubscribeBus) {
       ((ReliableSubscribeBus) bus).synchronizeSequenceNumber(address, snapshot
           .getNumber(Key.VERSION) - 1);
@@ -111,19 +112,25 @@ public class SubscribeOnlyStore extends SimpleStore {
     });
   }
 
-  private void doLoad(final String docId, final Handler<Document> onLoaded,
+  private void doLoad(final String id, final Handler<Document> onLoaded,
       final Handler<Model> opt_initializer, final Handler<Error> opt_error) {
-    bus.send(Addr.STORE, Json.createObject().set(Key.ID, docId),
-        new Handler<Message<JsonObject>>() {
-          @Override
-          public void handle(Message<JsonObject> message) {
-            JsonObject body = message.body();
-            final DocumentBridge bridge =
-                new DocumentBridge(SubscribeOnlyStore.this, docId, body == null ? null : body
-                    .getArray(Key.SNAPSHOT), opt_error);
-            onLoaded(docId, opt_initializer, body, bridge);
-            bridge.scheduleHandle(onLoaded);
+    bus.send(Addr.STORE, Json.createObject().set(Key.ID, id), new Handler<Message<JsonObject>>() {
+      @Override
+      public void handle(Message<JsonObject> message) {
+        JsonObject body = message.body();
+        body = body == null ? Json.createObject().set(Key.VERSION, 0) : body;
+        final DocumentBridge bridge =
+            new DocumentBridge(SubscribeOnlyStore.this, id, body == null ? null : body
+                .getArray(Key.SNAPSHOT), opt_error);
+        onLoaded(id, opt_initializer, body, bridge);
+        if (body.getNumber(Key.VERSION) == 0) {
+          bridge.createRoot();
+          if (opt_initializer != null) {
+            Platform.scheduler().handle(opt_initializer, bridge.getDocument().getModel());
           }
-        });
+        }
+        bridge.scheduleHandle(onLoaded, bridge.getDocument());
+      }
+    });
   }
 }

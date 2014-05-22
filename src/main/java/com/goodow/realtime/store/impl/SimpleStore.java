@@ -57,12 +57,13 @@ public class SimpleStore implements Store {
   }
 
   @Override
-  public void load(final String docId, final Handler<Document> onLoaded,
+  public void load(final String id, final Handler<Document> onLoaded,
       final Handler<Model> opt_initializer, final Handler<Error> opt_error) {
-    DocumentBridge bridge = new DocumentBridge(this, docId, null, opt_error);
+    DocumentBridge bridge = new DocumentBridge(this, id, null, opt_error);
+    bridge.createRoot();
     if (opt_initializer != null) {
       Platform.scheduler().handle(opt_initializer, bridge.getDocument().getModel());
     }
-    bridge.scheduleHandle(onLoaded);
+    bridge.scheduleHandle(onLoaded, bridge.getDocument());
   }
 }

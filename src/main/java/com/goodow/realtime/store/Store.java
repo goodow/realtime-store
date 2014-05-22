@@ -40,7 +40,7 @@ public interface Store extends Exportable {
    * associated with {@code docId}, a new realtime document will be created and
    * {@code opt_initializer} will be called (if it is provided).
    * 
-   * @param docId The ID of the document to load.
+   * @param id The ID of the document to load.
    * @param onLoaded A callback that will be called when the realtime document is ready. The created
    *          or opened realtime document object will be passed to this function.
    * @param opt_initializer An optional initialization function that will be called before
@@ -51,6 +51,6 @@ public interface Store extends Exportable {
    *          {@link com.goodow.realtime.store.Error} object describing the error will be passed to
    *          this function.
    */
-  void load(String docId, Handler<Document> onLoaded, Handler<Model> opt_initializer,
+  void load(String id, Handler<Document> onLoaded, Handler<Model> opt_initializer,
       Handler<Error> opt_error);
 }
