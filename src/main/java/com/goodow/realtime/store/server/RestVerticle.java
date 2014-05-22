@@ -40,8 +40,8 @@ public class RestVerticle extends BusModBase {
     HttpServer server = vertx.createHttpServer().setCompressionSupported(true);
     RouteMatcher matcher = new RouteMatcher();
 
-    String snapshot = path + "/:type/:id";
-    String ops = path + "/:type/:id/ops";
+    String snapshot = path + "/:docType/:docId";
+    String ops = path + "/:docType/:docId/ops";
     Handler<HttpServerRequest> handler = new Handler<HttpServerRequest>() {
       @Override
       public void handle(final HttpServerRequest req) {
@@ -137,8 +137,8 @@ public class RestVerticle extends BusModBase {
   }
 
   private JsonObject parseRequest(final HttpServerRequest req) {
-    String docId = req.params().get("type") + "/" + req.params().get("id");
-    JsonObject message = new JsonObject().putString("action", req.method()).putString("id", docId);
+    String id = req.params().get("docType") + "/" + req.params().get("docId");
+    JsonObject message = new JsonObject().putString("action", req.method()).putString("id", id);
     return message;
   }
 }

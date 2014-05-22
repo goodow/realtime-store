@@ -18,6 +18,7 @@ import com.goodow.realtime.json.impl.JreJsonObject;
 import com.goodow.realtime.operation.Transformer;
 import com.goodow.realtime.operation.impl.CollaborativeOperation;
 import com.goodow.realtime.store.DocumentBridge;
+import com.goodow.realtime.store.channel.Constants.Key;
 
 import com.google.inject.Inject;
 
@@ -42,22 +43,31 @@ public class OpSubmitter {
    * 
    * callback called with {v:, ops:, snapshot:}
    */
-  public void submit(String type, String id, final JsonObject opData,
+  public void submit(String docType, String docId, final JsonObject opData,
       final AsyncResultHandler<JsonObject> callback) {
-    retrySubmit(new ArrayList<Object>(), type, id, createOperation(opData), opData.getLong("v"),
-        callback);
+    retrySubmit(new ArrayList<Object>(), docType, docId, createOperation(opData), opData
+        .getLong(Key.VERSION), callback);
   }
 
   private CollaborativeOperation createOperation(JsonObject opData) {
     return transformer.createOperation(new JreJsonObject(opData.toMap()));
   }
 
+  private JreJsonArray createOperations(JsonArray opDatas, int from, int to) {
+    JreJsonArray operations = new JreJsonArray();
+    for (; from < to; from++) {
+      operations.push(createOperation(opDatas.<JsonObject> get(from)));
+    }
+    return operations;
+  }
+
   @SuppressWarnings("unchecked")
-  private DocumentBridge createSnapshot(final String type, final String id, JsonObject snapshotData) {
+  private DocumentBridge createSnapshot(final String docType, final String docId,
+      JsonObject snapshotData) {
     JreJsonArray snapshot =
-        snapshotData.containsField("snapshot") ? new JreJsonArray(snapshotData.getArray("snapshot")
-            .toList()) : null;
-    final DocumentBridge bridge = new DocumentBridge(null, type + "/" + id, snapshot, null);
+        snapshotData.containsField(Key.SNAPSHOT) ? new JreJsonArray(snapshotData.getArray(
+            Key.SNAPSHOT).toList()) : null;
+    final DocumentBridge bridge = new DocumentBridge(null, docType + "/" + docId, snapshot, null);
     return bridge;
   }
 
@@ -68,27 +78,29 @@ public class OpSubmitter {
    * function to return actual operations and whatnot, but its quite rare to actually need to
    * transform data on the server at this point.
    */
-  private void doSubmit(final List<Object> transformedOps, final String type, final String id,
-      final CollaborativeOperation operation, final long applyAt, final DocumentBridge snapshot,
-      final AsyncResultHandler<JsonObject> callback) {
+  private void doSubmit(final List<Object> transformedOps, final String docType,
+      final String docId, final CollaborativeOperation operation, final long applyAt,
+      final DocumentBridge snapshot, final AsyncResultHandler<JsonObject> callback) {
     final JsonObject opData =
-        new JsonObject(((JreJsonObject) operation.toJson()).toNative()).putNumber("v", applyAt);
-    redis.atomicSubmit(type, id, opData, new AsyncResultHandler<Void>() {
+        new JsonObject(((JreJsonObject) operation.toJson()).toNative()).putNumber(Key.VERSION,
+            applyAt);
+    redis.atomicSubmit(docType, docId, opData, new AsyncResultHandler<Void>() {
       @Override
       public void handle(AsyncResult<Void> ar) {
         if (ar.failed()) {
           if ("Transform needed".equals(ar.cause().getMessage())) {
-            retrySubmit(transformedOps, type, id, operation, applyAt, callback);
+            retrySubmit(transformedOps, docType, docId, operation, applyAt, callback);
           } else {
             callback.handle(new DefaultFutureResult<JsonObject>(ar.cause()));
           }
           return;
         }
         final JsonObject root = new JsonObject(((JreJsonObject) snapshot.toJson()).toNative());
-        JsonObject snapshotData =
-            new JsonObject().putNumber("v", applyAt + 1).putObject("root", root).putArray(
-                "snapshot", new JsonArray(((JreJsonArray) snapshot.toSnapshot()).toNative()));
-        writeSnapshotAfterSubmit(type, id, snapshotData, opData, new AsyncResultHandler<Void>() {
+        JsonObject snapData =
+            new JsonObject().putNumber(Key.VERSION, applyAt + 1).putObject(
+                ElasticSearchDriver.ROOT, root).putArray(Key.SNAPSHOT,
+                new JsonArray(((JreJsonArray) snapshot.toSnapshot()).toNative()));
+        writeSnapshotAfterSubmit(docType, docId, snapData, opData, new AsyncResultHandler<Void>() {
           @Override
           public void handle(AsyncResult<Void> ar) {
             // What do we do if the snapshot write fails? We've already committed the operation -
@@ -101,11 +113,10 @@ public class OpSubmitter {
 
             // postSubmit is for things like publishing the operation over pubsub. We should
             // probably make this asyncronous.
-            redis.postSubmit(type, id, opData, root);
-            callback
-                .handle(new DefaultFutureResult<JsonObject>(new JsonObject()
-                    .putNumber("v", applyAt).putArray("ops", new JsonArray(transformedOps))
-                    .putObject("snapshot", root)));
+            redis.postSubmit(docType, docId, opData, root);
+            callback.handle(new DefaultFutureResult<JsonObject>(new JsonObject().putNumber(
+                Key.VERSION, applyAt).putArray(Key.OPS, new JsonArray(transformedOps)).putObject(
+                Key.SNAPSHOT, root)));
           }
         });
       }
@@ -116,12 +127,13 @@ public class OpSubmitter {
    * This is a fetch that doesn't check the oplog to see if the snapshot is out of date. It will be
    * higher performance, but in some error conditions it may return an outdated snapshot.
    */
-  private void lazyFetch(String type, String id, final AsyncResultHandler<JsonObject> callback) {
-    persistor.getSnapshot(type, id, new AsyncResultHandler<JsonObject>() {
+  private void lazyFetch(String docType, String docId, final AsyncResultHandler<JsonObject> callback) {
+    persistor.getSnapshot(docType, docId, new AsyncResultHandler<JsonObject>() {
       @Override
       public void handle(AsyncResult<JsonObject> ar) {
         if (ar.succeeded() && ar.result() == null) {
-          callback.handle(new DefaultFutureResult<JsonObject>(new JsonObject().putNumber("v", 0)));
+          callback.handle(new DefaultFutureResult<JsonObject>(new JsonObject().putNumber(
+              Key.VERSION, 0)));
           return;
         }
         callback.handle(ar);
@@ -129,13 +141,12 @@ public class OpSubmitter {
     });
   }
 
-  @SuppressWarnings("unchecked")
-  private void retrySubmit(final List<Object> transformedOps, final String type, final String id,
-      final CollaborativeOperation operation, final Long applyAt,
+  private void retrySubmit(final List<Object> transformedOps, final String docType,
+      final String docId, final CollaborativeOperation operation, final Long applyAt,
       final AsyncResultHandler<JsonObject> callback) {
     // First we'll get a doc snapshot. This wouldn't be necessary except that we need to check that
     // the operation is valid against the current document before accepting it.
-    lazyFetch(type, id, new AsyncResultHandler<JsonObject>() {
+    lazyFetch(docType, docId, new AsyncResultHandler<JsonObject>() {
       @Override
       public void handle(AsyncResult<JsonObject> ar) {
         if (ar.failed()) {
@@ -143,19 +154,19 @@ public class OpSubmitter {
           return;
         }
         final JsonObject snapshotData = ar.result();
-        final long snapshotVersion = snapshotData.getLong("v");
+        final long snapshotVersion = snapshotData.getLong(Key.VERSION);
         // Get all operations that might be relevant. We'll float the snapshot and the operation up
         // to the most recent version of the document, then try submitting.
         final long from = applyAt != null ? Math.min(snapshotVersion, applyAt) : snapshotVersion;
-        redis.getOps(type, id, from, null, new AsyncResultHandler<JsonObject>() {
+        redis.getOps(docType, docId, from, null, new AsyncResultHandler<JsonObject>() {
           @Override
           public void handle(AsyncResult<JsonObject> ar) {
             if (ar.failed()) {
               callback.handle(ar);
               return;
             }
-            final DocumentBridge snapshot = createSnapshot(type, id, snapshotData);
-            JsonArray ops = ar.result().getArray("ops");
+            final DocumentBridge snapshot = createSnapshot(docType, docId, snapshotData);
+            JsonArray ops = ar.result().getArray(Key.OPS);
             long snapshotV = snapshotVersion;
             long opV = applyAt == null ? snapshotV + ops.size() : applyAt;
             for (Object op : ops) {
@@ -172,7 +183,7 @@ public class OpSubmitter {
 
               // Bring both the op and the snapshot up to date. At least one of these two
               // conditionals should be true.
-              long opVersion = opData.getLong("v");
+              long opVersion = opData.getLong(Key.VERSION);
               if (snapshotV == opVersion) {
                 try {
                   snapshot.consume(createOperation(opData));
@@ -195,11 +206,11 @@ public class OpSubmitter {
             }
             CollaborativeOperation transformed = operation;
             if (applyAt != null && ops.size() > 0
-                && applyAt <= ops.<JsonObject> get(ops.size() - 1).getLong("v")) {
+                && applyAt <= ops.<JsonObject> get(ops.size() - 1).getLong(Key.VERSION)) {
               try {
                 CollaborativeOperation applied =
-                    transformer.compose(new JreJsonArray(ops.toList().subList(
-                        (int) (applyAt - ops.<JsonObject> get(0).getLong("v")), ops.size())));
+                    transformer.compose(createOperations(ops, (int) (applyAt - ops
+                        .<JsonObject> get(0).getLong(Key.VERSION)), ops.size()));
                 transformed = operation.transform(applied, false);
               } catch (Exception e) {
                 callback.handle(new DefaultFutureResult<JsonObject>(new ReplyException(
@@ -216,15 +227,15 @@ public class OpSubmitter {
                   ReplyFailure.RECIPIENT_FAILURE, e.getMessage())));
               return;
             }
-            doSubmit(transformedOps, type, id, transformed, opV, snapshot, callback);
+            doSubmit(transformedOps, docType, docId, transformed, opV, snapshot, callback);
           }
         });
       }
     });
   }
 
-  private void writeSnapshotAfterSubmit(String type, String id, JsonObject snapshotData,
+  private void writeSnapshotAfterSubmit(String docType, String docId, JsonObject snapshotData,
       JsonObject opData, AsyncResultHandler<Void> callback) {
-    persistor.writeSnapshot(type, id, snapshotData, callback);
+    persistor.writeSnapshot(docType, docId, snapshotData, callback);
   }
 }

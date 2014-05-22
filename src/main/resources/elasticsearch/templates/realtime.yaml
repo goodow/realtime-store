@@ -1,23 +1,30 @@
 realtime:
-  template: "realtime"
+  template: realtime*
   order: 0
-  settings:
-    analysis:
-      analyzer:
-        ik_max_word:
-          type: ik
-          alias: [ik]
-          use_smart: false
-        ik_smart:
-          type: ik
-          use_smart: true
   mappings:
     _default_:
       properties:
         _snapshot:
-          store: yes
-          index: no
+          type: object
+          index: "no"
+          enabled: false
+        _op:
+          type: object
+          index: "no"
           enabled: false
       dynamic_templates:
       - template_1:
-        match:
+          path_match: _op
+          mapping:
+            index: "no"
+            enabled: false
+#  settings:
+#    analysis:
+#      analyzer:
+#        ik_max_word:
+#          type: ik
+#          alias: [ik]
+#          use_smart: false
+#        ik_smart:
+#          type: ik
+#          use_smart: true

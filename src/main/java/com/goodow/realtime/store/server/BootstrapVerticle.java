@@ -28,7 +28,7 @@ public class BootstrapVerticle extends BusModBase {
     super.start();
 
     final CountingCompletionHandler<Void> countDownLatch =
-        new CountingCompletionHandler<Void>((VertxInternal) vertx, 5);
+        new CountingCompletionHandler<Void>((VertxInternal) vertx, 4);
     countDownLatch.setHandler(new Handler<AsyncResult<Void>>() {
       @Override
       public void handle(AsyncResult<Void> ar) {
@@ -51,14 +51,13 @@ public class BootstrapVerticle extends BusModBase {
     };
 
     JsonObject empty = new JsonObject();
-    container.deployModule("com.goodow.realtime~realtime-channel~0.5.5-SNAPSHOT",
-        getOptionalObjectConfig("realtime_channel", empty), doneHandler);
     container.deployModule("com.goodow.realtime~realtime-search~0.5.5-SNAPSHOT",
         getOptionalObjectConfig("realtime_search", empty), doneHandler);
     container.deployModule("com.goodow.realtime~realtime-auth~0.5.5-SNAPSHOT",
-        getOptionalObjectConfig("realtime_auth", empty), doneHandler);
-    container.deployModule("io.vertx~mod-redis~1.1.4-SNAPSHOT", getOptionalObjectConfig("redis",
-        empty), doneHandler);
+        getOptionalObjectConfig("realtime_auth", getOptionalObjectConfig("realtime_channel", empty)), doneHandler);
+    JsonObject redis = getOptionalObjectConfig("redis", empty);
+    redis.putString("address", redis.getString("address", "realtime.redis"));
+    container.deployModule("io.vertx~mod-redis~1.1.3", redis, doneHandler);
 
     container.deployVerticle(StoreVerticle.class.getName(), getOptionalObjectConfig(
         "realtime_store", empty), doneHandler);

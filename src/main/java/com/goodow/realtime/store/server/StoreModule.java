@@ -44,7 +44,6 @@ public class StoreModule extends AbstractModule implements VertxModule {
 
   @Override
   protected void configure() {
-    // bind(Store.class).to(RedisStore.class);
     bind(new TypeLiteral<Transformer<CollaborativeOperation>>() {
     }).to(CollaborativeTransformer.class);
   }

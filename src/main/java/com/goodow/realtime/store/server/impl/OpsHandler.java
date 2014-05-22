@@ -13,6 +13,7 @@
  */
 package com.goodow.realtime.store.server.impl;
 
+import com.goodow.realtime.store.channel.Constants.Key;
 import com.goodow.realtime.store.server.StoreVerticle;
 
 import com.google.inject.Inject;
@@ -28,11 +29,11 @@ import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.platform.Container;
 
 public class OpsHandler {
-  static String[] getTypeAndId(String docId) {
-    int idx = docId.indexOf('/');
-    boolean hasType = idx != -1 && idx != docId.length() - 1;
-    return hasType ? new String[] {docId.substring(0, idx), docId.substring(idx + 1)}
-        : new String[] {"test", docId};
+  static String[] getTypeAndId(String id) {
+    int idx = id.indexOf('/');
+    boolean hasType = idx != -1 && idx != id.length() - 1;
+    return hasType ? new String[] {id.substring(0, idx), id.substring(idx + 1)} : new String[] {
+        "test", id};
   }
 
   @Inject private RedisDriver redis;
@@ -48,15 +49,13 @@ public class OpsHandler {
       @Override
       public void handle(Message<JsonObject> message) {
         JsonObject body = message.body();
-        String docId = body.getString("id");
-        if (docId == null) {
+        String id = body.getString(Key.ID);
+        if (id == null) {
           message.fail(-1, "id must be specified");
           return;
         }
-        String[] typeAndId = getTypeAndId(docId);
-        String type = typeAndId[0];
-        String id = typeAndId[1];
-        doGet(type, id, body.getLong("from", 0), body.getLong("to"), message);
+        String[] typeAndId = getTypeAndId(id);
+        doGet(typeAndId[0], typeAndId[1], body.getLong("from", 0), body.getLong("to"), message);
       }
     }, new Handler<AsyncResult<Void>>() {
       @Override
@@ -74,12 +73,13 @@ public class OpsHandler {
    * Non inclusive - gets ops from [from, to). Ie, all relevant ops. If to is null then it returns
    * all ops.
    */
-  private void doGet(String type, String id, Long from, Long to, final Message<JsonObject> resp) {
+  private void doGet(String docType, String docId, Long from, Long to,
+      final Message<JsonObject> resp) {
     if (from == null) {
       resp.fail(-1, "Invalid from field in getOps");
       return;
     }
-    redis.getOps(type, id, from, to, new AsyncResultHandler<JsonObject>() {
+    redis.getOps(docType, docId, from, to, new AsyncResultHandler<JsonObject>() {
       @Override
       public void handle(AsyncResult<JsonObject> ar) {
         if (ar.failed()) {
@@ -87,7 +87,7 @@ public class OpsHandler {
           resp.fail(cause.failureCode(), cause.getMessage());
           return;
         }
-        resp.reply(ar.result().getArray("ops"));
+        resp.reply(ar.result().getArray(Key.OPS));
       }
     });
   }

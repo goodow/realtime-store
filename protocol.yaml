@@ -1,22 +1,22 @@
 # address: realtime.store
 --- # Fetch document
 action: get
-id: docId
+id: docType/docId
 accessToken: token
-autoCreate: true
 --- &snapshotData # reply
 v: 0
 snapshot: []
+root: {}
 
 --- # Fetch version
 action: head
-id: docId
+id: docType/docId
 --- # reply
 0
 
 --- # Submit Operations
 action: post
-id: docId
+id: docType/docId
 opData: &opData
   v: 1
   op: []
@@ -31,19 +31,19 @@ ops: # operations by which this operation was transformed, if someone else's ope
   
 # address: realtime.store.ops
 --- # Get ops
-id: docId
+id: docType/docId
 from: 10
 to: 11 # noninclusively
 --- # reply
 - *opData
 
-# address: realtime.store:id
+# address: realtime.store:docType/docId
 --- # publish channel
 <<: *opData
 ...
 
 
-# address: realtime.store.collaborator:id
+# address: realtime.store.presence:docType/docId
 --- &collaborator # Presence publish channel
 isJoined: false
 sessionId: sid
@@ -55,9 +55,9 @@ isAnonymous: false
 photoUrl: http://xx
 ...
 
---- # address: @realtime.store.event.EventType:id:objectId Event publish
+--- # address: @realtime.store.event.EventType:docType/docId:objectId Event publish
 *Event
 
---- # address: @realtime.store.event.document_error:id Document error event publish
+--- # address: @realtime.store.event.document_error:docType/docId Document error event publish
 *com.goodow.realtime.Error
 ...

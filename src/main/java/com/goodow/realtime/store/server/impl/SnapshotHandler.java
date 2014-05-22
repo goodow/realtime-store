@@ -58,26 +58,26 @@ public class SnapshotHandler {
       @Override
       public void handle(Message<JsonObject> message) {
         JsonObject body = message.body();
-        String docId = body.getString("id");
-        if (docId == null) {
+        String id = body.getString(Key.ID);
+        if (id == null) {
           message.fail(-1, "id must be specified");
           return;
         }
-        String[] typeAndId = OpsHandler.getTypeAndId(docId);
-        String type = typeAndId[0];
-        String id = typeAndId[1];
+        String[] typeAndId = OpsHandler.getTypeAndId(id);
+        String docType = typeAndId[0];
+        String docId = typeAndId[1];
         String action = body.getString("action", "get");
         if ("head".equals(action)) {
-          doHead(type, id, message);
+          doHead(docType, docId, message);
         } else if ("post".equals(action)) {
           JsonObject opData = body.getObject(Key.OP_DATA);
           if (opData == null) {
             message.fail(-1, Key.OP_DATA + " must be specified");
             return;
           }
-          doPost(type, id, opData, message);
+          doPost(docType, docId, opData, message);
         } else { // get
-          doGet(type, id, message);
+          doGet(docType, docId, message);
         }
       }
     }, new Handler<AsyncResult<Void>>() {
@@ -92,16 +92,17 @@ public class SnapshotHandler {
     });
   }
 
-  private void doGet(String type, String id, final Message<JsonObject> resp) {
-    persistor.getSnapshot(type, id, SnapshotHandler.<JsonObject> handleAsyncResult(resp));
+  private void doGet(String docType, String docId, final Message<JsonObject> resp) {
+    persistor.getSnapshot(docType, docId, SnapshotHandler.<JsonObject> handleAsyncResult(resp));
   }
 
-  private void doHead(String type, String id, Message<JsonObject> resp) {
-    redis.getVersion(type, id, SnapshotHandler.<Long> handleAsyncResult(resp));
+  private void doHead(String docType, String docId, Message<JsonObject> resp) {
+    redis.getVersion(docType, docId, SnapshotHandler.<Long> handleAsyncResult(resp));
   }
 
-  private void doPost(String type, String id, JsonObject opData, final Message<JsonObject> resp) {
-    opSubmitter.submit(type, id, opData, new AsyncResultHandler<JsonObject>() {
+  private void doPost(String docType, String docId, JsonObject opData,
+      final Message<JsonObject> resp) {
+    opSubmitter.submit(docType, docId, opData, new AsyncResultHandler<JsonObject>() {
       @Override
       public void handle(AsyncResult<JsonObject> ar) {
         if (ar.failed()) {
@@ -110,7 +111,7 @@ public class SnapshotHandler {
           return;
         }
         JsonObject result = ar.result();
-        result.removeField("snapshot");
+        result.removeField(Key.SNAPSHOT);
         resp.reply(result);
       }
     });
