@@ -94,6 +94,7 @@ public class OpSubmitter {
           }
           return;
         }
+        log.finest("Wrote op @" + applyAt);
         final JsonObject root = new JsonObject(((JreJsonObject) snapshot.toJson()).toNative());
         JsonObject snapData =
             new JsonObject().putNumber(Key.VERSION, applyAt + 1).putObject(
@@ -113,6 +114,7 @@ public class OpSubmitter {
             // postSubmit is for things like publishing the operation over pubsub. We should
             // probably make this asyncronous.
             redis.postSubmit(docType, docId, opData, root);
+            log.finest("Wrote snapshot @" + (applyAt + 1));
             callback.handle(new DefaultFutureResult<JsonObject>(new JsonObject().putNumber(
                 Key.VERSION, applyAt).putArray(Key.OPS, transformedOps).putObject(
                 Key.SNAPSHOT, root)));

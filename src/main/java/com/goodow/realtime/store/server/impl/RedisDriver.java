@@ -33,15 +33,17 @@ import org.vertx.java.core.impl.DefaultFutureResult;
 import org.vertx.java.core.impl.VertxInternal;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
-import org.vertx.java.core.logging.Logger;
 import org.vertx.java.platform.Container;
 
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import io.vertx.java.redis.RedisClient;
 
 @Singleton
 public class RedisDriver {
+  private static final Logger log = Logger.getLogger(RedisDriver.class.getName());
   private final String address;
   private String getOpsScript;
   private String submitScript;
@@ -50,13 +52,11 @@ public class RedisDriver {
   @Inject private ElasticSearchDriver persistor;
   private final Vertx vertx;
   private final EventBus eb;
-  private final Logger logger;
 
   @Inject
   RedisDriver(Vertx vertx, final Container container) {
     this.vertx = vertx;
     eb = vertx.eventBus();
-    logger = container.logger();
     address = container.config().getString("address", StoreVerticle.DEFAULT_ADDRESS);
   }
 
@@ -84,7 +84,7 @@ public class RedisDriver {
           callbackWrapper.handle(ar);
           return;
         }
-        String message = ar.cause().getMessage();
+        final String message = ar.cause().getMessage();
         if (!"Missing data".equals(message) && !"Version from the future".equals(message)) {
           // - 'Op already submitted': Return this error back to the user.
           // - 'Transform needed': Operation is old. Transform and retry.
@@ -104,6 +104,8 @@ public class RedisDriver {
               return;
             }
             long docVersion = ar.result().longValue();
+            log.finest("redisSubmitScript failed: " + message + " op version: " + opData.getLong(Key.VERSION)
+              + " snapshot version: " + docVersion);
             if (docVersion < opData.getLong(Key.VERSION)) {
               // This is nate's awful hell error state. The oplog is basically
               // corrupted - the snapshot database is further in the future than
@@ -234,7 +236,7 @@ public class RedisDriver {
       public void handle(AsyncResult<Void> ar) {
         // This shouldn't happen, but its non-fatal. It just means ops won't get flushed from redis.
         if (ar.failed()) {
-          logger.trace("redisSetExpire error", ar.cause());
+          log.log(Level.FINE, "redisSetExpire error", ar.cause());
         }
       }
     });
@@ -485,6 +487,7 @@ public class RedisDriver {
           // Its possible (though unlikely) that ops will be missing from the oplog if the redis
           // script succeeds but the process crashes before the persistant oplog is given the new
           // operations. In this case, backfill the persistant oplog with the data in redis.
+          log.info("populating oplog [" + docVersion + ", " + opVersion + "]");
           redisGetOps(docType, docId, docVersion, opVersion, new AsyncResultHandler<JsonObject>() {
             @Override
             public void handle(AsyncResult<JsonObject> ar) {

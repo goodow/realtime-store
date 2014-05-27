@@ -144,8 +144,9 @@ public class TransformQueue<O extends Operation<?>> {
       O composedClientOp = transformer.compose(queuedClientOps);
       Pair<O, O> pair = transformer.transform(composedClientOp, serverOp);
       queuedClientOps = Json.createArray().push(pair.first);
-      serverOps.push(pair.second);
+      serverOp = pair.second;
     }
+    serverOps.push(serverOp);
   }
 
   @Override

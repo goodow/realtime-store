@@ -158,8 +158,7 @@ public class ElasticSearchDriver {
     JsonObject index =
         new JsonObject().putString("action", "index").putString("_index", INDEX).putString("_type",
             getOpsType(docType)).putString("_id", getOpId(docId, v)).putString("op_type", "create")
-            .putObject(
-                "source",
+            .putBoolean("refresh", true).putObject("source",
                 opData.putString(DOC_ID, docId).putArray(_OP,
                     new JsonArray((List<Object>) opData.removeField(Key.OP))));
     eb.sendWithTimeout(address, index, REPLY_TIMEOUT,
