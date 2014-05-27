@@ -28,9 +28,7 @@ import com.goodow.realtime.operation.list.json.JsonReplaceComponent;
 import com.goodow.realtime.operation.map.json.JsonMapComponent;
 import com.goodow.realtime.store.util.JsonSerializer;
 import com.goodow.realtime.store.util.ModelFactory;
-
 import com.google.common.annotations.GwtIncompatible;
-
 import org.timepedia.exporter.client.Export;
 import org.timepedia.exporter.client.ExportAfterCreateMethod;
 import org.timepedia.exporter.client.ExportPackage;
@@ -253,7 +251,7 @@ public class CollaborativeList extends CollaborativeObject {
     if (values.length == 0) {
       return;
     } else {
-      JsonArray[] array = JsonSerializer.serializeObjects(values);
+      JsonArray array = JsonSerializer.serializeObjects(values);
       JsonInsertComponent op = new JsonInsertComponent(id, index, array);
       consumeAndSubmit(op);
     }
@@ -358,7 +356,7 @@ public class CollaborativeList extends CollaborativeObject {
       throw new ArrayIndexOutOfBoundsException("StartIndex: " + startIndex + ", EndIndex: "
           + endIndex + ", Size: " + length());
     }
-    JsonArray[] values = subValues(startIndex, endIndex - startIndex);
+    JsonArray values = subValues(startIndex, endIndex - startIndex);
     JsonDeleteComponent op = new JsonDeleteComponent(id, startIndex, values);
     consumeAndSubmit(op);
   }
@@ -393,9 +391,12 @@ public class CollaborativeList extends CollaborativeObject {
           "At least one value must be specified for a set mutation.");
     }
     checkIndex(index + values.length, true);
-    JsonReplaceComponent op =
-        new JsonReplaceComponent(id, index, subValues(index, values.length), JsonSerializer
-            .serializeObjects(values));
+    JsonArray oldValues = subValues(index, values.length);
+    JsonArray newValues = JsonSerializer.serializeObjects(values);
+    if (oldValues.equals(newValues)) {
+      return;
+    }
+    JsonReplaceComponent op = new JsonReplaceComponent(id, index, oldValues, newValues);
     consumeAndSubmit(op);
   }
 
@@ -449,19 +450,19 @@ public class CollaborativeList extends CollaborativeObject {
   @Override
   protected void consume(final String userId, final String sessionId,
       OperationComponent<?> component) {
-    ((Operation<ListTarget<JsonArray[]>>) component).apply(new ListTarget<JsonArray[]>() {
+    ((Operation<ListTarget<JsonArray>>) component).apply(new ListTarget<JsonArray>() {
       @Override
       public void delete(int startIndex, int length) {
         removeAndFireEvent(startIndex, length, sessionId, userId);
       }
 
       @Override
-      public void insert(int startIndex, JsonArray[] values) {
+      public void insert(int startIndex, JsonArray values) {
         insertAndFireEvent(startIndex, values, sessionId, userId);
       }
 
       @Override
-      public void replace(int startIndex, JsonArray[] values) {
+      public void replace(int startIndex, JsonArray values) {
         replaceAndFireEvent(startIndex, values, sessionId, userId);
       }
     });
@@ -502,20 +503,22 @@ public class CollaborativeList extends CollaborativeObject {
     }
   }
 
-  private void insertAndFireEvent(int index, JsonArray[] values, String sessionId, String userId) {
+  private void insertAndFireEvent(final int index, JsonArray values, String sessionId, String userId) {
     assert index <= length();
-    JsonArray objects = Json.createArray();
-    int i = 0;
-    for (JsonArray value : values) {
-      objects.push(JsonSerializer.deserializeObject(value, model.objects));
-      snapshot.insert(index + i++, value);
-      model.addOrRemoveParent(value, id, true);
-      model.bytesUsed += (value == null ? "null" : value.toJsonString()).length();
-    }
+    final JsonArray objects = Json.createArray();
+    values.forEach(new ListIterator<JsonArray>() {
+      @Override
+      public void call(int idx, JsonArray value) {
+        objects.push(JsonSerializer.deserializeObject(value, model.objects));
+        snapshot.insert(index + idx, value);
+        model.addOrRemoveParent(value, id, true);
+        model.bytesUsed += (value == null ? "null" : value.toJsonString()).length();
+      }
+    });
     ValuesAddedEvent event =
         new ValuesAddedEvent(event(sessionId, userId).set("index", index).set("values", objects));
     fireEvent(event);
-    model.setIndexReferenceIndex(id, true, index, values.length, sessionId, userId);
+    model.setIndexReferenceIndex(id, true, index, values.length(), sessionId, userId);
   }
 
   private void removeAndFireEvent(int index, int length, String sessionId, String userId) {
@@ -534,32 +537,34 @@ public class CollaborativeList extends CollaborativeObject {
     model.setIndexReferenceIndex(id, false, index, length, sessionId, userId);
   }
 
-  private void replaceAndFireEvent(int index, JsonArray[] values, String sessionId, String userId) {
-    assert index + values.length <= length();
-    JsonArray oldObjects = Json.createArray();
-    JsonArray newObjects = Json.createArray();
-    int i = 0;
-    for (JsonArray newValue : values) {
-      oldObjects.push(get(index + i));
-      newObjects.push(JsonSerializer.deserializeObject(newValue, model.objects));
-      JsonArray oldValue = snapshot.getArray(index + i);
-      snapshot.remove(index + i);
-      snapshot.insert(index + i++, newValue);
-      model.addOrRemoveParent(oldValue, id, false);
-      model.addOrRemoveParent(newValue, id, true);
-      model.bytesUsed -= oldValue.toJsonString().length();
-      model.bytesUsed += newValue.toJsonString().length();
-    }
+  private void replaceAndFireEvent(final int index, JsonArray values, String sessionId, String userId) {
+    assert index + values.length() <= length();
+    final JsonArray oldObjects = Json.createArray();
+    final JsonArray newObjects = Json.createArray();
+    values.forEach(new ListIterator<JsonArray>() {
+      @Override
+      public void call(int idx, JsonArray newValue) {
+        oldObjects.push(get(index + idx));
+        newObjects.push(JsonSerializer.deserializeObject(newValue, model.objects));
+        JsonArray oldValue = snapshot.getArray(index + idx);
+        snapshot.remove(index + idx);
+        snapshot.insert(index + idx++, newValue);
+        model.addOrRemoveParent(oldValue, id, false);
+        model.addOrRemoveParent(newValue, id, true);
+        model.bytesUsed -= oldValue.toJsonString().length();
+        model.bytesUsed += newValue.toJsonString().length();
+      }
+    });
     ValuesSetEvent event =
         new ValuesSetEvent(event(sessionId, userId).set("index", index).set("oldObjects",
             oldObjects).set("newObjects", newObjects));
     fireEvent(event);
   }
 
-  private JsonArray[] subValues(int startIndex, int length) {
-    JsonArray[] array = new JsonArray[length];
-    for (int i = 0; i < length; i++) {
-      array[i] = snapshot.getArray(startIndex + i);
+  private JsonArray subValues(int startIndex, int length) {
+    JsonArray array = Json.createArray();
+    for (int i = startIndex; i < startIndex + length; i++) {
+      array.push(snapshot.getArray(i));
     }
     return array;
   }

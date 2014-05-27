@@ -72,11 +72,10 @@ public class JsonSerializer {
     return array;
   }
 
-  public static JsonArray[] serializeObjects(Object... values) {
-    JsonArray[] array = new JsonArray[values.length];
-    int i = 0;
+  public static JsonArray serializeObjects(Object... values) {
+    JsonArray array = Json.createArray();
     for (Object obj : values) {
-      array[i++] = serializeObject(obj);
+      array.push(serializeObject(obj));
     }
     return array;
   }

@@ -13,6 +13,7 @@
  */
 package com.goodow.realtime.store.server;
 
+import com.goodow.realtime.channel.server.impl.VertxPlatform;
 import com.goodow.realtime.operation.Transformer;
 import com.goodow.realtime.operation.impl.CollaborativeOperation;
 import com.goodow.realtime.operation.impl.CollaborativeTransformer;
@@ -44,6 +45,8 @@ public class StoreModule extends AbstractModule implements VertxModule {
 
   @Override
   protected void configure() {
+    VertxPlatform.register(vertx);
+
     bind(new TypeLiteral<Transformer<CollaborativeOperation>>() {
     }).to(CollaborativeTransformer.class);
   }

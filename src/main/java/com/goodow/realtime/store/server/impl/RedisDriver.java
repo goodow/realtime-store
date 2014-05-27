@@ -280,11 +280,11 @@ public class RedisDriver {
   }
 
   protected String getDocIdChannel(String docType, String docId) {
-    return address + "." + docType + "/" + docId;
+    return address + ":" + docType + "/" + docId;
   }
 
   protected String getDocTypeChannel(String docType) {
-    return address + "." + docType;
+    return address + ":" + docType;
   }
 
   protected String getOpsKey(String docType, String docId) {

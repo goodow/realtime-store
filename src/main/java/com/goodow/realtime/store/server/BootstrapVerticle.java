@@ -55,7 +55,7 @@ public class BootstrapVerticle extends BusModBase {
         getOptionalObjectConfig("realtime_search", empty), doneHandler);
     container.deployModule("com.goodow.realtime~realtime-auth~0.5.5-SNAPSHOT",
         getOptionalObjectConfig("realtime_auth", getOptionalObjectConfig("realtime_channel", empty)), doneHandler);
-    JsonObject redis = getOptionalObjectConfig("redis", empty);
+    JsonObject redis = getOptionalObjectConfig("redis", empty.copy());
     redis.putString("address", redis.getString("address", "realtime.redis"));
     container.deployModule("io.vertx~mod-redis~1.1.3", redis, doneHandler);
 

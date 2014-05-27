@@ -68,7 +68,7 @@ public class ElasticSearchDriver {
         new JsonObject().putString("action", "search").putString("_index", INDEX).putString(
             "_type", getOpsType(docType)).putObject(
             "source",
-            new JsonObject().putObject("sort", sort).putNumber("size", Long.MAX_VALUE).putObject(
+            new JsonObject().putObject("sort", sort).putNumber("size", 1000).putObject(
                 "filter", filter));
 
     eb.sendWithTimeout(address, search, REPLY_TIMEOUT,
@@ -138,9 +138,9 @@ public class ElasticSearchDriver {
             }
             JsonObject body = ar.result().body();
             long v = 0;
-            if (body.getObject("hits").getLong("total") == 1) {
+            if (body.getObject("hits").getLong("total") != 0) {
               v =
-                  body.getObject("hits").getArray("hits").<JsonObject> get(0).getLong(Key.VERSION) + 1;
+                  body.getObject("hits").getArray("hits").<JsonObject> get(0).getObject("_source").getLong(Key.VERSION) + 1;
             }
             result.setResult(v);
           }

@@ -216,7 +216,7 @@ public class DocumentBridge implements OperationSink<CollaborativeOperation> {
    * Applies an op locally and send it bypassing the undo stack. This is necessary with operations
    * popped from the undoManager as they are automatically applied.
    * 
-   * @param operations
+   * @param operation
    */
   private void bypassUndoStack(CollaborativeOperation operation) {
     applyLocally(operation);

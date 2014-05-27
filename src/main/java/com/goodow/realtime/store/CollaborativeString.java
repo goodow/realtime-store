@@ -13,7 +13,9 @@
  */
 package com.goodow.realtime.store;
 
+import com.goodow.realtime.core.Diff;
 import com.goodow.realtime.core.Handler;
+import com.goodow.realtime.core.Platform;
 import com.goodow.realtime.core.Registration;
 import com.goodow.realtime.operation.Operation;
 import com.goodow.realtime.operation.OperationComponent;
@@ -170,7 +172,25 @@ public class CollaborativeString extends CollaborativeObject {
       throw new IllegalArgumentException("Expected string for text, but was: null");
     }
     model.beginCompoundOperation("replaceText");
-    // ModelNative.get().setText(this, text);
+    Platform.diff().diff(getText(), text, new Diff.ListTarget<String>() {
+      @Override
+      public void insert(int startIndex, String values) {
+        insertString(startIndex, values);
+      }
+
+      @Override
+      public void remove(int startIndex, int length) {
+        removeRange(startIndex, startIndex + length);
+      }
+
+      @Override
+      public void replace(int startIndex, String values) {
+      }
+
+      @Override
+      public void move(int fromIndex, int toIndex, int length) {
+      }
+    });
     model.endCompoundOperation();
   }
 

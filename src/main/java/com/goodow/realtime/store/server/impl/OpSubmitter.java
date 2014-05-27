@@ -19,9 +19,7 @@ import com.goodow.realtime.operation.Transformer;
 import com.goodow.realtime.operation.impl.CollaborativeOperation;
 import com.goodow.realtime.store.DocumentBridge;
 import com.goodow.realtime.store.channel.Constants.Key;
-
 import com.google.inject.Inject;
-
 import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.AsyncResultHandler;
 import org.vertx.java.core.eventbus.ReplyException;
@@ -30,10 +28,11 @@ import org.vertx.java.core.impl.DefaultFutureResult;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class OpSubmitter {
+  private static final Logger log  = Logger.getLogger(OpSubmitter.class.getName());
   @Inject private RedisDriver redis;
   @Inject private ElasticSearchDriver persistor;
   @Inject private Transformer<CollaborativeOperation> transformer;
@@ -45,7 +44,7 @@ public class OpSubmitter {
    */
   public void submit(String docType, String docId, final JsonObject opData,
       final AsyncResultHandler<JsonObject> callback) {
-    retrySubmit(new ArrayList<Object>(), docType, docId, createOperation(opData), opData
+    retrySubmit(new JsonArray(), docType, docId, createOperation(opData), opData
         .getLong(Key.VERSION), callback);
   }
 
@@ -78,7 +77,7 @@ public class OpSubmitter {
    * function to return actual operations and whatnot, but its quite rare to actually need to
    * transform data on the server at this point.
    */
-  private void doSubmit(final List<Object> transformedOps, final String docType,
+  private void doSubmit(final JsonArray transformedOps, final String docType,
       final String docId, final CollaborativeOperation operation, final long applyAt,
       final DocumentBridge snapshot, final AsyncResultHandler<JsonObject> callback) {
     final JsonObject opData =
@@ -115,7 +114,7 @@ public class OpSubmitter {
             // probably make this asyncronous.
             redis.postSubmit(docType, docId, opData, root);
             callback.handle(new DefaultFutureResult<JsonObject>(new JsonObject().putNumber(
-                Key.VERSION, applyAt).putArray(Key.OPS, new JsonArray(transformedOps)).putObject(
+                Key.VERSION, applyAt).putArray(Key.OPS, transformedOps).putObject(
                 Key.SNAPSHOT, root)));
           }
         });
@@ -141,7 +140,7 @@ public class OpSubmitter {
     });
   }
 
-  private void retrySubmit(final List<Object> transformedOps, final String docType,
+  private void retrySubmit(final JsonArray transformedOps, final String docType,
       final String docId, final CollaborativeOperation operation, final Long applyAt,
       final AsyncResultHandler<JsonObject> callback) {
     // First we'll get a doc snapshot. This wouldn't be necessary except that we need to check that
@@ -213,6 +212,7 @@ public class OpSubmitter {
                         .<JsonObject> get(0).getLong(Key.VERSION)), ops.size()));
                 transformed = operation.transform(applied, false);
               } catch (Exception e) {
+                log.log(Level.WARNING, "Failed to transform operation", e);
                 callback.handle(new DefaultFutureResult<JsonObject>(new ReplyException(
                     ReplyFailure.RECIPIENT_FAILURE, e.getMessage())));
                 return;
@@ -223,6 +223,7 @@ public class OpSubmitter {
             try {
               snapshot.consume(transformed);
             } catch (Exception e) {
+              log.log(Level.WARNING, "Failed to consume operation", e);
               callback.handle(new DefaultFutureResult<JsonObject>(new ReplyException(
                   ReplyFailure.RECIPIENT_FAILURE, e.getMessage())));
               return;

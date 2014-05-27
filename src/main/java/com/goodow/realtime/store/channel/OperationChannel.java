@@ -252,7 +252,7 @@ public class OperationChannel<O extends Operation<?>> {
       return;
     }
 
-    logger.log(Level.INFO, "Eagerly acked @", appliedAt);
+    logger.log(Level.INFO, "Eagerly acked @" + appliedAt);
 
     // Special optimization: there were no concurrent ops on the server,
     // so we don't need to wait for them or even our own ops on the channel.

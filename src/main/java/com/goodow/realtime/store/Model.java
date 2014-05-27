@@ -187,7 +187,7 @@ public class Model implements Disposable {
     beginCreationCompoundOperation();
     bridge.consumeAndSubmit(new CreateComponent(id, CreateComponent.LIST));
     if (opt_initialValue != null && opt_initialValue.length > 0) {
-      JsonArray[] values = JsonSerializer.serializeObjects(opt_initialValue);
+      JsonArray values = JsonSerializer.serializeObjects(opt_initialValue);
       JsonInsertComponent op = new JsonInsertComponent(id, 0, values);
       bridge.consumeAndSubmit(op);
     }
