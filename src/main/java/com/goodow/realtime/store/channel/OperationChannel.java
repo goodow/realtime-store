@@ -164,11 +164,12 @@ public class OperationChannel<O extends Operation<?>> {
   }
 
   public void disconnect() {
-    checkConnected();
-    handlerRegistration.unregister();
-    sessionId = null;
-    handlerRegistration = null;
-    setState(State.UNINITIALISED);
+    if(isConnected()) {
+      handlerRegistration.unregister();
+      sessionId = null;
+      handlerRegistration = null;
+      setState(State.UNINITIALISED);
+    }
   }
 
   public O peek() {

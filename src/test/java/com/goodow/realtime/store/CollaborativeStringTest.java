@@ -17,6 +17,8 @@ import com.goodow.realtime.channel.server.impl.VertxPlatform;
 import com.goodow.realtime.core.Handler;
 import com.goodow.realtime.json.Json;
 import com.goodow.realtime.json.JsonArray;
+import com.goodow.realtime.operation.impl.CollaborativeOperation;
+import com.goodow.realtime.operation.list.string.StringDeleteComponent;
 import com.goodow.realtime.store.impl.SimpleStore;
 
 import org.junit.Test;
@@ -245,13 +247,26 @@ public class CollaborativeStringTest extends TestVerticle {
     str.removeRange(1, 2); // "a" events[2]
   }
 
-  // @Test
+  @Test
   public void testSetText() {
-    str.setText("abc");
-    VertxAssert.assertEquals("abc", str.getText());
-    str.setText("ddabd");
-    VertxAssert.assertEquals("ddabd", str.getText());
+    str.setText("0123456");
+    VertxAssert.assertEquals("0123456", str.getText());
+    str.addObjectChangedListener(new Handler<ObjectChangedEvent>() {
+      @Override
+      public void handle(ObjectChangedEvent event) {
+        VertxAssert.assertEquals(3, event.events.length());
 
-    VertxAssert.testComplete();
+        VertxAssert.assertEquals(0, event.events.<TextInsertedEvent> get(0).getIndex());
+        VertxAssert.assertEquals("0123456", event.events.<TextInsertedEvent> get(0).getText());
+        VertxAssert.assertEquals(1, event.events.<TextDeletedEvent> get(1).getIndex());
+        VertxAssert.assertEquals("1", event.events.<TextDeletedEvent> get(1).getText());
+        VertxAssert.assertEquals(3, event.events.<TextDeletedEvent> get(2).getIndex());
+        VertxAssert.assertEquals("45", event.events.<TextDeletedEvent> get(2).getText());
+
+        VertxAssert.testComplete();
+      }
+    });
+    str.setText("0236");
+    VertxAssert.assertEquals("0236", str.getText());
   }
 }

@@ -185,10 +185,12 @@ public class CollaborativeString extends CollaborativeObject {
 
       @Override
       public void replace(int startIndex, String values) {
+        throw new UnsupportedOperationException();
       }
 
       @Override
       public void move(int fromIndex, int toIndex, int length) {
+        throw new UnsupportedOperationException();
       }
     });
     model.endCompoundOperation();

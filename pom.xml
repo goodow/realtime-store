@@ -35,10 +35,14 @@
       </snapshots>
     </repository>
     <repository>
-      <id>google-diff-match-patch</id>
-      <url>http://google-diff-match-patch.googlecode.com/svn/trunk/maven/</url>
-      <snapshots>
+      <id>sonatype-google-snapshots</id>
+      <name>Sonatype Google Snapshots</name>
+      <url>https://oss.sonatype.org/content/repositories/google-snapshots</url>
+      <releases>
         <enabled>false</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
       </snapshots>
     </repository>
   </repositories>
@@ -56,12 +60,6 @@
       <version>${project.version}</version>
     </dependency>
 
-    <dependency>
-      <groupId>diff_match_patch</groupId>
-      <artifactId>diff_match_patch</artifactId>
-      <version>current</version>
-    </dependency>
-    
     <dependency>
       <groupId>com.goodow.vertx</groupId>
       <artifactId>mod-guice</artifactId>
@@ -110,13 +108,15 @@
     <dependency>
       <groupId>com.goodow.gwt</groupId>
       <artifactId>gwt-exporter</artifactId>
+      <version>2.5.1-SNAPSHOT</version>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
       <scope>provided</scope>
     </dependency>
-    
+
     <!-- Test -->
     <dependency>
       <groupId>io.vertx</groupId>
@@ -233,7 +233,6 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>gwt-maven-plugin</artifactId>
-        <version>${gwt.version}</version>
         <configuration>
           <compileSourcesArtifacts>
             <compileSourcesArtifact>com.goodow.realtime:realtime-json</compileSourcesArtifact>
