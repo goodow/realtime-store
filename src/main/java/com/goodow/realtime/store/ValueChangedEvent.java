@@ -16,7 +16,7 @@ package com.goodow.realtime.store;
 import com.google.gwt.core.client.js.JsInterface;
 import com.google.gwt.core.client.js.JsProperty;
 
-@JsInterface
+//@JsInterface
 /**
  * Event fired when a map or custom object property changes.
  */

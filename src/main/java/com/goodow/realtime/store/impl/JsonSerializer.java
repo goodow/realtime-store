@@ -64,8 +64,10 @@ class JsonSerializer {
       array.push(REFERENCE_TYPE).push(((CollaborativeObject) obj).id());
     } else if (obj instanceof String) {
       array.push(VALUE_TYPE).push(obj);
-    } else if (obj instanceof JsonElement) {
-      array.push(VALUE_TYPE).push(((JsonElement) obj).copy());
+    } else if (obj instanceof JsonObject) {
+      array.push(VALUE_TYPE).push(((JsonObject) obj).copy());
+    } else if (obj instanceof JsonArray) {
+      array.push(VALUE_TYPE).push(((JsonArray) obj).copy());
     } else {
       throw new IllegalArgumentException("Invalid JSON type: " + obj.getClass().getName());
     }

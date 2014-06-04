@@ -18,7 +18,7 @@ import com.goodow.realtime.core.Registration;
 import com.google.gwt.core.client.js.JsInterface;
 import com.google.gwt.core.client.js.JsProperty;
 
-@JsInterface
+//@JsInterface
 /**
  * CollaborativeObject contains behavior common to all built in collaborative types. This class
  * should not be instantiated directly. Use the create* methods on
@@ -42,5 +42,5 @@ public interface CollaborativeObject extends EventTarget {
    */
   String id();
 
-  Object toJson();
+  <T> T toJson();
 }
