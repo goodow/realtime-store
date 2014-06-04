@@ -13,18 +13,10 @@
  */
 package com.goodow.realtime.store;
 
-import com.goodow.realtime.store.util.ModelFactory;
-
-import org.timepedia.exporter.client.Export;
-import org.timepedia.exporter.client.ExportPackage;
-import org.timepedia.exporter.client.Exportable;
-
 /**
  * Events fired by the document or collaborative objects.
  */
-@ExportPackage(ModelFactory.PACKAGE_PREFIX_REALTIME)
-@Export
-public enum EventType implements Exportable {
+public enum EventType {
   /**
    * A new collaborator joined the document. Listen on the {@link com.goodow.realtime.store.Document} for
    * these changes.

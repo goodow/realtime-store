@@ -19,7 +19,6 @@ import com.goodow.realtime.json.Json;
 import com.goodow.realtime.json.JsonArray;
 import com.goodow.realtime.json.JsonObject;
 import com.goodow.realtime.store.impl.SimpleStore;
-
 import org.junit.Test;
 import org.vertx.testtools.TestVerticle;
 import org.vertx.testtools.VertxAssert;
@@ -38,7 +37,7 @@ public class CollaborativeListTest extends TestVerticle {
       @Override
       public void handle(Document doc) {
         mod = doc.getModel();
-        list = mod.createList();
+        list = mod.createList(null);
 
         startTests();
       }
@@ -47,7 +46,7 @@ public class CollaborativeListTest extends TestVerticle {
 
   @Test
   public void testAsArray() {
-    list = mod.createList("v1", 1, true, null);
+    list = mod.createList(Json.createArray().push("v1").push(1).push(true).push(null));
     JsonArray array = list.asArray();
     VertxAssert.assertEquals("v1", array.getString(0));
     VertxAssert.assertEquals(1d, array.getNumber(1), 0d);
@@ -69,7 +68,7 @@ public class CollaborativeListTest extends TestVerticle {
 
   @Test
   public void testIndexOf() {
-    list = mod.createList(2, 1, true, null);
+    list = mod.createList(Json.createArray().push(2).push(1).push(true).push(null));
     VertxAssert.assertEquals(1, list.indexOf(1, null));
     VertxAssert.assertEquals(3, list.indexOf(null, null));
 
@@ -126,12 +125,11 @@ public class CollaborativeListTest extends TestVerticle {
 
   @Test
   public void testInitialize() {
-    VertxAssert.assertSame(list, mod.getObject(list.getId()));
     VertxAssert.assertEquals(0, list.length());
 
     JsonObject v4 = Json.createObject();
     v4.set("subKey", "subValue");
-    list = mod.createList("v1", 1, true, v4, null);
+    list = mod.createList(Json.createArray().push("v1").push(1).push(true).push(v4).push(null));
     VertxAssert.assertEquals(5, list.length());
     VertxAssert.assertEquals("v1", list.get(0));
     VertxAssert.assertEquals(1d, (Double) list.get(1), 0d);
@@ -146,11 +144,11 @@ public class CollaborativeListTest extends TestVerticle {
   public void testInsert() {
     JsonObject v4 = Json.createObject();
     v4.set("subKey", "subValue");
-    list.insertAll(0, "v1", 1, true, v4, null);
+    list.insertAll(0, Json.createArray().push("v1").push(1).push(true).push(v4).push(null));
     list.insert(0, null);
     Object obj = null;
-    list.insertAll(2, obj);
-    list.insertAll(0);
+    list.insertAll(2, Json.createArray().push(obj));
+    list.insertAll(0, Json.createArray());
     VertxAssert.assertEquals(7, list.length());
     VertxAssert.assertNull(list.get(0));
     VertxAssert.assertNull(list.get(2));
@@ -161,7 +159,7 @@ public class CollaborativeListTest extends TestVerticle {
 
   @Test
   public void testLastIndexOf() {
-    list = mod.createList("v1", 1, true, null, null);
+    list = mod.createList(Json.createArray().push("v1").push(1).push(true).push(null).push(null));
     VertxAssert.assertEquals(2, list.lastIndexOf(true, null));
     VertxAssert.assertEquals(4, list.lastIndexOf(null, null));
 

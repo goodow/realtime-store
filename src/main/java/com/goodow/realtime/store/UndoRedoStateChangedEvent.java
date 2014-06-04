@@ -1,11 +1,11 @@
 /*
- * Copyright 2012 Goodow.com
- * 
+ * Copyright 2014 Goodow.com
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License
  * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
  * or implied. See the License for the specific language governing permissions and limitations under
@@ -13,41 +13,19 @@
  */
 package com.goodow.realtime.store;
 
-import com.goodow.realtime.json.JsonObject;
-import com.goodow.realtime.store.util.ModelFactory;
+import com.google.gwt.core.client.js.JsInterface;
+import com.google.gwt.core.client.js.JsProperty;
 
-import org.timepedia.exporter.client.Export;
-import org.timepedia.exporter.client.ExportPackage;
-
+@JsInterface
 /**
  * An event indicating that canUndo or canRedo changed.
  */
-@ExportPackage(ModelFactory.PACKAGE_PREFIX_REALTIME)
-@Export
-public class UndoRedoStateChangedEvent implements Disposable {
-  /**
-   * True if you can currently redo, false otherwise.
-   */
-  public final boolean canRedo;
-  /**
-   * True if you can currently undo, false otherwise.
-   */
-  public final boolean canUndo;
+public interface UndoRedoStateChangedEvent {
+  @JsProperty
+  /* True if you can currently redo, false otherwise. */
+  boolean canRedo();
 
-  /**
-   * @param source The source object.
-   * @param canUndo A serialized undo/redo state changed event.
-   */
-  public UndoRedoStateChangedEvent(Model source, JsonObject serialized) {
-    this.canUndo = serialized.getBoolean("canUndo");
-    this.canRedo = serialized.getBoolean("canRedo");
-  }
-
-  public boolean canRedo() {
-    return canRedo;
-  }
-
-  public boolean canUndo() {
-    return canUndo;
-  }
+  @JsProperty
+  /* True if you can currently undo, false otherwise. */
+  boolean canUndo();
 }

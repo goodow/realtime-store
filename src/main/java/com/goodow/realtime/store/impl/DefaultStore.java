@@ -16,23 +16,18 @@ package com.goodow.realtime.store.impl;
 import com.goodow.realtime.channel.Bus;
 import com.goodow.realtime.core.Handler;
 import com.goodow.realtime.json.JsonObject;
-import com.goodow.realtime.store.DocumentBridge;
 import com.goodow.realtime.store.Model;
 import com.goodow.realtime.store.channel.Constants.Key;
 import com.goodow.realtime.store.channel.OperationSucker;
-import com.goodow.realtime.store.util.ModelFactory;
+import com.google.gwt.core.client.js.JsExport;
 
-import org.timepedia.exporter.client.Export;
-import org.timepedia.exporter.client.ExportPackage;
-
-@ExportPackage(ModelFactory.PACKAGE_PREFIX_REALTIME)
-@Export
 public class DefaultStore extends SubscribeOnlyStore {
 
   public DefaultStore(Bus bus) {
     super(bus);
   }
 
+  @JsExport("$wnd.realtime.store.DefaultStore")
   public DefaultStore(String serverAddress, JsonObject options) {
     super(serverAddress, options);
   }

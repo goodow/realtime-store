@@ -13,18 +13,10 @@
  */
 package com.goodow.realtime.store;
 
-import com.goodow.realtime.store.util.ModelFactory;
-
-import org.timepedia.exporter.client.Export;
-import org.timepedia.exporter.client.ExportPackage;
-import org.timepedia.exporter.client.Exportable;
-
 /**
  * Errors that can occur while loading or collaborating on a document.
  */
-@ExportPackage(ModelFactory.PACKAGE_PREFIX_REALTIME)
-@Export
-public enum ErrorType implements Exportable {
+public enum ErrorType {
   /**
    * An internal error occurred in the Realtime API client.
    */

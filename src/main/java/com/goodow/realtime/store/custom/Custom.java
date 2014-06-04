@@ -16,18 +16,11 @@ package com.goodow.realtime.store.custom;
 import com.goodow.realtime.core.Handler;
 import com.goodow.realtime.store.Document;
 import com.goodow.realtime.store.Model;
-import com.goodow.realtime.store.util.ModelFactory;
-
-import org.timepedia.exporter.client.Export;
-import org.timepedia.exporter.client.ExportPackage;
-import org.timepedia.exporter.client.Exportable;
 
 /**
  * A namespace that includes methods for registering and working with custom collaborative objects.
  */
-@ExportPackage("")
-@Export(ModelFactory.PACKAGE_PREFIX_CUSTOM)
-public class Custom implements Exportable {
+public class Custom {
   /**
    * Returns a reference that can be assigned to an object prototype field of a custom collaborative
    * object in order to define custom collaborative properties. For example: MyClass.prototype.name

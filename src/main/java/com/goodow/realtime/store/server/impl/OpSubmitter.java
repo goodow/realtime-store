@@ -17,7 +17,7 @@ import com.goodow.realtime.json.impl.JreJsonArray;
 import com.goodow.realtime.json.impl.JreJsonObject;
 import com.goodow.realtime.operation.Transformer;
 import com.goodow.realtime.operation.impl.CollaborativeOperation;
-import com.goodow.realtime.store.DocumentBridge;
+import com.goodow.realtime.store.impl.DocumentBridge;
 import com.goodow.realtime.store.channel.Constants.Key;
 import com.google.inject.Inject;
 import org.vertx.java.core.AsyncResult;

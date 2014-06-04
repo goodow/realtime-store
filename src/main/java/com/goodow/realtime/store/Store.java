@@ -15,25 +15,23 @@ package com.goodow.realtime.store;
 
 import com.goodow.realtime.channel.Bus;
 import com.goodow.realtime.core.Handler;
-import com.goodow.realtime.store.util.ModelFactory;
-
-import org.timepedia.exporter.client.Export;
-import org.timepedia.exporter.client.ExportPackage;
-import org.timepedia.exporter.client.Exportable;
+import com.google.gwt.core.client.js.JsInterface;
+import com.google.gwt.core.client.js.JsProperty;
 
 /**
  * The Goodow Realtime Store API.
  */
-@ExportPackage(ModelFactory.PACKAGE_PREFIX_REALTIME)
-@Export
-public interface Store extends Exportable {
+@JsInterface
+public interface Store {
   void close();
 
   Bus getBus();
 
-  String getSessionId();
+  @JsProperty
+  String sessionId();
 
-  String getUserId();
+  @JsProperty
+  String userId();
 
   /**
    * Loads the realtime data model associated with {@code docId}. If no realtime data model is

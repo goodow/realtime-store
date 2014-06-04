@@ -18,7 +18,6 @@ import com.goodow.realtime.channel.impl.SimpleBus;
 import com.goodow.realtime.core.Handler;
 import com.goodow.realtime.core.Platform;
 import com.goodow.realtime.store.Document;
-import com.goodow.realtime.store.DocumentBridge;
 import com.goodow.realtime.store.Error;
 import com.goodow.realtime.store.Model;
 import com.goodow.realtime.store.Store;
@@ -47,12 +46,12 @@ public class SimpleStore implements Store {
   }
 
   @Override
-  public final String getSessionId() {
+  public final String sessionId() {
     return sessionId;
   }
 
   @Override
-  public String getUserId() {
+  public String userId() {
     return userId;
   }
 

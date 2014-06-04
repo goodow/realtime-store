@@ -17,10 +17,7 @@ import com.goodow.realtime.channel.server.impl.VertxPlatform;
 import com.goodow.realtime.core.Handler;
 import com.goodow.realtime.json.Json;
 import com.goodow.realtime.json.JsonArray;
-import com.goodow.realtime.operation.impl.CollaborativeOperation;
-import com.goodow.realtime.operation.list.string.StringDeleteComponent;
 import com.goodow.realtime.store.impl.SimpleStore;
-
 import org.junit.Test;
 import org.vertx.testtools.TestVerticle;
 import org.vertx.testtools.VertxAssert;
@@ -59,47 +56,44 @@ public class CollaborativeStringTest extends TestVerticle {
     final Object[] objectChanged = new Object[2];
     final int[] count = {0};
 
-    str.addObjectChangedListener(new Handler<ObjectChangedEvent>() {
+    str.onObjectChanged(new Handler<ObjectChangedEvent>() {
       @Override
       public void handle(ObjectChangedEvent event) {
         count[0]++;
-        VertxAssert.assertSame(str.id, event.target);
-        VertxAssert.assertEquals(EventType.OBJECT_CHANGED, event.type);
-        VertxAssert.assertTrue(event.isLocal);
-        JsonArray events = event.events;
+        VertxAssert.assertEquals(EventType.OBJECT_CHANGED, event.type());
+        VertxAssert.assertTrue(event.isLocal());
+        JsonArray events = event.events();
         VertxAssert.assertEquals(2, events.length());
-        VertxAssert.assertSame(objectChanged[0], events.<TextInsertedEvent> get(0));
-        VertxAssert.assertSame(objectChanged[1], events.<TextDeletedEvent> get(1));
+        VertxAssert.assertSame(objectChanged[0], events.<TextInsertedEvent>get(0));
+        VertxAssert.assertSame(objectChanged[1], events.<TextDeletedEvent>get(1));
 
         VertxAssert.assertEquals(3, count[0]);
         VertxAssert.testComplete();
       }
     });
 
-    str.addTextInsertedListener(new Handler<TextInsertedEvent>() {
+    str.onTextInserted(new Handler<TextInsertedEvent>() {
       @Override
       public void handle(TextInsertedEvent event) {
         count[0]++;
         objectChanged[0] = event;
-        VertxAssert.assertSame(str.id, event.target);
-        VertxAssert.assertEquals(EventType.TEXT_INSERTED, event.type);
-        VertxAssert.assertTrue(event.isLocal);
-        VertxAssert.assertEquals(0, event.index);
-        VertxAssert.assertEquals("abcdef", event.text);
+        VertxAssert.assertEquals(EventType.TEXT_INSERTED, event.type());
+        VertxAssert.assertTrue(event.isLocal());
+        VertxAssert.assertEquals(0, event.index());
+        VertxAssert.assertEquals("abcdef", event.text());
       }
     });
     str.append("abcdef");
 
-    str.addTextDeletedListener(new Handler<TextDeletedEvent>() {
+    str.onTextDeleted(new Handler<TextDeletedEvent>() {
       @Override
       public void handle(TextDeletedEvent event) {
         count[0]++;
         objectChanged[1] = event;
-        VertxAssert.assertSame(str.id, event.target);
-        VertxAssert.assertEquals(EventType.TEXT_DELETED, event.type);
-        VertxAssert.assertTrue(event.isLocal);
-        VertxAssert.assertEquals(2, event.index);
-        VertxAssert.assertEquals("cd", event.text);
+        VertxAssert.assertEquals(EventType.TEXT_DELETED, event.type());
+        VertxAssert.assertTrue(event.isLocal());
+        VertxAssert.assertEquals(2, event.index());
+        VertxAssert.assertEquals("cd", event.text());
       }
     });
     str.removeRange(2, 4);
@@ -162,7 +156,6 @@ public class CollaborativeStringTest extends TestVerticle {
 
   @Test
   public void testInitialize() {
-    VertxAssert.assertSame(str, mod.getObject(str.getId()));
     VertxAssert.assertEquals("", str.getText());
 
     str = mod.createString("abcd");
@@ -188,22 +181,22 @@ public class CollaborativeStringTest extends TestVerticle {
     str.append("ab");
     final JsonArray events = Json.createArray();
     IndexReference indexReference = str.registerReference(1, true);
-    indexReference.addReferenceShiftedListener(new Handler<ReferenceShiftedEvent>() {
+    indexReference.onReferenceShifted(new Handler<ReferenceShiftedEvent>() {
       @Override
       public void handle(ReferenceShiftedEvent event) {
         events.push(event);
       }
     });
-    indexReference.addObjectChangedListener(new Handler<ObjectChangedEvent>() {
+    indexReference.onObjectChanged(new Handler<ObjectChangedEvent>() {
       @Override
       public void handle(ObjectChangedEvent event) {
-        assertArraySame(events, event.events);
-        VertxAssert.assertEquals(1, events.<ReferenceShiftedEvent> get(0).oldIndex);
-        VertxAssert.assertEquals(2, events.<ReferenceShiftedEvent> get(0).newIndex);
-        VertxAssert.assertEquals(2, events.<ReferenceShiftedEvent> get(1).oldIndex);
-        VertxAssert.assertEquals(1, events.<ReferenceShiftedEvent> get(1).newIndex);
-        VertxAssert.assertEquals(1, events.<ReferenceShiftedEvent> get(2).oldIndex);
-        VertxAssert.assertEquals(-1, events.<ReferenceShiftedEvent> get(2).newIndex);
+        assertArraySame(events, event.events());
+        VertxAssert.assertEquals(1, events.<ReferenceShiftedEvent>get(0).oldIndex());
+        VertxAssert.assertEquals(2, events.<ReferenceShiftedEvent>get(0).newIndex());
+        VertxAssert.assertEquals(2, events.<ReferenceShiftedEvent>get(1).oldIndex());
+        VertxAssert.assertEquals(1, events.<ReferenceShiftedEvent>get(1).newIndex());
+        VertxAssert.assertEquals(1, events.<ReferenceShiftedEvent>get(2).oldIndex());
+        VertxAssert.assertEquals(-1, events.<ReferenceShiftedEvent>get(2).newIndex());
 
         VertxAssert.testComplete();
       }
@@ -220,22 +213,22 @@ public class CollaborativeStringTest extends TestVerticle {
     str.append("ab");
     final JsonArray events = Json.createArray();
     IndexReference indexReference = str.registerReference(1, false);
-    indexReference.addReferenceShiftedListener(new Handler<ReferenceShiftedEvent>() {
+    indexReference.onReferenceShifted(new Handler<ReferenceShiftedEvent>() {
       @Override
       public void handle(ReferenceShiftedEvent event) {
         events.push(event);
       }
     });
-    indexReference.addObjectChangedListener(new Handler<ObjectChangedEvent>() {
+    indexReference.onObjectChanged(new Handler<ObjectChangedEvent>() {
       @Override
       public void handle(ObjectChangedEvent event) {
-        assertArraySame(events, event.events);
-        VertxAssert.assertEquals(1, events.<ReferenceShiftedEvent> get(0).oldIndex);
-        VertxAssert.assertEquals(2, events.<ReferenceShiftedEvent> get(0).newIndex);
-        VertxAssert.assertEquals(2, events.<ReferenceShiftedEvent> get(1).oldIndex);
-        VertxAssert.assertEquals(1, events.<ReferenceShiftedEvent> get(1).newIndex);
-        VertxAssert.assertEquals(1, events.<ReferenceShiftedEvent> get(2).oldIndex);
-        VertxAssert.assertEquals(1, events.<ReferenceShiftedEvent> get(2).newIndex);
+        assertArraySame(events, event.events());
+        VertxAssert.assertEquals(1, events.<ReferenceShiftedEvent>get(0).oldIndex());
+        VertxAssert.assertEquals(2, events.<ReferenceShiftedEvent>get(0).newIndex());
+        VertxAssert.assertEquals(2, events.<ReferenceShiftedEvent>get(1).oldIndex());
+        VertxAssert.assertEquals(1, events.<ReferenceShiftedEvent>get(1).newIndex());
+        VertxAssert.assertEquals(1, events.<ReferenceShiftedEvent>get(2).oldIndex());
+        VertxAssert.assertEquals(1, events.<ReferenceShiftedEvent>get(2).newIndex());
 
         VertxAssert.testComplete();
       }
@@ -251,17 +244,17 @@ public class CollaborativeStringTest extends TestVerticle {
   public void testSetText() {
     str.setText("0123456");
     VertxAssert.assertEquals("0123456", str.getText());
-    str.addObjectChangedListener(new Handler<ObjectChangedEvent>() {
+    str.onObjectChanged(new Handler<ObjectChangedEvent>() {
       @Override
       public void handle(ObjectChangedEvent event) {
-        VertxAssert.assertEquals(3, event.events.length());
+        VertxAssert.assertEquals(3, event.events().length());
 
-        VertxAssert.assertEquals(0, event.events.<TextInsertedEvent> get(0).getIndex());
-        VertxAssert.assertEquals("0123456", event.events.<TextInsertedEvent> get(0).getText());
-        VertxAssert.assertEquals(1, event.events.<TextDeletedEvent> get(1).getIndex());
-        VertxAssert.assertEquals("1", event.events.<TextDeletedEvent> get(1).getText());
-        VertxAssert.assertEquals(3, event.events.<TextDeletedEvent> get(2).getIndex());
-        VertxAssert.assertEquals("45", event.events.<TextDeletedEvent> get(2).getText());
+        VertxAssert.assertEquals(0, event.events().<TextInsertedEvent>get(0).index());
+        VertxAssert.assertEquals("0123456", event.events().<TextInsertedEvent>get(0).text());
+        VertxAssert.assertEquals(1, event.events().<TextDeletedEvent>get(1).index());
+        VertxAssert.assertEquals("1", event.events().<TextDeletedEvent>get(1).text());
+        VertxAssert.assertEquals(3, event.events().<TextDeletedEvent>get(2).index());
+        VertxAssert.assertEquals("45", event.events().<TextDeletedEvent>get(2).text());
 
         VertxAssert.testComplete();
       }

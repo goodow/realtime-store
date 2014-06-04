@@ -28,20 +28,13 @@ import com.goodow.realtime.operation.Transformer;
 import com.goodow.realtime.operation.impl.CollaborativeOperation;
 import com.goodow.realtime.operation.impl.CollaborativeTransformer;
 import com.goodow.realtime.store.Document;
-import com.goodow.realtime.store.DocumentBridge;
-import com.goodow.realtime.store.DocumentBridge.OutputSink;
 import com.goodow.realtime.store.Error;
 import com.goodow.realtime.store.Model;
 import com.goodow.realtime.store.Store;
 import com.goodow.realtime.store.channel.Constants.Addr;
 import com.goodow.realtime.store.channel.Constants.Key;
-import com.goodow.realtime.store.util.ModelFactory;
+import com.goodow.realtime.store.impl.DocumentBridge.OutputSink;
 
-import org.timepedia.exporter.client.Export;
-import org.timepedia.exporter.client.ExportPackage;
-
-@ExportPackage(ModelFactory.PACKAGE_PREFIX_REALTIME)
-@Export
 public class SubscribeOnlyStore extends SimpleStore {
   public SubscribeOnlyStore(Bus bus) {
     super(bus);

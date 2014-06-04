@@ -1,14 +1,9 @@
-cd ../realtime-channel
-mvn clean install
+#!/bin/bash
+set -ev
 
-cd ../realtime-store
-mvn clean compile gwt:compile -Dgwt.module=com.goodow.realtime.store.RealtimeProd
+mvn compile gwt:compile -Dgwt.module=com.goodow.realtime.store.StoreProd \
+    -Dgwt.disableCastChecking=true -Dgwt.disableClassMetadata=true \
+    -Dgwt.compiler.optimizationLevel=9 -Dgwt.compiler.enableClosureCompiler=true
 # -Dgwt.draftCompile=true -Dgwt.style=DETAILED -Dgwt.compiler.compileReport=true
 
-cd ../realtime-server-appengine/src/main/webapp/good/realtime/
-rm realtime.js
-# rm `ls | grep .cache.js`
-
-cd ../../../../../../realtime-store/target/realtime-store-0.5.5-SNAPSHOT/realtime/
-cp realtime.nocache.js ../../../../realtime-server-appengine/src/main/webapp/good/realtime/realtime.js
-# cp `ls | grep .cache.js` ../../../../realtime-server-appengine/src/main/webapp/good/realtime/
+cp target/realtime-store-0.5.5-SNAPSHOT/store/store.nocache.js bower-realtime-store/realtime-store.js

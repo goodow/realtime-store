@@ -19,13 +19,9 @@ import com.goodow.realtime.json.Json;
 import com.goodow.realtime.json.JsonArray;
 import com.goodow.realtime.json.JsonObject;
 import com.goodow.realtime.store.impl.SimpleStore;
-
 import org.junit.Test;
 import org.vertx.testtools.TestVerticle;
 import org.vertx.testtools.VertxAssert;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public class CollaborativeMapTest extends TestVerticle {
   Model mod;
@@ -61,34 +57,33 @@ public class CollaborativeMapTest extends TestVerticle {
   @Test
   public void testEventHandler() {
     final JsonArray events = Json.createArray();
-    map.addValueChangedListener(new Handler<ValueChangedEvent>() {
+    map.onValueChanged(new Handler<ValueChangedEvent>() {
       @Override
       public void handle(ValueChangedEvent event) {
-        VertxAssert.assertSame(map.id, event.target);
-        VertxAssert.assertEquals(EventType.VALUE_CHANGED, event.type);
-        VertxAssert.assertTrue(event.isLocal);
+        VertxAssert.assertEquals(EventType.VALUE_CHANGED, event.type());
+        VertxAssert.assertTrue(event.isLocal());
         events.push(event);
       }
     });
-    map.addObjectChangedListener(new Handler<ObjectChangedEvent>() {
+    map.onObjectChanged(new Handler<ObjectChangedEvent>() {
       @Override
       public void handle(ObjectChangedEvent event) {
-        CollaborativeStringTest.assertArraySame(events, event.events);
-        VertxAssert.assertEquals("a", events.<ValueChangedEvent> get(0).property);
-        VertxAssert.assertEquals(null, events.<ValueChangedEvent> get(0).oldValue);
-        VertxAssert.assertEquals(3.0, events.<ValueChangedEvent> get(0).newValue);
-        VertxAssert.assertEquals("a", events.<ValueChangedEvent> get(1).property);
-        VertxAssert.assertEquals(3.0, events.<ValueChangedEvent> get(1).oldValue);
+        CollaborativeStringTest.assertArraySame(events, event.events());
+        VertxAssert.assertEquals("a", events.<ValueChangedEvent>get(0).property());
+        VertxAssert.assertEquals(null, events.<ValueChangedEvent>get(0).oldValue());
+        VertxAssert.assertEquals(3.0, events.<ValueChangedEvent>get(0).newValue());
+        VertxAssert.assertEquals("a", events.<ValueChangedEvent>get(1).property());
+        VertxAssert.assertEquals(3.0, events.<ValueChangedEvent>get(1).oldValue());
         VertxAssert.assertEquals(Json.createObject().set("a", true).set("b", 1.0), events
-            .<ValueChangedEvent> get(1).newValue);
-        VertxAssert.assertEquals("a", events.<ValueChangedEvent> get(2).property);
+            .<ValueChangedEvent>get(1).newValue());
+        VertxAssert.assertEquals("a", events.<ValueChangedEvent>get(2).property());
         VertxAssert.assertEquals(Json.createObject().set("a", true).set("b", 1.0), events
-            .<ValueChangedEvent> get(2).oldValue);
-        VertxAssert.assertEquals(null, events.<ValueChangedEvent> get(2).newValue);
+            .<ValueChangedEvent>get(2).oldValue());
+        VertxAssert.assertEquals(null, events.<ValueChangedEvent>get(2).newValue());
 
-        VertxAssert.assertEquals("x", events.<ValueChangedEvent> get(5).property);
-        VertxAssert.assertEquals(null, events.<ValueChangedEvent> get(5).oldValue);
-        VertxAssert.assertEquals(true, events.<ValueChangedEvent> get(5).newValue);
+        VertxAssert.assertEquals("x", events.<ValueChangedEvent>get(5).property());
+        VertxAssert.assertEquals(null, events.<ValueChangedEvent>get(5).oldValue());
+        VertxAssert.assertEquals(true, events.<ValueChangedEvent>get(5).newValue());
 
         VertxAssert.testComplete();
       }
@@ -98,16 +93,16 @@ public class CollaborativeMapTest extends TestVerticle {
     map.remove("a");
 
     CollaborativeMap map2 = mod.createMap(null);
-    CollaborativeList list = mod.createList();
+    CollaborativeList list = mod.createList(null);
     list.push(map2);
     map.set("c", list);
-    list.addValuesAddedListener(new Handler<ValuesAddedEvent>() {
+    list.onValuesAdded(new Handler<ValuesAddedEvent>() {
       @Override
       public void handle(ValuesAddedEvent event) {
         events.push(event);
       }
     });
-    map2.addValueChangedListener(new Handler<ValueChangedEvent>() {
+    map2.onValueChanged(new Handler<ValueChangedEvent>() {
       @Override
       public void handle(ValueChangedEvent event) {
         events.push(event);
@@ -128,17 +123,13 @@ public class CollaborativeMapTest extends TestVerticle {
 
   @Test
   public void testInitialize() {
-    VertxAssert.assertSame(map, mod.getObject(map.getId()));
     VertxAssert.assertEquals(0, map.size());
     VertxAssert.assertTrue(map.isEmpty());
 
     JsonObject v4 = Json.createObject();
     v4.set("subKey", "subValue");
-    Map<String, Object> initialValue = new HashMap<String, Object>();
-    initialValue.put("k1", "v1");
-    initialValue.put("k2", 2);
-    initialValue.put("k3", true);
-    initialValue.put("k4", v4);
+    JsonObject initialValue = Json.createObject();
+    initialValue.set("k1", "v1").set("k2", 2).set("k3", true).set("k4", v4);
     map = mod.createMap(initialValue);
     VertxAssert.assertEquals(4, map.size());
     VertxAssert.assertEquals("v1", map.get("k1"));
@@ -154,11 +145,11 @@ public class CollaborativeMapTest extends TestVerticle {
   public void testItems() {
     map.set("k1", "v1");
     map.set("k2", "v2");
-    Object[][] items = map.items();
-    VertxAssert.assertEquals("k1", items[0][0]);
-    VertxAssert.assertEquals("v1", items[0][1]);
-    VertxAssert.assertEquals("k2", items[1][0]);
-    VertxAssert.assertEquals("v2", items[1][1]);
+    JsonArray items = map.items();
+    VertxAssert.assertEquals("k1", items.getArray(0).getString(0));
+    VertxAssert.assertEquals("v1", items.getArray(0).getString(1));
+    VertxAssert.assertEquals("k2", items.getArray(1).getString(0));
+    VertxAssert.assertEquals("v2", items.getArray(1).getString(1));
 
     VertxAssert.testComplete();
   }

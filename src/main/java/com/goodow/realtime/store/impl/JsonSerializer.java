@@ -11,7 +11,7 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package com.goodow.realtime.store.util;
+package com.goodow.realtime.store.impl;
 
 import com.goodow.realtime.json.Json;
 import com.goodow.realtime.json.JsonArray;
@@ -19,7 +19,7 @@ import com.goodow.realtime.json.JsonElement;
 import com.goodow.realtime.json.JsonObject;
 import com.goodow.realtime.store.CollaborativeObject;
 
-public class JsonSerializer {
+class JsonSerializer {
   public static final int REFERENCE_TYPE = 2;
   private static final int VALUE_TYPE = 21;
 
@@ -61,7 +61,7 @@ public class JsonSerializer {
     } else if (obj instanceof Boolean) {
       array.push(VALUE_TYPE).push(((Boolean) obj).booleanValue());
     } else if (obj instanceof CollaborativeObject) {
-      array.push(REFERENCE_TYPE).push(((CollaborativeObject) obj).getId());
+      array.push(REFERENCE_TYPE).push(((CollaborativeObject) obj).id());
     } else if (obj instanceof String) {
       array.push(VALUE_TYPE).push(obj);
     } else if (obj instanceof JsonElement) {
@@ -72,11 +72,14 @@ public class JsonSerializer {
     return array;
   }
 
-  public static JsonArray serializeObjects(Object... values) {
-    JsonArray array = Json.createArray();
-    for (Object obj : values) {
-      array.push(serializeObject(obj));
-    }
+  public static JsonArray serializeObjects(JsonArray values) {
+    final JsonArray array = Json.createArray();
+    values.forEach(new JsonArray.ListIterator<Object>() {
+      @Override
+      public void call(int index, Object obj) {
+        array.push(serializeObject(obj));
+      }
+    });
     return array;
   }
 }

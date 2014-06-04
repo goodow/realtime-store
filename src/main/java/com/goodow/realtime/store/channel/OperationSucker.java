@@ -23,8 +23,11 @@ import com.goodow.realtime.operation.Transformer;
 import com.goodow.realtime.operation.impl.CollaborativeOperation;
 import com.goodow.realtime.operation.impl.CollaborativeTransformer;
 import com.goodow.realtime.store.Collaborator;
-import com.goodow.realtime.store.DocumentBridge;
-import com.goodow.realtime.store.DocumentBridge.OutputSink;
+import com.goodow.realtime.store.impl.DefaultCollaborator;
+import com.goodow.realtime.store.impl.DefaultDocumentSaveStateChangedEvent;
+import com.goodow.realtime.store.impl.DefaultError;
+import com.goodow.realtime.store.impl.DocumentBridge;
+import com.goodow.realtime.store.impl.DocumentBridge.OutputSink;
 import com.goodow.realtime.store.DocumentSaveStateChangedEvent;
 import com.goodow.realtime.store.Error;
 import com.goodow.realtime.store.ErrorType;
@@ -72,7 +75,7 @@ public class OperationSucker implements OperationChannel.Listener<CollaborativeO
       public void handle(Message<JsonObject> message) {
         JsonObject body = message.body();
         boolean isJoined = !body.has(Key.IS_JOINED) || body.getBoolean(Key.IS_JOINED);
-        bridge.onCollaboratorChanged(isJoined, new Collaborator(body));
+        bridge.onCollaboratorChanged(isJoined, new DefaultCollaborator(body));
       }
     });
 
@@ -86,7 +89,7 @@ public class OperationSucker implements OperationChannel.Listener<CollaborativeO
   @Override
   public void onError(Throwable e) {
     logger.log(Level.WARNING, "Channel error occurs", e);
-    bus.publishLocal(Addr.EVENT + Addr.DOCUMENT_ERROR + ":" + id, new Error(ErrorType.SERVER_ERROR,
+    bus.publishLocal(Addr.EVENT + Addr.DOCUMENT_ERROR + ":" + id, new DefaultError(ErrorType.SERVER_ERROR,
         "Channel error occurs", true));
   }
 
@@ -100,7 +103,7 @@ public class OperationSucker implements OperationChannel.Listener<CollaborativeO
   @Override
   public void onSaveStateChanged(boolean isSaving, boolean isPending) {
     bus.publishLocal(Addr.EVENT + EventType.DOCUMENT_SAVE_STATE_CHANGED + ":" + id,
-        new DocumentSaveStateChangedEvent(bridge.getDocument(), Json.createObject().set("isSaving",
+        new DefaultDocumentSaveStateChangedEvent(bridge.getDocument(), Json.createObject().set("isSaving",
             isSaving).set("isPending", isPending)));
   }
 }

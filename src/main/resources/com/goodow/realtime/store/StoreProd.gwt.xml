@@ -15,11 +15,8 @@
  * limitations under the License.
 -->
 <module rename-to='store'>
-  <inherits name='com.goodow.realtime.channel.Channel'/>
-  <inherits name='com.goodow.realtime.operation.Operation'/>
-
-  <entry-point class="com.goodow.realtime.html.ChannelEntryPoint"/>
-
-  <source path="" />
-  <super-source path="super" />
+  <inherits name='com.goodow.realtime.store.Store'/>
+  
+  <add-linker name="sso"/>
+  <set-configuration-property name="devModeRedirectEnabled" value="false"/>
 </module>

@@ -14,18 +14,11 @@
 package com.goodow.realtime.store.databinding;
 
 import com.goodow.realtime.store.CollaborativeObject;
-import com.goodow.realtime.store.Disposable;
-import com.goodow.realtime.store.util.ModelFactory;
-
-import org.timepedia.exporter.client.Export;
-import org.timepedia.exporter.client.ExportPackage;
 
 /**
  * A binding between a collaborative object in the data model and a DOM element.
  */
-@ExportPackage(ModelFactory.PACKAGE_PREFIX_DATABINDING)
-@Export
-public class Binding implements Disposable {
+public class Binding {
   private final CollaborativeObject collaborativeObject;
   private final Object domElement;
 

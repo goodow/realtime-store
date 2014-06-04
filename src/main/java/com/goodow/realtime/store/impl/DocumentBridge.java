@@ -11,9 +11,8 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package com.goodow.realtime.store;
+package com.goodow.realtime.store.impl;
 
-import com.goodow.realtime.channel.Message;
 import com.goodow.realtime.core.Handler;
 import com.goodow.realtime.core.Platform;
 import com.goodow.realtime.json.Json;
@@ -30,9 +29,16 @@ import com.goodow.realtime.operation.impl.CollaborativeOperation;
 import com.goodow.realtime.operation.impl.CollaborativeTransformer;
 import com.goodow.realtime.operation.undo.UndoManager;
 import com.goodow.realtime.operation.undo.UndoManagerFactory;
+import com.goodow.realtime.store.Collaborator;
+import com.goodow.realtime.store.Document;
+import com.goodow.realtime.store.EventType;
+import com.goodow.realtime.store.Store;
+import com.goodow.realtime.store.UndoRedoStateChangedEvent;
 import com.goodow.realtime.store.channel.Constants.Addr;
-import com.goodow.realtime.store.impl.SimpleStore;
 
+/**
+ * Internal utilities for the Realtime API.
+ */
 public class DocumentBridge implements OperationSink<CollaborativeOperation> {
   public interface OutputSink extends OperationSink<CollaborativeOperation> {
     OutputSink VOID = new OutputSink() {
@@ -50,27 +56,17 @@ public class DocumentBridge implements OperationSink<CollaborativeOperation> {
 
   final Store store;
   final String id;
-  private final Document document;
-  private final Model model;
+  private final DefaultDocument document;
+  private final DefaultModel model;
   private UndoManager<CollaborativeOperation> undoManager = UndoManagerFactory.getNoOp();
   OutputSink outputSink = OutputSink.VOID;
 
   public DocumentBridge(Store store, String id, JsonArray components,
-      final Handler<Error> errorHandler) {
+      final Handler<com.goodow.realtime.store.Error> errorHandler) {
     this.store = store == null ? new SimpleStore() : store;
     this.id = id;
-    document = new Document(this);
+    document = new DefaultDocument(this, errorHandler);
     model = document.getModel();
-
-    if (errorHandler != null) {
-      document.handlerRegs.wrap(store.getBus().registerLocalHandler(
-          Addr.EVENT + Addr.DOCUMENT_ERROR + ":" + id, new Handler<Message<Error>>() {
-            @Override
-            public void handle(Message<Error> message) {
-              errorHandler.handle(message.body());
-            }
-          }));
-    }
 
     if (components != null && components.length() > 0) {
       final CollaborativeTransformer transformer = new CollaborativeTransformer();
@@ -127,9 +123,9 @@ public class DocumentBridge implements OperationSink<CollaborativeOperation> {
   public JsonArray toSnapshot() {
     final JsonArray createComponents = Json.createArray();
     final JsonArray components = Json.createArray();
-    model.objects.forEach(new MapIterator<CollaborativeObject>() {
+    model.objects.forEach(new MapIterator<DefaultCollaborativeObject>() {
       @Override
-      public void call(String key, CollaborativeObject object) {
+      public void call(String key, DefaultCollaborativeObject object) {
         OperationComponent<?>[] initializeComponents = object.toInitialization();
         boolean isCreateOp = true;
         for (OperationComponent<?> component : initializeComponents) {
@@ -158,7 +154,7 @@ public class DocumentBridge implements OperationSink<CollaborativeOperation> {
 
   void consumeAndSubmit(OperationComponent<?> component) {
     CollaborativeOperation operation =
-        new CollaborativeOperation(store.getUserId(), store.getSessionId(), Json.createArray()
+        new CollaborativeOperation(store.userId(), store.sessionId(), Json.createArray()
             .push(component));
     applyLocally(operation);
     undoManager.checkpoint();
@@ -167,7 +163,7 @@ public class DocumentBridge implements OperationSink<CollaborativeOperation> {
   }
 
   boolean isLocalSession(String sessionId) {
-    String local = store.getSessionId();
+    String local = store.sessionId();
     return sessionId == null ? local == null : sessionId.equals(local);
   }
 
@@ -184,22 +180,22 @@ public class DocumentBridge implements OperationSink<CollaborativeOperation> {
       @Override
       public void call(int index, AbstractComponent<?> component) {
         if (component.type != CreateComponent.TYPE) {
-          model.getObject(component.id).consume(operation.userId, operation.sessionId, component);
+          model.<DefaultCollaborativeObject>getObject(component.id).consume(operation.userId, operation.sessionId, component);
           return;
         }
-        CollaborativeObject obj;
+        DefaultCollaborativeObject obj;
         switch (((CreateComponent) component).subType) {
           case CreateComponent.MAP:
-            obj = new CollaborativeMap(model);
+            obj = new DefaultCollaborativeMap(model);
             break;
           case CreateComponent.LIST:
-            obj = new CollaborativeList(model);
+            obj = new DefaultCollaborativeList(model);
             break;
           case CreateComponent.STRING:
-            obj = new CollaborativeString(model);
+            obj = new DefaultCollaborativeString(model);
             break;
           case CreateComponent.INDEX_REFERENCE:
-            obj = new IndexReference(model);
+            obj = new DefaultIndexReference(model);
             break;
           default:
             throw new RuntimeException("Shouldn't reach here!");
@@ -231,7 +227,7 @@ public class DocumentBridge implements OperationSink<CollaborativeOperation> {
       model.canUndo = canUndo;
       model.canRedo = canRedo;
       UndoRedoStateChangedEvent event =
-          new UndoRedoStateChangedEvent(model, Json.createObject().set("canUndo", canUndo).set(
+          new DefaultUndoRedoStateChangedEvent(model, Json.createObject().set("canUndo", canUndo).set(
               "canRedo", canRedo));
       store.getBus().publishLocal(Addr.EVENT + EventType.UNDO_REDO_STATE_CHANGED + ":" + id, event);
     }
