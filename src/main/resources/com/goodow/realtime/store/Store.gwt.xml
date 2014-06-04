@@ -18,8 +18,8 @@
   <inherits name='com.goodow.realtime.channel.Channel'/>
   <inherits name='com.goodow.realtime.operation.Operation'/>
 
-  <entry-point class="com.goodow.realtime.html.ChannelEntryPoint"/>
-
-  <source path="" />
+  <source path="">
+    <exclude name="server/**" />
+  </source>
   <super-source path="super" />
 </module>

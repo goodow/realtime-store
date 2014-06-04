@@ -1,3 +1,6 @@
 [submodule "GDStore"]
   path = GDStore
   url = https://github.com/goodow/GDStore.git
+[submodule "bower-realtime-store"]
+	path = bower-realtime-store
+	url = https://github.com/goodow/bower-realtime-store.git

@@ -21,7 +21,7 @@ import com.google.gwt.core.client.js.JsProperty;
 
 import java.util.Comparator;
 
-@JsInterface
+//@JsInterface
 /**
  * A collaborative list. A list can contain other Realtime collaborative objects, custom
  * collaborative objects, primitive values, or objects that can be serialized to JSON.
@@ -188,6 +188,4 @@ public interface CollaborativeList extends CollaborativeObject {
    * @exception ArrayIndexOutOfBoundsException
    */
   void length(int length);
-
-  JsonArray toJson();
 }

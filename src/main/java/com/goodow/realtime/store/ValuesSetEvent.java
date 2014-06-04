@@ -17,7 +17,7 @@ import com.goodow.realtime.json.JsonArray;
 import com.google.gwt.core.client.js.JsInterface;
 import com.google.gwt.core.client.js.JsProperty;
 
-@JsInterface
+//@JsInterface
 /**
  * Event fired when items in a collaborative list are changed in place.
  */

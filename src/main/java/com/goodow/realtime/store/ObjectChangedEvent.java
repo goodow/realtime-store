@@ -17,7 +17,7 @@ import com.goodow.realtime.json.JsonArray;
 import com.google.gwt.core.client.js.JsInterface;
 import com.google.gwt.core.client.js.JsProperty;
 
-@JsInterface
+//@JsInterface
 /**
  * Event fired when a collaborative object changes. This event will bubble to all of the ancestors
  * of the changed object. It includes an array of events describing the specific changes.
