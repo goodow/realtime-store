@@ -18,7 +18,7 @@ import com.goodow.realtime.core.Registration;
 import com.google.gwt.core.client.js.JsInterface;
 import com.google.gwt.core.client.js.JsProperty;
 
-@JsInterface
+//@JsInterface
 /**
  * Creates a new collaborative string. Unlike regular strings, collaborative strings are mutable.
  * <p>
@@ -98,7 +98,4 @@ public interface CollaborativeString extends CollaborativeObject {
    * @return The length of the string. Read only.
    */
   int length();
-
-  @Override
-  String toJson();
 }

@@ -42,5 +42,5 @@ public interface CollaborativeObject extends EventTarget {
    */
   String id();
 
-  Object toJson();
+  <T> T toJson();
 }

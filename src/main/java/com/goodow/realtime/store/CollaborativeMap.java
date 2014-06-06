@@ -20,7 +20,7 @@ import com.goodow.realtime.json.JsonObject;
 import com.google.gwt.core.client.js.JsInterface;
 import com.google.gwt.core.client.js.JsProperty;
 
-@JsInterface
+//@JsInterface
 /**
  * A collaborative map. A map's key must be a string. The values can contain other Realtime
  * collaborative objects, custom collaborative objects, primitive values or objects that can be
@@ -114,6 +114,4 @@ public interface CollaborativeMap extends CollaborativeObject {
    * @return The number of keys in the map.
    */
   int size();
-
-  JsonObject toJson();
 }
