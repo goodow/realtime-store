@@ -23,15 +23,9 @@ import com.google.gwt.core.client.js.JsInterface;
  * A Realtime document. A document consists of a Realtime model and a set of collaborators. Listen
  * on the document for the following events:
  * <ul>
- * <li>
- * <p>
- * {@link com.goodow.realtime.store.EventType#COLLABORATOR_LEFT}
- * <li>
- * <p>
- * {@link com.goodow.realtime.store.EventType#COLLABORATOR_JOINED}
- * <li>
- * <p>
- * {@link com.goodow.realtime.store.EventType#DOCUMENT_SAVE_STATE_CHANGED}
+ * <li>{@link com.goodow.realtime.store.EventType#COLLABORATOR_LEFT}
+ * <li>{@link com.goodow.realtime.store.EventType#COLLABORATOR_JOINED}
+ * <li>{@link com.goodow.realtime.store.EventType#DOCUMENT_SAVE_STATE_CHANGED}
  * </ul>
  * <p>
  * This class should not be instantiated directly. The document object is generated during the

@@ -229,6 +229,8 @@
             <compileSourcesArtifact>com.goodow.realtime:realtime-channel</compileSourcesArtifact>
           </compileSourcesArtifacts>
           <bindAddress>0.0.0.0</bindAddress>
+          <precompile>false</precompile>
+          <!--<extraJvmArgs>-Xmx2048M</extraJvmArgs>-->
           <!-- <module>${project.groupId}.store.RealtimeProd</module> -->
         </configuration>
       </plugin>

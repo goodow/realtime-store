@@ -107,6 +107,16 @@ class DefaultModel implements Model {
     throw new UnsupportedOperationException();
   }
 
+  /**
+   * Creates the native JS object for a given Brix type.
+   *
+   * @param ref The type to create.
+   * @return The native object.
+   */
+  public Object createJsObject(String ref) {
+    throw new UnsupportedOperationException();
+  }
+
   @Override public CollaborativeList createList(JsonArray opt_initialValue) {
     String id = generateObjectId();
     beginCreationCompoundOperation();
@@ -187,15 +197,19 @@ class DefaultModel implements Model {
   }
 
   /**
+   * Initializes the JS version of a collaborative object.
+   *
+   * @param obj The JS collaborative object.
+   */
+  public void initJsObject(Object obj) {
+    throw new UnsupportedOperationException();
+  }
+
+  /**
    * @return Whether the model is initialized.
    */
   public boolean isInitialized() {
     return false;
-  }
-
-  /* The mode of the document. If true, the document is readonly. If false it is editable. */
-  public boolean isReadOnly() {
-    return isReadOnly;
   }
 
   @Override public void redo() {

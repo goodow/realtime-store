@@ -22,7 +22,7 @@ public enum ErrorType {
    */
   CLIENT_ERROR,
   /**
-   * Another user created the document's initial state after good.realtime.load was called but
+   * Another user created the document's initial state after Store.load was called but
    * before the local creation was saved.
    */
   CONCURRENT_CREATION,
