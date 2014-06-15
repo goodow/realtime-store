@@ -4,10 +4,10 @@ import com.goodow.realtime.core.Handler;
 import com.goodow.realtime.core.Registration;
 import com.goodow.realtime.json.JsonArray;
 import com.goodow.realtime.json.JsonObject;
-import com.google.gwt.core.client.js.JsInterface;
+import com.google.gwt.core.client.js.JsType;
 import com.google.gwt.core.client.js.JsProperty;
 
-@JsInterface
+@JsType
 /**
  * The collaborative model is the data model for a Realtime document. The document's object graph
  * should be added to the model under the root object. All objects that are part of the model must

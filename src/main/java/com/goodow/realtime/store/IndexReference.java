@@ -15,11 +15,10 @@ package com.goodow.realtime.store;
 
 import com.goodow.realtime.core.Handler;
 import com.goodow.realtime.core.Registration;
-import com.goodow.realtime.json.JsonObject;
-import com.google.gwt.core.client.js.JsInterface;
 import com.google.gwt.core.client.js.JsProperty;
+import com.google.gwt.core.client.js.JsType;
 
-//@JsInterface
+@JsType
 /**
  * An IndexReference is a pointer to a specific location in a collaborative list or string. This
  * pointer automatically shifts as new elements are added to and removed from the object.

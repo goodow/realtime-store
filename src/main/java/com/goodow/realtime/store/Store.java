@@ -15,13 +15,13 @@ package com.goodow.realtime.store;
 
 import com.goodow.realtime.channel.Bus;
 import com.goodow.realtime.core.Handler;
-import com.google.gwt.core.client.js.JsInterface;
+import com.google.gwt.core.client.js.JsType;
 import com.google.gwt.core.client.js.JsProperty;
 
 /**
  * The Goodow Realtime Store API.
  */
-@JsInterface
+@JsType
 public interface Store {
   void close();
 

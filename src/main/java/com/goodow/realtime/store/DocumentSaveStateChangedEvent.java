@@ -13,10 +13,10 @@
  */
 package com.goodow.realtime.store;
 
-import com.google.gwt.core.client.js.JsInterface;
+import com.google.gwt.core.client.js.JsType;
 import com.google.gwt.core.client.js.JsProperty;
 
-@JsInterface
+@JsType
 /**
  * An event that indicates that the save state of a document has changed. If both isSaving and
  * isPending are false, the document is completely saved and up to date.

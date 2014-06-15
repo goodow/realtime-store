@@ -13,10 +13,10 @@
  */
 package com.goodow.realtime.store;
 
-import com.google.gwt.core.client.js.JsInterface;
 import com.google.gwt.core.client.js.JsProperty;
+import com.google.gwt.core.client.js.JsType;
 
-//@JsInterface
+@JsType
 /**
  * Event fired when text is removed from a string.
  */

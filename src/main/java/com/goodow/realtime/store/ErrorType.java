@@ -13,9 +13,12 @@
  */
 package com.goodow.realtime.store;
 
+import com.google.gwt.core.client.js.JsExport;
+
 /**
  * Errors that can occur while loading or collaborating on a document.
  */
+@JsExport
 public enum ErrorType {
   /**
    * An internal error occurred in the Realtime API client.

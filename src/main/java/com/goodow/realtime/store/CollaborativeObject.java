@@ -15,10 +15,10 @@ package com.goodow.realtime.store;
 
 import com.goodow.realtime.core.Handler;
 import com.goodow.realtime.core.Registration;
-import com.google.gwt.core.client.js.JsInterface;
 import com.google.gwt.core.client.js.JsProperty;
+import com.google.gwt.core.client.js.JsType;
 
-//@JsInterface
+@JsType
 /**
  * CollaborativeObject contains behavior common to all built in collaborative types. This class
  * should not be instantiated directly. Use the create* methods on

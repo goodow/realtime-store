@@ -15,9 +15,9 @@ package com.goodow.realtime.store;
 
 import com.goodow.realtime.core.Handler;
 import com.goodow.realtime.core.Registration;
-import com.google.gwt.core.client.js.JsInterface;
+import com.google.gwt.core.client.js.JsType;
 
-@JsInterface
+@JsType
 /**
  * An event target which can dispatch events to interested listeners. Listeners subscribe via addEventListener.
  */

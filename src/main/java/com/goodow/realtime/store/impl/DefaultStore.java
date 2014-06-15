@@ -20,14 +20,16 @@ import com.goodow.realtime.store.Model;
 import com.goodow.realtime.store.channel.Constants.Key;
 import com.goodow.realtime.store.channel.OperationSucker;
 import com.google.gwt.core.client.js.JsExport;
+import com.google.gwt.core.client.js.JsNamespace;
 
+@JsNamespace("$wnd.realtime.store")
 public class DefaultStore extends SubscribeOnlyStore {
 
   public DefaultStore(Bus bus) {
     super(bus);
   }
 
-  @JsExport("$wnd.realtime.store.DefaultStore")
+  @JsExport
   public DefaultStore(String serverAddress, JsonObject options) {
     super(serverAddress, options);
   }

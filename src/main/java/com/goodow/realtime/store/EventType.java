@@ -13,9 +13,12 @@
  */
 package com.goodow.realtime.store;
 
+import com.google.gwt.core.client.js.JsExport;
+
 /**
  * Events fired by the document or collaborative objects.
  */
+@JsExport
 public enum EventType {
   /**
    * A new collaborator joined the document. Listen on the {@link com.goodow.realtime.store.Document} for

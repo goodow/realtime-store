@@ -11,26 +11,5 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
+@com.google.gwt.core.client.js.JsNamespace("$wnd.realtime.store")
 package com.goodow.realtime.store;
-
-import com.goodow.realtime.json.JsonArray;
-import com.google.gwt.core.client.js.JsProperty;
-import com.google.gwt.core.client.js.JsType;
-
-@JsType
-/**
- * Event fired when items in a collaborative list are changed in place.
- */
-public interface ValuesSetEvent extends BaseModelEvent {
-  @JsProperty
-  /* The index of the first value that was replaced. */
-  int index();
-
-  @JsProperty
-  /* The new values. */
-  JsonArray newValues();
-
-  @JsProperty
-  /* The old values. */
-  JsonArray oldValues();
-}

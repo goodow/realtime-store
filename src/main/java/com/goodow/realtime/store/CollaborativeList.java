@@ -16,12 +16,12 @@ package com.goodow.realtime.store;
 import com.goodow.realtime.core.Handler;
 import com.goodow.realtime.core.Registration;
 import com.goodow.realtime.json.JsonArray;
-import com.google.gwt.core.client.js.JsInterface;
 import com.google.gwt.core.client.js.JsProperty;
+import com.google.gwt.core.client.js.JsType;
 
 import java.util.Comparator;
 
-//@JsInterface
+@JsType
 /**
  * A collaborative list. A list can contain other Realtime collaborative objects, custom
  * collaborative objects, primitive values, or objects that can be serialized to JSON.

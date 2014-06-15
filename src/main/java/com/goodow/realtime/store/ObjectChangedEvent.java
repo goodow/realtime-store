@@ -14,10 +14,10 @@
 package com.goodow.realtime.store;
 
 import com.goodow.realtime.json.JsonArray;
-import com.google.gwt.core.client.js.JsInterface;
 import com.google.gwt.core.client.js.JsProperty;
+import com.google.gwt.core.client.js.JsType;
 
-//@JsInterface
+@JsType
 /**
  * Event fired when a collaborative object changes. This event will bubble to all of the ancestors
  * of the changed object. It includes an array of events describing the specific changes.

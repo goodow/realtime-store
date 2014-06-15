@@ -114,7 +114,7 @@ class DefaultDocument implements Document {
           Addr.EVENT + Addr.DOCUMENT_ERROR + ":" + internalApi.id, new Handler<Message<com.goodow.realtime.store.Error>>() {
         @Override
         public void handle(Message<Error> message) {
-          errorHandler.handle(message.body());
+          Platform.scheduler().handle(errorHandler, message.body());
         }
       }));
     }
@@ -161,7 +161,7 @@ class DefaultDocument implements Document {
           @SuppressWarnings("unchecked")
           @Override
           public void handle(Message<?> message) {
-            handler.handle(message.body());
+            Platform.scheduler().handle(handler, message.body());
           }
         }));
   }

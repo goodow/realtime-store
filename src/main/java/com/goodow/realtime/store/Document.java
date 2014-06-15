@@ -16,9 +16,9 @@ package com.goodow.realtime.store;
 import com.goodow.realtime.core.Handler;
 import com.goodow.realtime.core.Registration;
 import com.goodow.realtime.json.JsonArray;
-import com.google.gwt.core.client.js.JsInterface;
+import com.google.gwt.core.client.js.JsType;
 
-@JsInterface
+@JsType
 /**
  * A Realtime document. A document consists of a Realtime model and a set of collaborators. Listen
  * on the document for the following events:
