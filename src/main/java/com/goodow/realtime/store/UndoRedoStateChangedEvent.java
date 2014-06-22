@@ -13,7 +13,6 @@
  */
 package com.goodow.realtime.store;
 
-import com.google.gwt.core.client.js.JsProperty;
 import com.google.gwt.core.client.js.JsType;
 
 @JsType
@@ -21,11 +20,9 @@ import com.google.gwt.core.client.js.JsType;
  * An event indicating that canUndo or canRedo changed.
  */
 public interface UndoRedoStateChangedEvent {
-  @JsProperty
   /* True if you can currently redo, false otherwise. */
   boolean canRedo();
 
-  @JsProperty
   /* True if you can currently undo, false otherwise. */
   boolean canUndo();
 }

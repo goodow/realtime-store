@@ -13,7 +13,6 @@
  */
 package com.goodow.realtime.store;
 
-import com.google.gwt.core.client.js.JsProperty;
 import com.google.gwt.core.client.js.JsType;
 
 import com.goodow.realtime.core.Handler;
@@ -110,7 +109,6 @@ public interface CollaborativeMap extends CollaborativeObject {
    */
   JsonArray values();
 
-  @JsProperty
   /**
    * @return The number of keys in the map.
    */

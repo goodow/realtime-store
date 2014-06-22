@@ -13,7 +13,6 @@
  */
 package com.goodow.realtime.store;
 
-import com.google.gwt.core.client.js.JsProperty;
 import com.google.gwt.core.client.js.JsType;
 
 import com.goodow.realtime.json.JsonArray;
@@ -23,11 +22,9 @@ import com.goodow.realtime.json.JsonArray;
  * Event fired when items are added to a collaborative list.
  */
 public interface ValuesAddedEvent extends BaseModelEvent {
-  @JsProperty
   /* The index of the first added value. */
   int index();
 
-  @JsProperty
   /* The values that were added. */
   JsonArray values();
 }

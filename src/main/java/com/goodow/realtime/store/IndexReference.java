@@ -13,7 +13,6 @@
  */
 package com.goodow.realtime.store;
 
-import com.google.gwt.core.client.js.JsProperty;
 import com.google.gwt.core.client.js.JsType;
 
 import com.goodow.realtime.core.Handler;
@@ -35,7 +34,6 @@ import com.goodow.realtime.core.Registration;
 public interface IndexReference extends CollaborativeObject {
   Registration onReferenceShifted(Handler<ReferenceShiftedEvent> handler);
 
-  @JsProperty
   /**
    * @return Whether this reference can be deleted. Read-only. This property affects the behavior of
    *         the index reference when the index the reference points to is deleted. If this is true,
@@ -44,14 +42,12 @@ public interface IndexReference extends CollaborativeObject {
    */
   boolean canBeDeleted();
 
-  @JsProperty
   /**
    * @return The index of the current location the reference points to. Write to this property to
    *         change the referenced index.
    */
   int index();
 
-  @JsProperty
   /**
    * Change the referenced index.
    *
@@ -60,7 +56,6 @@ public interface IndexReference extends CollaborativeObject {
    */
   void index(int index);
 
-  @JsProperty
   /**
    * @return The object this reference points to. Read-only.
    */

@@ -13,7 +13,6 @@
  */
 package com.goodow.realtime.store;
 
-import com.google.gwt.core.client.js.JsProperty;
 import com.google.gwt.core.client.js.JsType;
 
 @JsType
@@ -21,11 +20,9 @@ import com.google.gwt.core.client.js.JsType;
  * Event fired when an index reference shifts
  */
 public interface ReferenceShiftedEvent extends BaseModelEvent {
-  @JsProperty
   /* The new index. */
   int newIndex();
 
-  @JsProperty
   /* The previous index. */
   int oldIndex();
 }

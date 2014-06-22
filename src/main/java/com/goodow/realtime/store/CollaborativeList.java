@@ -13,7 +13,6 @@
  */
 package com.goodow.realtime.store;
 
-import com.google.gwt.core.client.js.JsProperty;
 import com.google.gwt.core.client.js.JsType;
 
 import com.goodow.realtime.core.Handler;
@@ -174,7 +173,6 @@ public interface CollaborativeList extends CollaborativeObject {
    */
   void set(int index, Object value);
 
-  @JsProperty
   /**
    * @return The number of entries in the list. Assign to this field to reduce the size of the list.
    *         Note that the length given must be < or equal to the current size. The length of a list
@@ -182,7 +180,6 @@ public interface CollaborativeList extends CollaborativeObject {
    */
   int length();
 
-  @JsProperty
   /**
    * @see #length()
    * @param length the new length of the array

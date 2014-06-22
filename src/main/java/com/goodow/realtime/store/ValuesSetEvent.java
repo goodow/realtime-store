@@ -13,7 +13,6 @@
  */
 package com.goodow.realtime.store;
 
-import com.google.gwt.core.client.js.JsProperty;
 import com.google.gwt.core.client.js.JsType;
 
 import com.goodow.realtime.json.JsonArray;
@@ -23,15 +22,12 @@ import com.goodow.realtime.json.JsonArray;
  * Event fired when items in a collaborative list are changed in place.
  */
 public interface ValuesSetEvent extends BaseModelEvent {
-  @JsProperty
   /* The index of the first value that was replaced. */
   int index();
 
-  @JsProperty
   /* The new values. */
   JsonArray newValues();
 
-  @JsProperty
   /* The old values. */
   JsonArray oldValues();
 }

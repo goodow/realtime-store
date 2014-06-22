@@ -13,7 +13,6 @@
  */
 package com.goodow.realtime.store;
 
-import com.google.gwt.core.client.js.JsProperty;
 import com.google.gwt.core.client.js.JsType;
 
 import com.goodow.realtime.core.Handler;
@@ -35,7 +34,6 @@ public interface CollaborativeObject extends EventTarget {
    */
   String toString();
 
-  @JsProperty
   /**
    * Returns the object id.
    *

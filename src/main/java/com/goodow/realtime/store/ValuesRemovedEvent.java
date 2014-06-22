@@ -13,7 +13,6 @@
  */
 package com.goodow.realtime.store;
 
-import com.google.gwt.core.client.js.JsProperty;
 import com.google.gwt.core.client.js.JsType;
 
 import com.goodow.realtime.json.JsonArray;
@@ -23,11 +22,9 @@ import com.goodow.realtime.json.JsonArray;
  * Event fired when items are removed from a collaborative list.
  */
 public interface ValuesRemovedEvent extends BaseModelEvent {
-  @JsProperty
   /* The index of the first removed value. */
   int index();
 
-  @JsProperty
   /* The values that were removed. */
   JsonArray values();
 }

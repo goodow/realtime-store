@@ -13,7 +13,6 @@
  */
 package com.goodow.realtime.store;
 
-import com.google.gwt.core.client.js.JsProperty;
 import com.google.gwt.core.client.js.JsType;
 
 import com.goodow.realtime.core.Handler;
@@ -94,7 +93,6 @@ public interface CollaborativeString extends CollaborativeObject {
    */
   void setText(String text);
 
-  @JsProperty
   /**
    * @return The length of the string. Read only.
    */

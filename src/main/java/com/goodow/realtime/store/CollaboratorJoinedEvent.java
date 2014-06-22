@@ -13,7 +13,6 @@
  */
 package com.goodow.realtime.store;
 
-import com.google.gwt.core.client.js.JsProperty;
 import com.google.gwt.core.client.js.JsType;
 
 @JsType
@@ -21,7 +20,6 @@ import com.google.gwt.core.client.js.JsType;
  * An event indicating that a new collaborator has joined the document.
  */
 public interface CollaboratorJoinedEvent {
-  @JsProperty
   /* The collaborator that joined. */
   Collaborator collaborator();
 }

@@ -1,6 +1,5 @@
 package com.goodow.realtime.store;
 
-import com.google.gwt.core.client.js.JsProperty;
 import com.google.gwt.core.client.js.JsType;
 
 import com.goodow.realtime.core.Handler;
@@ -68,13 +67,11 @@ public interface Model {
    */
   void undo();
 
-  @JsProperty
   /**
    * @return True if the model can currently redo.
    */
   boolean canRedo();
 
-  @JsProperty
   /**
    * @return True if the model can currently undo.
    */

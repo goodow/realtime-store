@@ -13,7 +13,6 @@
  */
 package com.goodow.realtime.store;
 
-import com.google.gwt.core.client.js.JsProperty;
 import com.google.gwt.core.client.js.JsType;
 
 @JsType
@@ -21,23 +20,18 @@ import com.google.gwt.core.client.js.JsType;
  * A base class for model events.
  */
 public interface BaseModelEvent {
-  @JsProperty
   /* Whether this event bubbles. */
   boolean bubbles();
 
-  @JsProperty
   /* Whether this event originated in the local session. */
   boolean isLocal();
 
-  @JsProperty
   /* The ID of the session that initiated the event. */
   String sessionId();
 
-  @JsProperty
   /* The user ID of the user that initiated the event. */
   String userId();
 
-  @JsProperty
   /* Event type. */
   EventType type();
 }

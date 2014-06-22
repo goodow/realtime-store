@@ -13,7 +13,6 @@
  */
 package com.goodow.realtime.store;
 
-import com.google.gwt.core.client.js.JsProperty;
 import com.google.gwt.core.client.js.JsType;
 
 @JsType
@@ -21,11 +20,9 @@ import com.google.gwt.core.client.js.JsType;
  * Event fired when text is inserted into a string.
  */
 public interface TextInsertedEvent extends BaseModelEvent {
-  @JsProperty
   /* The index of the change. */
   int index();
 
-  @JsProperty
   /* The inserted text. */
   String text();
 }

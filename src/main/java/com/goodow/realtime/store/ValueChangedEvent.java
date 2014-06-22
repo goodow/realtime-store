@@ -13,7 +13,6 @@
  */
 package com.goodow.realtime.store;
 
-import com.google.gwt.core.client.js.JsProperty;
 import com.google.gwt.core.client.js.JsType;
 
 @JsType
@@ -21,15 +20,12 @@ import com.google.gwt.core.client.js.JsType;
  * Event fired when a map or custom object property changes.
  */
 public interface ValueChangedEvent extends BaseModelEvent {
-  @JsProperty
   /* The new property value. */
   Object newValue();
 
-  @JsProperty
   /* The old property value. */
   Object oldValue();
 
-  @JsProperty
   /* The property whose value changed. */
   String property();
 }

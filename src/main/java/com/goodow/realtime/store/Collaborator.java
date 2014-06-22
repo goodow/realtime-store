@@ -13,7 +13,6 @@
  */
 package com.goodow.realtime.store;
 
-import com.google.gwt.core.client.js.JsProperty;
 import com.google.gwt.core.client.js.JsType;
 
 @JsType
@@ -21,31 +20,24 @@ import com.google.gwt.core.client.js.JsType;
  * A collaborator on the document.
  */
 public interface Collaborator {
-  @JsProperty
   /* The color associated with the collaborator. */
   String color();
 
-  @JsProperty
   /* The display name of the collaborator. */
   String displayName();
 
-  @JsProperty
   /* True if the collaborator is anonymous, false otherwise. */
   boolean isAnonymous();
 
-  @JsProperty
   /* True if the collaborator is the local user, false otherwise. */
   boolean isMe();
 
-  @JsProperty
   /* A url that points to the profile photo of the user. */
   String photoUrl();
 
-  @JsProperty
   /* The sessionId of the collaborator. */
   String sessionId();
 
-  @JsProperty
   /* The userId of the collaborator. */
   String userId();
 }

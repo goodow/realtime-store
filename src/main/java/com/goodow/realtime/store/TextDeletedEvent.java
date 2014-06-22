@@ -13,7 +13,6 @@
  */
 package com.goodow.realtime.store;
 
-import com.google.gwt.core.client.js.JsProperty;
 import com.google.gwt.core.client.js.JsType;
 
 @JsType
@@ -21,11 +20,9 @@ import com.google.gwt.core.client.js.JsType;
  * Event fired when text is removed from a string.
  */
 public interface TextDeletedEvent extends BaseModelEvent {
-  @JsProperty
   /* The index of the first character that was deleted. */
   int index();
 
-  @JsProperty
   /* The deleted text. */
   String text();
 }

@@ -13,7 +13,6 @@
  */
 package com.goodow.realtime.store;
 
-import com.google.gwt.core.client.js.JsProperty;
 import com.google.gwt.core.client.js.JsType;
 
 import com.goodow.realtime.json.JsonArray;
@@ -24,7 +23,6 @@ import com.goodow.realtime.json.JsonArray;
  * of the changed object. It includes an array of events describing the specific changes.
  */
 public interface ObjectChangedEvent extends BaseModelEvent {
-  @JsProperty
   /* The specific events that document the changes that occurred on the object. */
   JsonArray events();
 }
