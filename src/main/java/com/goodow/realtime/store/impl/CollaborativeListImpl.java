@@ -354,8 +354,8 @@ class CollaborativeListImpl extends CollaborativeObjectImpl implements Collabora
       }
     });
     ValuesSetEvent event =
-        new ValuesSetEventImpl(event(sessionId, userId).set("index", index).set("oldObjects",
-            oldObjects).set("newObjects", newObjects));
+        new ValuesSetEventImpl(event(sessionId, userId).set("index", index).set("oldValues",
+            oldObjects).set("newValues", newObjects));
     fireEvent(event);
   }
 

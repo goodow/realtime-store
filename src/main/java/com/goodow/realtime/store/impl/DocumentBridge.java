@@ -58,7 +58,6 @@ public class DocumentBridge implements OperationSink<CollaborativeOperation> {
 
   final Store store;
   final String id;
-  private Collaborator me;
   private final DocumentImpl document;
   private final ModelImpl model;
   private UndoManager<CollaborativeOperation> undoManager = UndoManagerFactory.getNoOp();
@@ -71,21 +70,15 @@ public class DocumentBridge implements OperationSink<CollaborativeOperation> {
     document = new DocumentImpl(this, errorHandler);
     model = document.getModel();
 
-    final JsonArray array = Json.createArray();
     collaborators = collaborators == null ? Json.createArray() : collaborators;
     collaborators.forEach(new ListIterator<JsonObject>() {
       @Override
       public void call(int index, JsonObject obj) {
         boolean isMe = store.getBus().getSessionId().equals(obj.getString("sessionId"));
-        obj.set(Key.IS_ME, isMe);
-        CollaboratorImpl collaborator = new CollaboratorImpl(obj);
-        array.push(collaborator);
-        if (isMe) {
-          me = collaborator;
-        }
+        Collaborator collaborator = new CollaboratorImpl(obj.set(Key.IS_ME, isMe));
+        document.collaborators.set(collaborator.sessionId(), collaborator);
       }
     });
-    document.collaborators = array;
 
     if (components != null && components.length() > 0) {
       final CollaborativeTransformer transformer = new CollaborativeTransformer();
@@ -168,6 +161,7 @@ public class DocumentBridge implements OperationSink<CollaborativeOperation> {
   }
 
   void consumeAndSubmit(OperationComponent<?> component) {
+    Collaborator me = document.collaborators.get(store.getBus().getSessionId());
     CollaborativeOperation operation =
         new CollaborativeOperation(me == null ? null : me.userId(), store.getBus().getSessionId(),
                                    Json.createArray().push(component));

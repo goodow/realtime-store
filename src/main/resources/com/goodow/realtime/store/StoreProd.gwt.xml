@@ -17,8 +17,8 @@
 <module rename-to='store'>
   <inherits name='com.goodow.realtime.store.Store'/>
   
-  <add-linker name="sso"/>
   <set-configuration-property name="devModeRedirectEnabled" value="false"/>
 
+  <add-linker name="sso"/>
   <set-property name="compiler.useSourceMaps" value="false"/>
 </module>

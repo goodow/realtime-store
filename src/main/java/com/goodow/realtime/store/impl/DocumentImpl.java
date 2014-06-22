@@ -25,6 +25,7 @@ import com.goodow.realtime.json.JsonArray.ListIterator;
 import com.goodow.realtime.json.JsonObject;
 import com.goodow.realtime.json.JsonObject.MapIterator;
 import com.goodow.realtime.store.BaseModelEvent;
+import com.goodow.realtime.store.Collaborator;
 import com.goodow.realtime.store.CollaboratorJoinedEvent;
 import com.goodow.realtime.store.CollaboratorLeftEvent;
 import com.goodow.realtime.store.Document;
@@ -37,7 +38,7 @@ import com.goodow.realtime.store.channel.Constants.Key;
 class DocumentImpl implements Document {
   private final ModelImpl model;
   final Registrations handlerRegs;
-  JsonArray collaborators;
+  final JsonObject collaborators;
 
   private boolean isEventsScheduled = false;
   private JsonArray eventsToFire; // ArrayList<BaseModelEvent>
@@ -107,6 +108,7 @@ class DocumentImpl implements Document {
   DocumentImpl(final DocumentBridge internalApi, final Handler<Error> errorHandler) {
     model = new ModelImpl(internalApi, this);
     handlerRegs = new Registrations();
+    collaborators = Json.createObject();
 
     Bus bus = internalApi.store.getBus();
     if (errorHandler != null) {
@@ -125,25 +127,24 @@ class DocumentImpl implements Document {
         @Override
         public void handle(Message<JsonObject> message) {
           JsonObject body = message.body().set(Key.IS_ME, false);
-          CollaboratorImpl collaborator = new CollaboratorImpl(body);
-          int index = collaborators.indexOf(collaborator);
+          Collaborator collaborator = new CollaboratorImpl(body);
           boolean isJoined = !body.has(Key.IS_JOINED) || body.getBoolean(Key.IS_JOINED);
+          String sessionId = collaborator.sessionId();
           if (isJoined) {
-            if (index == -1) {
-              collaborators.push(collaborator);
+            if (!collaborators.has(sessionId)) {
+              collaborators.set(sessionId, collaborator);
               model.bridge.store.getBus().publishLocal(
                   Addr.STORE + "/" + model.bridge.id + "/" + EventType.COLLABORATOR_JOINED,
                   new CollaboratorJoinedEventImpl(DocumentImpl.this, collaborator));
             }
           } else {
-            if (index != -1) {
-              collaborators.remove(index);
+            if (collaborators.has(sessionId)) {
+              collaborators.remove(sessionId);
               model.bridge.store.getBus().publishLocal(
                   Addr.STORE + "/" + model.bridge.id + "/" + EventType.COLLABORATOR_LEFT,
                   new CollaboratorLeftEventImpl(DocumentImpl.this, collaborator));
             }
           }
-
         }
       }));
   }
@@ -171,7 +172,14 @@ class DocumentImpl implements Document {
   }
 
   @Override public JsonArray getCollaborators() {
-    return collaborators;
+    final JsonArray toRtn = Json.createArray();
+    collaborators.forEach(new MapIterator<Collaborator>() {
+      @Override
+      public void call(String key, Collaborator collaborator) {
+        toRtn.push(collaborator);
+      }
+    });
+    return toRtn;
   }
 
   @Override public ModelImpl getModel() {
