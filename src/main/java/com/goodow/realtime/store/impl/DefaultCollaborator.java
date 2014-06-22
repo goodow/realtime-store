@@ -51,13 +51,24 @@ public class DefaultCollaborator implements Collaborator {
    * @param serialized A serialized collaborator object
    */
   public DefaultCollaborator(JsonObject serialized) {
-    this.userId = serialized.getString(Key.USER_ID);
-    this.sessionId = serialized.getString(Key.SESSION_ID);
-    this.displayName = serialized.getString(Key.DISPLAY_NAME);
-    this.color = serialized.getString(Key.COLOR);
+    this.userId = serialized.getString("userId");
+    this.sessionId = serialized.getString("sessionId");
+    this.displayName = serialized.getString("displayName");
+    this.color = serialized.getString("color");
     this.isMe = serialized.getBoolean(Key.IS_ME);
-    this.isAnonymous = serialized.getBoolean(Key.IS_ANONYMOUS);
-    this.photoUrl = serialized.getString(Key.PHOTO_URL);
+    this.isAnonymous = serialized.getBoolean("isAnonymous");
+    this.photoUrl = serialized.getString("photoUrl");
+  }
+
+  public DefaultCollaborator(String userId, String sessionId, String displayName, String color,
+                      boolean isMe, boolean isAnonymous, String photoUrl) {
+    this.userId = userId;
+    this.sessionId = sessionId;
+    this.displayName = displayName;
+    this.color = color;
+    this.isMe = isMe;
+    this.isAnonymous = isAnonymous;
+    this.photoUrl = photoUrl;
   }
 
   @Override

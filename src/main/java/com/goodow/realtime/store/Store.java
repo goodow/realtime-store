@@ -13,10 +13,10 @@
  */
 package com.goodow.realtime.store;
 
+import com.google.gwt.core.client.js.JsType;
+
 import com.goodow.realtime.channel.Bus;
 import com.goodow.realtime.core.Handler;
-import com.google.gwt.core.client.js.JsType;
-import com.google.gwt.core.client.js.JsProperty;
 
 /**
  * The Goodow Realtime Store API.
@@ -26,12 +26,6 @@ public interface Store {
   void close();
 
   Bus getBus();
-
-  @JsProperty
-  String sessionId();
-
-  @JsProperty
-  String userId();
 
   /**
    * Loads the realtime data model associated with {@code docId}. If no realtime data model is

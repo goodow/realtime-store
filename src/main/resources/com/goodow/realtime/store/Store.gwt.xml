@@ -22,4 +22,6 @@
     <exclude name="server/**" />
   </source>
   <super-source path="super" />
+
+  <set-property name="compiler.useSourceMaps" value="true"/>
 </module>

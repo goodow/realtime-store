@@ -13,11 +13,11 @@
  */
 package com.goodow.realtime.store.server.impl;
 
-import com.goodow.realtime.store.channel.Constants.Key;
-import com.goodow.realtime.store.server.StoreVerticle;
-
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+
+import com.goodow.realtime.store.channel.Constants.Addr;
+import com.goodow.realtime.store.channel.Constants.Key;
 
 import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.AsyncResultHandler;
@@ -57,7 +57,7 @@ public class RedisDriver {
   RedisDriver(Vertx vertx, final Container container) {
     this.vertx = vertx;
     eb = vertx.eventBus();
-    address = container.config().getString("address", StoreVerticle.DEFAULT_ADDRESS);
+    address = container.config().getString("address", Addr.STORE);
   }
 
   public void atomicSubmit(final String docType, final String docId, final JsonObject opData,
@@ -104,8 +104,8 @@ public class RedisDriver {
               return;
             }
             long docVersion = ar.result().longValue();
-            log.finest("redisSubmitScript failed: " + message + " op version: " + opData.getLong(Key.VERSION)
-              + " snapshot version: " + docVersion);
+            log.finest("redisSubmitScript failed: " + message + " op version: " + opData
+                .getLong(Key.VERSION) + " snapshot version: " + docVersion);
             if (docVersion < opData.getLong(Key.VERSION)) {
               // This is nate's awful hell error state. The oplog is basically
               // corrupted - the snapshot database is further in the future than
@@ -282,23 +282,23 @@ public class RedisDriver {
   }
 
   protected String getDocIdChannel(String docType, String docId) {
-    return address + ":" + docType + "/" + docId;
+    return address + "/" + docType + "/" + docId + Addr.WATCH;
   }
 
   protected String getDocTypeChannel(String docType) {
-    return address + ":" + docType;
+    return address + "/" + docType + Addr.WATCH;
   }
 
   protected String getOpsKey(String docType, String docId) {
-    return address + ":" + docType + "/" + docId + ":ops";
+    return address + "/" + docType + "/" + docId + Addr.OPS;
   }
 
   protected String getSnapshotKey(String docType, String docId) {
-    return address + ":" + docType + "/" + docId + ":snapshot";
+    return address + "/" + docType + "/" + docId;
   }
 
   protected String getVersionKey(String docType, String docId) {
-    return address + ":" + docType + "/" + docId + ":v";
+    return address + "/" + docType + "/" + docId + "/_v";
   }
 
   private void persistenceGetOps(String docType, String docId, final Long from, Long to,

@@ -13,14 +13,15 @@
  */
 package com.goodow.realtime.store.impl;
 
+import com.google.gwt.core.client.js.JsExport;
+import com.google.gwt.core.client.js.JsNamespace;
+
 import com.goodow.realtime.channel.Bus;
 import com.goodow.realtime.core.Handler;
 import com.goodow.realtime.json.JsonObject;
 import com.goodow.realtime.store.Model;
 import com.goodow.realtime.store.channel.Constants.Key;
 import com.goodow.realtime.store.channel.OperationSucker;
-import com.google.gwt.core.client.js.JsExport;
-import com.google.gwt.core.client.js.JsNamespace;
 
 @JsNamespace("$wnd.realtime.store")
 public class DefaultStore extends SubscribeOnlyStore {
@@ -35,11 +36,11 @@ public class DefaultStore extends SubscribeOnlyStore {
   }
 
   @Override
-  protected void onLoaded(String id, Handler<Model> opt_initializer, JsonObject snapshot,
+  protected void onLoaded(String id, Handler<Model> opt_initializer, double version,
       DocumentBridge bridge) {
     bridge.setUndoEnabled(true);
 
     OperationSucker operationSucker = new OperationSucker(bus, id);
-    operationSucker.load(bridge, snapshot.set(Key.SESSION_ID, sessionId));
+    operationSucker.load(bridge, version);
   }
 }

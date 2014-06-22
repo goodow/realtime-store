@@ -13,6 +13,7 @@
  */
 package com.goodow.realtime.store.impl;
 
+import com.goodow.realtime.channel.Bus;
 import com.goodow.realtime.channel.Message;
 import com.goodow.realtime.core.Handler;
 import com.goodow.realtime.core.Platform;
@@ -24,7 +25,6 @@ import com.goodow.realtime.json.JsonArray.ListIterator;
 import com.goodow.realtime.json.JsonObject;
 import com.goodow.realtime.json.JsonObject.MapIterator;
 import com.goodow.realtime.store.BaseModelEvent;
-import com.goodow.realtime.store.Collaborator;
 import com.goodow.realtime.store.CollaboratorJoinedEvent;
 import com.goodow.realtime.store.CollaboratorLeftEvent;
 import com.goodow.realtime.store.Document;
@@ -35,9 +35,9 @@ import com.goodow.realtime.store.channel.Constants.Addr;
 import com.goodow.realtime.store.channel.Constants.Key;
 
 class DefaultDocument implements Document {
-  private final JsonArray collaborators;
   private final DefaultModel model;
   final Registrations handlerRegs;
+  JsonArray collaborators;
 
   private boolean isEventsScheduled = false;
   private JsonArray eventsToFire; // ArrayList<BaseModelEvent>
@@ -66,7 +66,7 @@ class DefaultDocument implements Document {
           DefaultBaseModelEvent first = events.get(0);
           DefaultObjectChangedEvent objectChangedEvent =
               new DefaultObjectChangedEvent(Json.createObject().set("target", key).set("sessionId",
-                  first.sessionId).set(Key.USER_ID, first.userId).set("isLocal",
+                  first.sessionId).set("userId", first.userId).set("isLocal",
                   model.bridge.isLocalSession(first.sessionId)).set("events", events));
           fireEvent(objectChangedEvent);
         }
@@ -96,7 +96,7 @@ class DefaultDocument implements Document {
 
     private void fireEvent(DefaultBaseModelEvent event) {
       model.bridge.store.getBus().publishLocal(
-          Addr.EVENT + event.type + ":" + model.bridge.id + ":" + event.target, event);
+          Addr.STORE + "/" + model.bridge.id + "/" + event.target + "/" + event.type, event);
     }
   };
 
@@ -106,18 +106,46 @@ class DefaultDocument implements Document {
    */
   DefaultDocument(final DocumentBridge internalApi, final Handler<Error> errorHandler) {
     model = new DefaultModel(internalApi, this);
-    collaborators = Json.createArray();
     handlerRegs = new Registrations();
 
+    Bus bus = internalApi.store.getBus();
     if (errorHandler != null) {
-      handlerRegs.wrap(internalApi.store.getBus().registerLocalHandler(
-          Addr.EVENT + Addr.DOCUMENT_ERROR + ":" + internalApi.id, new Handler<Message<com.goodow.realtime.store.Error>>() {
+      handlerRegs.wrap(bus.registerLocalHandler(
+          Addr.STORE + "/" + internalApi.id + "/" + Addr.DOCUMENT_ERROR,
+          new Handler<Message<Error>>() {
+            @Override
+            public void handle(Message<Error> message) {
+              Platform.scheduler().handle(errorHandler, message.body());
+            }
+          }));
+    }
+
+    handlerRegs.wrap(bus.registerHandler(Addr.STORE + "/" + internalApi.id + Addr.PRESENCE
+                                         + Addr.WATCH, new Handler<Message<JsonObject>>() {
         @Override
-        public void handle(Message<Error> message) {
-          Platform.scheduler().handle(errorHandler, message.body());
+        public void handle(Message<JsonObject> message) {
+          JsonObject body = message.body().set(Key.IS_ME, false);
+          DefaultCollaborator collaborator = new DefaultCollaborator(body);
+          int index = collaborators.indexOf(collaborator);
+          boolean isJoined = !body.has(Key.IS_JOINED) || body.getBoolean(Key.IS_JOINED);
+          if (isJoined) {
+            if (index == -1) {
+              collaborators.push(collaborator);
+              model.bridge.store.getBus().publishLocal(
+                  Addr.STORE + "/" + model.bridge.id + "/" + EventType.COLLABORATOR_JOINED,
+                  new DefaultCollaboratorJoinedEvent(DefaultDocument.this, collaborator));
+            }
+          } else {
+            if (index != -1) {
+              collaborators.remove(index);
+              model.bridge.store.getBus().publishLocal(
+                  Addr.STORE + "/" + model.bridge.id + "/" + EventType.COLLABORATOR_LEFT,
+                  new DefaultCollaboratorLeftEvent(DefaultDocument.this, collaborator));
+            }
+          }
+
         }
       }));
-    }
   }
 
   @Override
@@ -131,7 +159,8 @@ class DefaultDocument implements Document {
   }
 
   @Override
-  public Registration onDocumentSaveStateChanged(final Handler<DocumentSaveStateChangedEvent> handler) {
+  public Registration onDocumentSaveStateChanged(
+      final Handler<DocumentSaveStateChangedEvent> handler) {
     return addEventListener(null, EventType.DOCUMENT_SAVE_STATE_CHANGED, handler, false);
   }
 
@@ -155,8 +184,8 @@ class DefaultDocument implements Document {
     if (type == null || handler == null) {
       throw new NullPointerException((type == null ? "type" : "handler") + " was null.");
     }
-    return handlerRegs.wrap(model.bridge.store.getBus().registerLocalHandler(
-        Addr.EVENT + type + ":" + model.bridge.id + (objectId == null ? "" : (":" + objectId)),
+    return handlerRegs.wrap(model.bridge.store.getBus().registerLocalHandler(Addr.STORE +
+        "/" + model.bridge.id + "/" + (objectId == null ? "" : (objectId + "/")) + type,
         new Handler<Message<?>>() {
           @SuppressWarnings("unchecked")
           @Override
@@ -164,25 +193,6 @@ class DefaultDocument implements Document {
             Platform.scheduler().handle(handler, message.body());
           }
         }));
-  }
-
-  void onCollaboratorChanged(boolean isJoined, Collaborator collaborator) {
-    int index = collaborators.indexOf(collaborator);
-    if (isJoined) {
-      if (index == -1) {
-        collaborators.push(collaborator);
-        model.bridge.store.getBus().publishLocal(
-            Addr.EVENT + EventType.COLLABORATOR_JOINED + ":" + model.bridge.id,
-            new DefaultCollaboratorJoinedEvent(this, collaborator));
-      }
-    } else {
-      if (index != -1) {
-        collaborators.remove(index);
-        model.bridge.store.getBus().publishLocal(
-            Addr.EVENT + EventType.COLLABORATOR_LEFT + ":" + model.bridge.id,
-            new DefaultCollaboratorLeftEvent(this, collaborator));
-      }
-    }
   }
 
   void scheduleEvent(BaseModelEvent event) {

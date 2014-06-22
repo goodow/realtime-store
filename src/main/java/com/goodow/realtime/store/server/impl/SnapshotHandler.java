@@ -13,10 +13,13 @@
  */
 package com.goodow.realtime.store.server.impl;
 
-import com.goodow.realtime.store.channel.Constants.Key;
-import com.goodow.realtime.store.server.StoreVerticle;
-
 import com.google.inject.Inject;
+
+import com.goodow.realtime.channel.impl.WebSocketBus;
+import com.goodow.realtime.json.Json;
+import com.goodow.realtime.store.channel.Constants.Addr;
+import com.goodow.realtime.store.channel.Constants.Key;
+import com.goodow.realtime.store.server.StoreModule;
 
 import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.AsyncResultHandler;
@@ -25,24 +28,12 @@ import org.vertx.java.core.Vertx;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.eventbus.ReplyException;
 import org.vertx.java.core.impl.CountingCompletionHandler;
+import org.vertx.java.core.impl.VertxInternal;
+import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.platform.Container;
 
 public class SnapshotHandler {
-  static <T> AsyncResultHandler<T> handleAsyncResult(final Message<JsonObject> resp) {
-    return new AsyncResultHandler<T>() {
-      @Override
-      public void handle(AsyncResult<T> ar) {
-        if (ar.failed()) {
-          ReplyException cause = (ReplyException) ar.cause();
-          resp.fail(cause.failureCode(), cause.getMessage());
-          return;
-        }
-        resp.reply(ar.result());
-      }
-    };
-  }
-
   @Inject private ElasticSearchDriver persistor;
   @Inject private RedisDriver redis;
   @Inject private OpSubmitter opSubmitter;
@@ -51,7 +42,7 @@ public class SnapshotHandler {
   private String address;
 
   public void start(final CountingCompletionHandler<Void> countDownLatch) {
-    address = container.config().getString("address", StoreVerticle.DEFAULT_ADDRESS);
+    address = container.config().getString("address", Addr.STORE);
 
     countDownLatch.incRequired();
     vertx.eventBus().registerHandler(address, new Handler<Message<JsonObject>>() {
@@ -77,7 +68,7 @@ public class SnapshotHandler {
           }
           doPost(docType, docId, opData, message);
         } else { // get
-          doGet(docType, docId, message);
+          doGet(docType, docId, body.getString(WebSocketBus.SESSION), message);
         }
       }
     }, new Handler<AsyncResult<Void>>() {
@@ -92,12 +83,67 @@ public class SnapshotHandler {
     });
   }
 
-  private void doGet(String docType, String docId, final Message<JsonObject> resp) {
-    persistor.getSnapshot(docType, docId, SnapshotHandler.<JsonObject> handleAsyncResult(resp));
+  private void doGet(String docType, String docId, String sessionId,
+                     final Message<JsonObject> resp) {
+    final CountingCompletionHandler<Void> completionHandler =
+        new CountingCompletionHandler<Void>((VertxInternal) vertx, 2);
+    final Object[] results = new Object[2];
+    completionHandler.setHandler(new Handler<AsyncResult<Void>>() {
+      @Override
+      public void handle(AsyncResult<Void> ar) {
+        if (ar.failed()) {
+          ReplyException cause = (ReplyException) ar.cause();
+          resp.fail(cause.failureCode(), cause.getMessage());
+          return;
+        }
+        JsonObject toRtn = (JsonObject) results[0];
+        if (toRtn == null) {
+          toRtn = new JsonObject();
+        }
+        resp.reply(toRtn.putArray(Key.COLLABORATORS, (JsonArray)results[1]));
+      }
+    });
+    persistor.getSnapshot(docType, docId, new AsyncResultHandler<JsonObject>() {
+      @Override
+      public void handle(AsyncResult<JsonObject> ar) {
+        if (ar.failed()) {
+          completionHandler.failed(ar.cause());
+        } else {
+          results[0] = ar.result();
+          completionHandler.complete();
+        }
+      }
+    });
+    JsonObject msg = new JsonObject().putString(Key.ID, docType + "/" + docId);
+    if (sessionId != null) {
+      msg.putString(WebSocketBus.SESSION, sessionId);
+    }
+    vertx.eventBus().sendWithTimeout(address + Addr.PRESENCE, msg, StoreModule.REPLY_TIMEOUT,
+                                     new AsyncResultHandler<Message<JsonArray>>() {
+          @Override
+          public void handle(AsyncResult<Message<JsonArray>> ar) {
+            if (ar.failed()) {
+              completionHandler.failed(ar.cause());
+            } else {
+              results[1] = ar.result().body();
+              completionHandler.complete();
+            }
+          }
+        });
   }
 
-  private void doHead(String docType, String docId, Message<JsonObject> resp) {
-    redis.getVersion(docType, docId, SnapshotHandler.<Long> handleAsyncResult(resp));
+  private void doHead(String docType, String docId, final Message<JsonObject> resp) {
+    redis.getVersion(docType, docId, new AsyncResultHandler<Long>() {
+      @Override
+      public void handle(AsyncResult<Long> ar) {
+        if (ar.failed()) {
+          ReplyException cause = (ReplyException) ar.cause();
+          resp.fail(cause.failureCode(), cause.getMessage());
+          return;
+        }
+        resp.reply(ar.result());
+      }
+    });
   }
 
   private void doPost(String docType, String docId, JsonObject opData,

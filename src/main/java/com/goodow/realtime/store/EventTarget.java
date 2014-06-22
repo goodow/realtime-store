@@ -13,13 +13,15 @@
  */
 package com.goodow.realtime.store;
 
+import com.google.gwt.core.client.js.JsType;
+
 import com.goodow.realtime.core.Handler;
 import com.goodow.realtime.core.Registration;
-import com.google.gwt.core.client.js.JsType;
 
 @JsType
 /**
- * An event target which can dispatch events to interested listeners. Listeners subscribe via addEventListener.
+ * An event target which can dispatch events to interested listeners.
+ * Listeners subscribe via addEventListener.
  */
 public interface EventTarget {
   /**

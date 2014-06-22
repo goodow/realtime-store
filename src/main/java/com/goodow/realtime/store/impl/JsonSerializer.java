@@ -15,7 +15,6 @@ package com.goodow.realtime.store.impl;
 
 import com.goodow.realtime.json.Json;
 import com.goodow.realtime.json.JsonArray;
-import com.goodow.realtime.json.JsonElement;
 import com.goodow.realtime.json.JsonObject;
 import com.goodow.realtime.store.CollaborativeObject;
 

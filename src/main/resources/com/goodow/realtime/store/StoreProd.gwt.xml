@@ -19,4 +19,6 @@
   
   <add-linker name="sso"/>
   <set-configuration-property name="devModeRedirectEnabled" value="false"/>
+
+  <set-property name="compiler.useSourceMaps" value="false"/>
 </module>

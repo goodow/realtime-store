@@ -13,10 +13,11 @@
  */
 package com.goodow.realtime.store;
 
-import com.goodow.realtime.core.Handler;
-import com.goodow.realtime.core.Registration;
 import com.google.gwt.core.client.js.JsProperty;
 import com.google.gwt.core.client.js.JsType;
+
+import com.goodow.realtime.core.Handler;
+import com.goodow.realtime.core.Registration;
 
 @JsType
 /**

@@ -1,4 +1,4 @@
-# address: realtime.store
+# address: realtime/store
 --- # Fetch document
 action: get
 id: docType/docId
@@ -7,6 +7,7 @@ accessToken: token
 v: 0
 snapshot: []
 root: {}
+collaborators: [*collaborator]
 
 --- # Fetch version
 action: head
@@ -29,7 +30,7 @@ ops: # operations by which this operation was transformed, if someone else's ope
 - *opData
 ...
   
-# address: realtime.store.ops
+# address: realtime/store/_ops
 --- # Get ops
 id: docType/docId
 from: 10
@@ -37,27 +38,48 @@ to: 11 # noninclusively
 --- # reply
 - *opData
 
-# address: realtime.store:docType/docId
---- # publish channel
+# address: realtime/store/docType/docId/_watch
+--- # Anyone subscribed to this address will be notified as document changes
+--- # document change notifications
 <<: *opData
 ...
 
 
-# address: realtime.store.presence:docType/docId
---- &collaborator # Presence publish channel
+# address: realtime/store/docType/docId/_presence/_watch
+--- # Anyone subscribed to this address will be notified as clients come and go
+--- &collaborator # user presence notifications
 isJoined: false
 sessionId: sid
-userId: uid
-displayName: name
+userId: ANONYMOUS_uid
+displayName: Anonymous Slow loris
 color: #58B442
-isMe: true
-isAnonymous: false
-photoUrl: http://xx
+isAnonymous: true
+photoUrl: https://ssl.gstatic.com/docs/common/profile/slowloris_lg.png
+...
+# address: realtime/store/_presence
+--- # Get a complete list of online collaborators
+id: docType/docId
+--- # reply
+- *collaborator
 ...
 
---- # address: @realtime.store.event.EventType:docType/docId:objectId Event publish
-*Event
 
---- # address: @realtime.store.event.document_error:docType/docId Document error event publish
-*com.goodow.realtime.Error
+--- # address: @realtime/store/docType/docId/document_error Document error event publish
+*com.goodow.realtime.store.Error
+...
+--- # address: @realtime/store/docType/docId/document_save_state_changed
+*com.goodow.realtime.store.DocumentSaveStateChangedEvent
+...
+--- # address: @realtime/store/docType/docId/collaborator_joined
+*com.goodow.realtime.store.CollaboratorJoinedEvent
+...
+--- # address: @realtime/store/docType/docId/collaborator_left
+*com.goodow.realtime.store.CollaboratorLeftEvent
+...
+--- # address: @realtime/store/docType/docId/undo_redo_state_changed
+*com.goodow.realtime.store.UndoRedoStateChangedEvent
+...
+
+--- # address: @realtime/store/docType/docId/objectId/event_type Event publish
+*com.goodow.realtime.store.BaseModelEvent
 ...

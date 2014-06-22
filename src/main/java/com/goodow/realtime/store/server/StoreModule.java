@@ -13,16 +13,16 @@
  */
 package com.goodow.realtime.store.server;
 
-import com.goodow.realtime.channel.server.impl.VertxPlatform;
-import com.goodow.realtime.operation.Transformer;
-import com.goodow.realtime.operation.impl.CollaborativeOperation;
-import com.goodow.realtime.operation.impl.CollaborativeTransformer;
-
-import com.alienos.guice.VertxModule;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
+
+import com.alienos.guice.VertxModule;
+import com.goodow.realtime.channel.server.impl.VertxPlatform;
+import com.goodow.realtime.operation.Transformer;
+import com.goodow.realtime.operation.impl.CollaborativeOperation;
+import com.goodow.realtime.operation.impl.CollaborativeTransformer;
 
 import org.vertx.java.core.Vertx;
 import org.vertx.java.platform.Container;
@@ -30,6 +30,7 @@ import org.vertx.java.platform.Container;
 import io.vertx.java.redis.RedisClient;
 
 public class StoreModule extends AbstractModule implements VertxModule {
+  public static final long REPLY_TIMEOUT = 15 * 1000;
   private Vertx vertx;
   private Container container;
 
@@ -56,7 +57,7 @@ public class StoreModule extends AbstractModule implements VertxModule {
   RedisClient provideRedisClient() {
     RedisClient redis =
         new RedisClient(vertx.eventBus(), container.config().getString("redis_address",
-            "realtime.redis"));
+            "realtime/redis"));
     return redis;
   }
 }

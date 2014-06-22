@@ -19,11 +19,11 @@ package com.goodow.realtime.store.channel;
 public interface Constants {
 
   public interface Addr {
-    String STORE = "realtime.store";
-    String OPS = STORE + ".ops";
-    String PRESENCE = "realtime.store.presence:";
+    String STORE = "realtime/store";
+    String OPS = "/_ops";
+    String WATCH = "/_watch";
+    String PRESENCE = "/_presence";
 
-    String EVENT = STORE + ".event.";
     String DOCUMENT_ERROR = "document_error";
   }
 
@@ -37,16 +37,10 @@ public interface Constants {
     String OPS = "ops";
     String SESSION_ID = "sid";
     String VERSION = "v";
-
     String SNAPSHOT = "snapshot";
-    String ACCESS_TOKEN = "accessToken";
+    String COLLABORATORS = "collaborators";
 
     String IS_JOINED = "isJoined";
-    String USER_ID = "userId";
-    String DISPLAY_NAME = "displayName";
-    String COLOR = "color";
     String IS_ME = "isMe";
-    String IS_ANONYMOUS = "isAnonymous";
-    String PHOTO_URL = "photoUrl";
   }
 }

@@ -22,7 +22,6 @@ import com.goodow.realtime.store.BaseModelEvent;
 import com.goodow.realtime.store.CollaborativeObject;
 import com.goodow.realtime.store.EventType;
 import com.goodow.realtime.store.ObjectChangedEvent;
-import com.goodow.realtime.store.channel.Constants.Key;
 
 abstract class DefaultCollaborativeObject implements CollaborativeObject {
   String id;
@@ -60,7 +59,7 @@ abstract class DefaultCollaborativeObject implements CollaborativeObject {
   }
 
   JsonObject event(String sessionId, String userId) {
-    return Json.createObject().set("target", id).set("sessionId", sessionId).set(Key.USER_ID,
+    return Json.createObject().set("target", id).set("sessionId", sessionId).set("userId",
         userId).set("isLocal", model.bridge.isLocalSession(sessionId));
   }
 

@@ -17,8 +17,8 @@ import com.goodow.realtime.channel.Bus;
 import com.goodow.realtime.channel.Message;
 import com.goodow.realtime.channel.impl.ReliableSubscribeBus;
 import com.goodow.realtime.core.Handler;
-import com.goodow.realtime.core.Registration;
 import com.goodow.realtime.core.Platform;
+import com.goodow.realtime.core.Registration;
 import com.goodow.realtime.json.Json;
 import com.goodow.realtime.json.JsonObject;
 import com.goodow.realtime.operation.Operation;
@@ -119,7 +119,6 @@ public class OperationChannel<O extends Operation<?>> {
   // State variables
   private State state = State.UNINITIALISED;
   private final TransformQueue<O> queue;
-  private String sessionId;
   private final String id;
   private final Bus bus;
   private Registration handlerRegistration;
@@ -133,12 +132,10 @@ public class OperationChannel<O extends Operation<?>> {
     this.listener = listener;
   }
 
-  public void connect(double version, final String sessionId) {
+  public void connect(double version) {
     assert !isConnected() : "Already connected";
-    assert sessionId != null : "Null sessionId";
     assert version >= 0 : "Invalid version, " + version;
-    this.sessionId = sessionId;
-    String addr = Addr.STORE + ":" + id;
+    String addr = Addr.STORE + "/" + id + Addr.WATCH;
     if (bus instanceof ReliableSubscribeBus) {
       ((ReliableSubscribeBus) bus).synchronizeSequenceNumber(addr, version - 1);
     }
@@ -151,7 +148,7 @@ public class OperationChannel<O extends Operation<?>> {
         JsonObject body = message.body();
         O op = transformer.createOperation(body);
         double appliedAt = body.getNumber(Key.VERSION);
-        if (sessionId.equals(body.getString(Key.SESSION_ID))) {
+        if (bus.getSessionId().equals(body.getString(Key.SESSION_ID))) {
           onAckOwnOperation(appliedAt, op);
         } else {
           onIncomingOperation(appliedAt, op);
@@ -166,7 +163,6 @@ public class OperationChannel<O extends Operation<?>> {
   public void disconnect() {
     if(isConnected()) {
       handlerRegistration.unregister();
-      sessionId = null;
       handlerRegistration = null;
       setState(State.UNINITIALISED);
     }
@@ -215,10 +211,8 @@ public class OperationChannel<O extends Operation<?>> {
   private void checkState(State newState) {
     switch (newState) {
       case UNINITIALISED:
-        assert sessionId == null;
         break;
       case ACKED:
-        assert sessionId != null;
         assert queue.version() >= 0;
         assert queue.unackedClientOp() == null;
         break;
@@ -242,9 +236,7 @@ public class OperationChannel<O extends Operation<?>> {
   }
 
   private boolean isConnected() {
-    // UNINITIALISED implies sessionId == null.
-    assert state != State.UNINITIALISED || sessionId == null;
-    return sessionId != null;
+    return state != State.UNINITIALISED;
   }
 
   private void maybeEagerlyHandleAck(double appliedAt) {

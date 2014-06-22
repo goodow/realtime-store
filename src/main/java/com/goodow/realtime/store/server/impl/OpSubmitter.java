@@ -13,13 +13,15 @@
  */
 package com.goodow.realtime.store.server.impl;
 
+import com.google.inject.Inject;
+
 import com.goodow.realtime.json.impl.JreJsonArray;
 import com.goodow.realtime.json.impl.JreJsonObject;
 import com.goodow.realtime.operation.Transformer;
 import com.goodow.realtime.operation.impl.CollaborativeOperation;
-import com.goodow.realtime.store.impl.DocumentBridge;
 import com.goodow.realtime.store.channel.Constants.Key;
-import com.google.inject.Inject;
+import com.goodow.realtime.store.impl.DocumentBridge;
+
 import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.AsyncResultHandler;
 import org.vertx.java.core.eventbus.ReplyException;
@@ -66,7 +68,7 @@ public class OpSubmitter {
     JreJsonArray snapshot =
         snapshotData.containsField(Key.SNAPSHOT) ? new JreJsonArray(snapshotData.getArray(
             Key.SNAPSHOT).toList()) : null;
-    final DocumentBridge bridge = new DocumentBridge(null, docType + "/" + docId, snapshot, null);
+    DocumentBridge bridge = new DocumentBridge(null, docType + "/" + docId, snapshot, null, null);
     return bridge;
   }
 
@@ -128,7 +130,8 @@ public class OpSubmitter {
    * This is a fetch that doesn't check the oplog to see if the snapshot is out of date. It will be
    * higher performance, but in some error conditions it may return an outdated snapshot.
    */
-  private void lazyFetch(String docType, String docId, final AsyncResultHandler<JsonObject> callback) {
+  private void lazyFetch(String docType, String docId,
+                         final AsyncResultHandler<JsonObject> callback) {
     persistor.getSnapshot(docType, docId, new AsyncResultHandler<JsonObject>() {
       @Override
       public void handle(AsyncResult<JsonObject> ar) {

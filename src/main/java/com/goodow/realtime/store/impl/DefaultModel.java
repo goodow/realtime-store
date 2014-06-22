@@ -68,7 +68,8 @@ class DefaultModel implements Model {
     this.document = document;
   }
 
-  @Override public Registration onUndoRedoStateChanged(final Handler<UndoRedoStateChangedEvent> handler) {
+  @Override
+  public Registration onUndoRedoStateChanged(final Handler<UndoRedoStateChangedEvent> handler) {
     return document.addEventListener(null, EventType.UNDO_REDO_STATE_CHANGED, handler, false);
   }
 
@@ -84,7 +85,7 @@ class DefaultModel implements Model {
    * @param opt_name An optional name for this compound operation.
    */
   public void beginCompoundOperation(String opt_name) {
-    log.info("beginCompoundOperation" + (opt_name == null ? "" : (" " + opt_name)));
+    log.finer("beginCompoundOperation" + (opt_name == null ? "" : (" " + opt_name)));
   }
 
   @Override public boolean canRedo() {
@@ -169,7 +170,7 @@ class DefaultModel implements Model {
    * progress.
    */
   public void endCompoundOperation() {
-    log.info("endCompoundOperation");
+    log.finer("endCompoundOperation");
   }
 
   public <T extends CollaborativeObject> T getObject(String objectId) {

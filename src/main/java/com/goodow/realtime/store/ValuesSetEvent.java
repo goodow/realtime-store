@@ -13,9 +13,10 @@
  */
 package com.goodow.realtime.store;
 
-import com.goodow.realtime.json.JsonArray;
 import com.google.gwt.core.client.js.JsProperty;
 import com.google.gwt.core.client.js.JsType;
+
+import com.goodow.realtime.json.JsonArray;
 
 @JsType
 /**

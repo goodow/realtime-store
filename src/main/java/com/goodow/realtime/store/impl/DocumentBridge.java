@@ -31,10 +31,12 @@ import com.goodow.realtime.operation.undo.UndoManager;
 import com.goodow.realtime.operation.undo.UndoManagerFactory;
 import com.goodow.realtime.store.Collaborator;
 import com.goodow.realtime.store.Document;
+import com.goodow.realtime.store.Error;
 import com.goodow.realtime.store.EventType;
 import com.goodow.realtime.store.Store;
 import com.goodow.realtime.store.UndoRedoStateChangedEvent;
 import com.goodow.realtime.store.channel.Constants.Addr;
+import com.goodow.realtime.store.channel.Constants.Key;
 
 /**
  * Internal utilities for the Realtime API.
@@ -56,17 +58,34 @@ public class DocumentBridge implements OperationSink<CollaborativeOperation> {
 
   final Store store;
   final String id;
+  private Collaborator me;
   private final DefaultDocument document;
   private final DefaultModel model;
   private UndoManager<CollaborativeOperation> undoManager = UndoManagerFactory.getNoOp();
   OutputSink outputSink = OutputSink.VOID;
 
-  public DocumentBridge(Store store, String id, JsonArray components,
-      final Handler<com.goodow.realtime.store.Error> errorHandler) {
+  public DocumentBridge(final Store store, String id, JsonArray components, JsonArray collaborators,
+      final Handler<Error> errorHandler) {
     this.store = store == null ? new SimpleStore() : store;
     this.id = id;
     document = new DefaultDocument(this, errorHandler);
     model = document.getModel();
+
+    final JsonArray array = Json.createArray();
+    collaborators = collaborators == null ? Json.createArray() : collaborators;
+    collaborators.forEach(new ListIterator<JsonObject>() {
+      @Override
+      public void call(int index, JsonObject obj) {
+        boolean isMe = store.getBus().getSessionId().equals(obj.getString("sessionId"));
+        obj.set(Key.IS_ME, isMe);
+        DefaultCollaborator collaborator = new DefaultCollaborator(obj);
+        array.push(collaborator);
+        if (isMe) {
+          me = collaborator;
+        }
+      }
+    });
+    document.collaborators = array;
 
     if (components != null && components.length() > 0) {
       final CollaborativeTransformer transformer = new CollaborativeTransformer();
@@ -91,10 +110,6 @@ public class DocumentBridge implements OperationSink<CollaborativeOperation> {
 
   public Document getDocument() {
     return document;
-  }
-
-  public void onCollaboratorChanged(boolean isJoined, Collaborator collaborator) {
-    document.onCollaboratorChanged(isJoined, collaborator);
   }
 
   public <T> void scheduleHandle(final Handler<T> handler, final T event) {
@@ -154,8 +169,8 @@ public class DocumentBridge implements OperationSink<CollaborativeOperation> {
 
   void consumeAndSubmit(OperationComponent<?> component) {
     CollaborativeOperation operation =
-        new CollaborativeOperation(store.userId(), store.sessionId(), Json.createArray()
-            .push(component));
+        new CollaborativeOperation(me == null ? null : me.userId(), store.getBus().getSessionId(),
+                                   Json.createArray().push(component));
     applyLocally(operation);
     undoManager.checkpoint();
     undoableOp(operation);
@@ -163,8 +178,7 @@ public class DocumentBridge implements OperationSink<CollaborativeOperation> {
   }
 
   boolean isLocalSession(String sessionId) {
-    String local = store.sessionId();
-    return sessionId == null ? local == null : sessionId.equals(local);
+    return store.getBus().getSessionId().equals(sessionId);
   }
 
   void redo() {
@@ -227,9 +241,10 @@ public class DocumentBridge implements OperationSink<CollaborativeOperation> {
       model.canUndo = canUndo;
       model.canRedo = canRedo;
       UndoRedoStateChangedEvent event =
-          new DefaultUndoRedoStateChangedEvent(model, Json.createObject().set("canUndo", canUndo).set(
-              "canRedo", canRedo));
-      store.getBus().publishLocal(Addr.EVENT + EventType.UNDO_REDO_STATE_CHANGED + ":" + id, event);
+          new DefaultUndoRedoStateChangedEvent(model, Json.createObject().set("canUndo", canUndo)
+              .set("canRedo", canRedo));
+      store.getBus().publishLocal(Addr.STORE + "/" + id + "/" + EventType.UNDO_REDO_STATE_CHANGED,
+                                  event);
     }
   }
 

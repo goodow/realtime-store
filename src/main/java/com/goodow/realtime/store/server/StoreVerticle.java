@@ -13,13 +13,14 @@
  */
 package com.goodow.realtime.store.server;
 
-import com.goodow.realtime.store.server.impl.OpsHandler;
-import com.goodow.realtime.store.server.impl.RedisDriver;
-import com.goodow.realtime.store.server.impl.SnapshotHandler;
+import com.google.inject.Inject;
 
 import com.alienos.guice.GuiceVerticleHelper;
 import com.alienos.guice.GuiceVertxBinding;
-import com.google.inject.Inject;
+import com.goodow.realtime.store.server.impl.OpsHandler;
+import com.goodow.realtime.store.server.impl.PresenceHandler;
+import com.goodow.realtime.store.server.impl.RedisDriver;
+import com.goodow.realtime.store.server.impl.SnapshotHandler;
 
 import org.vertx.java.busmods.BusModBase;
 import org.vertx.java.core.AsyncResult;
@@ -31,11 +32,10 @@ import org.vertx.java.core.impl.VertxInternal;
 
 @GuiceVertxBinding(modules = {StoreModule.class})
 public class StoreVerticle extends BusModBase {
-  public static final String DEFAULT_ADDRESS = "realtime.store";
-
   @Inject private RedisDriver redisDriver;
   @Inject private SnapshotHandler snapshotHandler;
   @Inject private OpsHandler opsHandler;
+  @Inject private PresenceHandler presenceHandler;
 
   @Override
   public void start(final Future<Void> startedResult) {
@@ -68,6 +68,7 @@ public class StoreVerticle extends BusModBase {
     redisDriver.start(countDownLatch);
     snapshotHandler.start(countDownLatch);
     opsHandler.start(countDownLatch);
+    presenceHandler.start(countDownLatch);
     container.deployVerticle(RestVerticle.class.getName(), config, doneHandler);
   }
 }

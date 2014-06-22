@@ -21,18 +21,18 @@ import com.google.gwt.core.client.js.JsExport;
 @JsExport
 public enum EventType {
   /**
-   * A new collaborator joined the document. Listen on the {@link com.goodow.realtime.store.Document} for
-   * these changes.
+   * A new collaborator joined the document. Listen on the
+   * {@link com.goodow.realtime.store.Document} for these changes.
    */
   COLLABORATOR_JOINED,
   /**
-   * A collaborator left the document. Listen on the {@link com.goodow.realtime.store.Document} for these
-   * changes.
+   * A collaborator left the document. Listen on the
+   * {@link com.goodow.realtime.store.Document} for these changes.
    */
   COLLABORATOR_LEFT,
   /**
-   * The document save state changed. Listen on the {@link com.goodow.realtime.store.Document} for these
-   * changes.
+   * The document save state changed. Listen on the
+   * {@link com.goodow.realtime.store.Document} for these changes.
    */
   DOCUMENT_SAVE_STATE_CHANGED,
   /**

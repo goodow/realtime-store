@@ -24,8 +24,6 @@ import com.goodow.realtime.store.Store;
 
 public class SimpleStore implements Store {
   public final Bus bus;
-  protected String userId;
-  protected String sessionId;
 
   public SimpleStore() {
     this(new SimpleBus());
@@ -46,19 +44,9 @@ public class SimpleStore implements Store {
   }
 
   @Override
-  public final String sessionId() {
-    return sessionId;
-  }
-
-  @Override
-  public String userId() {
-    return userId;
-  }
-
-  @Override
   public void load(final String id, final Handler<Document> onLoaded,
       final Handler<Model> opt_initializer, final Handler<Error> opt_error) {
-    DocumentBridge bridge = new DocumentBridge(this, id, null, opt_error);
+    DocumentBridge bridge = new DocumentBridge(this, id, null, null, opt_error);
     bridge.createRoot();
     if (opt_initializer != null) {
       Platform.scheduler().handle(opt_initializer, bridge.getDocument().getModel());

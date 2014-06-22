@@ -13,6 +13,7 @@
  */
 package com.goodow.realtime.store.server;
 
+import com.goodow.realtime.store.channel.Constants.Addr;
 import com.goodow.realtime.store.channel.Constants.Key;
 
 import org.vertx.java.busmods.BusModBase;
@@ -25,46 +26,49 @@ import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.http.HttpServer;
 import org.vertx.java.core.http.HttpServerRequest;
 import org.vertx.java.core.http.RouteMatcher;
+import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
 public class RestVerticle extends BusModBase {
-  private static final long REPLY_TIMEOUT = 1 * 1000;
   private String address;
 
   @Override
   public void start(final Future<Void> result) {
     super.start();
-    address = getOptionalStringConfig("address", StoreVerticle.DEFAULT_ADDRESS);
+    address = getOptionalStringConfig("address", Addr.STORE);
     JsonObject rest = getOptionalObjectConfig("rest", new JsonObject());
     String path = rest.getString("prefix", "/store");
     HttpServer server = vertx.createHttpServer().setCompressionSupported(true);
     RouteMatcher matcher = new RouteMatcher();
 
     String snapshot = path + "/:docType/:docId";
-    String ops = path + "/:docType/:docId/ops";
+    String ops = path + "/:docType/:docId" + Addr.OPS;
     Handler<HttpServerRequest> handler = new Handler<HttpServerRequest>() {
       @Override
       public void handle(final HttpServerRequest req) {
         JsonObject message = parseRequest(req);
-        eb.sendWithTimeout(address, message, REPLY_TIMEOUT,
-            new Handler<AsyncResult<Message<JsonObject>>>() {
+        eb.sendWithTimeout(address, message, StoreModule.REPLY_TIMEOUT,
+            new Handler<AsyncResult<Message<Object>>>() {
               @Override
-              public void handle(AsyncResult<Message<JsonObject>> ar) {
+              public void handle(AsyncResult<Message<Object>> ar) {
                 if (ar.failed()) {
                   req.response().setStatusCode(500).setStatusMessage(ar.cause().getMessage()).end();
                   return;
                 }
-                JsonObject body = ar.result().body();
-                if ("head".equals(req.method())) {
-                  req.response().end("" + body.getLong("v"));
+                Object body = ar.result().body();
+                if (body == null) {
+                  req.response().setStatusCode(404).end();
+                  return;
+                }
+                if ("HEAD".equals(req.method())) {
+                  req.response().end(body.toString());
                 } else {
                   req.response().headers().set("Content-Type", "application/json");
-                  req.response().end(body.encode());
+                  req.response().end(((JsonObject) body).encode());
                 }
               }
             });
       }
-
     };
     matcher.get(snapshot, handler);
     matcher.head(snapshot, handler);
@@ -76,7 +80,7 @@ public class RestVerticle extends BusModBase {
           @Override
           public void handle(Buffer body) {
             message.putObject(Key.OP_DATA, new JsonObject(body.toString()));
-            eb.sendWithTimeout(address, message, REPLY_TIMEOUT,
+            eb.sendWithTimeout(address, message, StoreModule.REPLY_TIMEOUT,
                 new Handler<AsyncResult<Message<JsonObject>>>() {
                   @Override
                   public void handle(AsyncResult<Message<JsonObject>> ar) {
@@ -107,17 +111,16 @@ public class RestVerticle extends BusModBase {
         if (to != null) {
           message.putNumber("to", Long.valueOf(to));
         }
-        eb.sendWithTimeout(address + ".ops", message, REPLY_TIMEOUT,
-            new Handler<AsyncResult<Message<JsonObject>>>() {
+        eb.sendWithTimeout(address + Addr.OPS, message, StoreModule.REPLY_TIMEOUT,
+            new Handler<AsyncResult<Message<JsonArray>>>() {
               @Override
-              public void handle(AsyncResult<Message<JsonObject>> ar) {
+              public void handle(AsyncResult<Message<JsonArray>> ar) {
                 if (ar.failed()) {
                   req.response().setStatusCode(500).setStatusMessage(ar.cause().getMessage()).end();
                   return;
                 }
-                JsonObject body = ar.result().body();
                 req.response().headers().set("Content-Type", "application/json");
-                req.response().end(body.encode());
+                req.response().end(ar.result().body().encode());
               }
             });
       }
@@ -138,7 +141,8 @@ public class RestVerticle extends BusModBase {
 
   private JsonObject parseRequest(final HttpServerRequest req) {
     String id = req.params().get("docType") + "/" + req.params().get("docId");
-    JsonObject message = new JsonObject().putString("action", req.method()).putString("id", id);
+    JsonObject message = new JsonObject().putString("action", req.method().toLowerCase())
+        .putString(Key.ID, id);
     return message;
   }
 }

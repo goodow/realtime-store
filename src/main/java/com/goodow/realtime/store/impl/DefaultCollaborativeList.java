@@ -299,7 +299,8 @@ class DefaultCollaborativeList extends DefaultCollaborativeObject implements Col
     }
   }
 
-  private void insertAndFireEvent(final int index, JsonArray values, String sessionId, String userId) {
+  private void insertAndFireEvent(final int index, JsonArray values, String sessionId,
+                                  String userId) {
     assert index <= length();
     final JsonArray objects = Json.createArray();
     values.forEach(new ListIterator<JsonArray>() {
@@ -333,7 +334,8 @@ class DefaultCollaborativeList extends DefaultCollaborativeObject implements Col
     model.setIndexReferenceIndex(id, false, index, length, sessionId, userId);
   }
 
-  private void replaceAndFireEvent(final int index, JsonArray values, String sessionId, String userId) {
+  private void replaceAndFireEvent(final int index, JsonArray values, String sessionId,
+                                   String userId) {
     assert index + values.length() <= length();
     final JsonArray oldObjects = Json.createArray();
     final JsonArray newObjects = Json.createArray();

@@ -14,6 +14,7 @@
 package com.goodow.realtime.store.server.impl;
 
 import com.goodow.realtime.store.channel.Constants.Key;
+import com.goodow.realtime.store.server.StoreModule;
 
 import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.AsyncResultHandler;
@@ -31,8 +32,7 @@ import java.util.List;
 import javax.inject.Inject;
 
 public class ElasticSearchDriver {
-  private static final String DEFAULT_SEARCH_ADDRESS = "realtime.search";
-  private static final long REPLY_TIMEOUT = 15 * 1000;
+  private static final String DEFAULT_SEARCH_ADDRESS = "realtime/search";
   private static final String INDEX = "realtime";
   private static final String _SNAPSHOT = "_snapshot";
   private static final String _OP = "_op";
@@ -71,7 +71,7 @@ public class ElasticSearchDriver {
             new JsonObject().putObject("sort", sort).putNumber("size", 1000).putObject(
                 "filter", filter));
 
-    eb.sendWithTimeout(address, search, REPLY_TIMEOUT,
+    eb.sendWithTimeout(address, search, StoreModule.REPLY_TIMEOUT,
         new Handler<AsyncResult<Message<JsonObject>>>() {
           @SuppressWarnings("unchecked")
           @Override
@@ -100,7 +100,7 @@ public class ElasticSearchDriver {
     JsonObject get =
         new JsonObject().putString("action", "get").putString("_index", INDEX).putString("_type",
             docType).putString("_id", docId);
-    eb.sendWithTimeout(address, get, REPLY_TIMEOUT, new AsyncResultHandler<Message<JsonObject>>() {
+    eb.sendWithTimeout(address, get, StoreModule.REPLY_TIMEOUT, new AsyncResultHandler<Message<JsonObject>>() {
       @Override
       public void handle(AsyncResult<Message<JsonObject>> ar) {
         DefaultFutureResult<JsonObject> result =
@@ -127,7 +127,7 @@ public class ElasticSearchDriver {
         new JsonObject().putString("action", "search").putString("_index", INDEX).putString(
             "_type", getOpsType(docType)).putObject("source", source);
 
-    eb.sendWithTimeout(address, search, REPLY_TIMEOUT,
+    eb.sendWithTimeout(address, search, StoreModule.REPLY_TIMEOUT,
         new Handler<AsyncResult<Message<JsonObject>>>() {
           @Override
           public void handle(AsyncResult<Message<JsonObject>> ar) {
@@ -139,8 +139,8 @@ public class ElasticSearchDriver {
             JsonObject body = ar.result().body();
             long v = 0;
             if (body.getObject("hits").getLong("total") != 0) {
-              v =
-                  body.getObject("hits").getArray("hits").<JsonObject> get(0).getObject("_source").getLong(Key.VERSION) + 1;
+              v = body.getObject("hits").getArray("hits").<JsonObject>get(0).getObject("_source")
+                      .getLong(Key.VERSION) + 1;
             }
             result.setResult(v);
           }
@@ -161,7 +161,7 @@ public class ElasticSearchDriver {
             .putBoolean("refresh", true).putObject("source",
                 opData.putString(DOC_ID, docId).putArray(_OP,
                     new JsonArray((List<Object>) opData.removeField(Key.OP))));
-    eb.sendWithTimeout(address, index, REPLY_TIMEOUT,
+    eb.sendWithTimeout(address, index, StoreModule.REPLY_TIMEOUT,
         new Handler<AsyncResult<Message<JsonObject>>>() {
           @Override
           public void handle(AsyncResult<Message<JsonObject>> ar) {
@@ -181,7 +181,7 @@ public class ElasticSearchDriver {
         new JsonObject().putString("action", "index").putString("_index", INDEX).putString("_type",
             docType).putString("_id", docId).putString("version_type", "external").putNumber(
             "version", snapshotData.getLong(Key.VERSION)).putObject("source", source);
-    eb.sendWithTimeout(address, index, REPLY_TIMEOUT,
+    eb.sendWithTimeout(address, index, StoreModule.REPLY_TIMEOUT,
         new Handler<AsyncResult<Message<JsonObject>>>() {
           @Override
           public void handle(AsyncResult<Message<JsonObject>> ar) {
