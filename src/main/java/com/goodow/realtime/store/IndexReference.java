@@ -54,7 +54,7 @@ public interface IndexReference extends CollaborativeObject {
    * @see #index()
    * @param index the new referenced index.
    */
-  void index(int index);
+  void setIndex(int index);
 
   /**
    * @return The object this reference points to. Read-only.

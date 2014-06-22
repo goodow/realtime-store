@@ -53,7 +53,7 @@ class DefaultIndexReference extends DefaultCollaborativeObject implements IndexR
     return model.getObject(referencedObjectId);
   }
 
-  @Override public void index(int index) {
+  @Override public void setIndex(int index) {
     if (index == this.index) {
       return;
     }

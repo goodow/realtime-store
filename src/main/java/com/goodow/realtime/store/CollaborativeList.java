@@ -185,5 +185,5 @@ public interface CollaborativeList extends CollaborativeObject {
    * @param length the new length of the array
    * @exception ArrayIndexOutOfBoundsException
    */
-  void length(int length);
+  void setLength(int length);
 }

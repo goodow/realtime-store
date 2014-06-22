@@ -214,7 +214,7 @@ class DefaultCollaborativeList extends DefaultCollaborativeObject implements Col
   }
 
   @Override
-  public void length(int length) {
+  public void setLength(int length) {
     checkIndex(length, true);
     int total = length();
     if (length == total) {
