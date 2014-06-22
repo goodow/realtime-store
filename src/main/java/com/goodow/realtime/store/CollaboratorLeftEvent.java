@@ -22,4 +22,7 @@ import com.google.gwt.core.client.js.JsType;
 public interface CollaboratorLeftEvent {
   /* The collaborator that left. */
   Collaborator collaborator();
+
+  /* Event type. */
+  EventType type();
 }

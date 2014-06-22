@@ -16,6 +16,7 @@ package com.goodow.realtime.store.impl;
 import com.goodow.realtime.json.JsonObject;
 import com.goodow.realtime.store.Document;
 import com.goodow.realtime.store.DocumentSaveStateChangedEvent;
+import com.goodow.realtime.store.EventType;
 
 public class DocumentSaveStateChangedEventImpl implements DocumentSaveStateChangedEvent {
   public final boolean isPending;
@@ -36,5 +37,10 @@ public class DocumentSaveStateChangedEventImpl implements DocumentSaveStateChang
 
   @Override public boolean isSaving() {
     return isSaving;
+  }
+
+  @Override
+  public EventType type() {
+    return EventType.DOCUMENT_SAVE_STATE_CHANGED;
   }
 }

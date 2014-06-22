@@ -32,4 +32,7 @@ public interface DocumentSaveStateChangedEvent {
    * we have not yet received an ack. If false, nothing is in the process of being sent.
    */
   boolean isSaving();
+
+  /* Event type. */
+  EventType type();
 }

@@ -16,6 +16,7 @@ package com.goodow.realtime.store.impl;
 import com.goodow.realtime.store.Collaborator;
 import com.goodow.realtime.store.CollaboratorLeftEvent;
 import com.goodow.realtime.store.Document;
+import com.goodow.realtime.store.EventType;
 
 class CollaboratorLeftEventImpl implements CollaboratorLeftEvent {
   /**
@@ -44,5 +45,10 @@ class CollaboratorLeftEventImpl implements CollaboratorLeftEvent {
 
   @Override public Collaborator collaborator() {
     return collaborator;
+  }
+
+  @Override
+  public EventType type() {
+    return EventType.COLLABORATOR_LEFT;
   }
 }

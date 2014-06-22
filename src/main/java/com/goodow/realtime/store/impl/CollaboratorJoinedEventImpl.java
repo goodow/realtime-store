@@ -16,6 +16,7 @@ package com.goodow.realtime.store.impl;
 import com.goodow.realtime.store.Collaborator;
 import com.goodow.realtime.store.CollaboratorJoinedEvent;
 import com.goodow.realtime.store.Document;
+import com.goodow.realtime.store.EventType;
 
 class CollaboratorJoinedEventImpl implements CollaboratorJoinedEvent {
   /**
@@ -44,5 +45,10 @@ class CollaboratorJoinedEventImpl implements CollaboratorJoinedEvent {
 
   @Override public Collaborator collaborator() {
     return collaborator;
+  }
+
+  @Override
+  public EventType type() {
+    return EventType.COLLABORATOR_JOINED;
   }
 }

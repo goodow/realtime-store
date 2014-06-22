@@ -171,7 +171,7 @@ class DocumentImpl implements Document {
   }
 
   @Override public JsonArray getCollaborators() {
-    return collaborators.copy();
+    return collaborators;
   }
 
   @Override public ModelImpl getModel() {

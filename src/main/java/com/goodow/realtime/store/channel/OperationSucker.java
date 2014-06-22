@@ -21,10 +21,10 @@ import com.goodow.realtime.operation.impl.CollaborativeTransformer;
 import com.goodow.realtime.store.ErrorType;
 import com.goodow.realtime.store.EventType;
 import com.goodow.realtime.store.channel.Constants.Addr;
-import com.goodow.realtime.store.impl.DocumentSaveStateChangedEventImpl;
-import com.goodow.realtime.store.impl.ErrorImpl;
 import com.goodow.realtime.store.impl.DocumentBridge;
 import com.goodow.realtime.store.impl.DocumentBridge.OutputSink;
+import com.goodow.realtime.store.impl.DocumentSaveStateChangedEventImpl;
+import com.goodow.realtime.store.impl.ErrorImpl;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;

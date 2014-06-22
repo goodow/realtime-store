@@ -22,4 +22,7 @@ import com.google.gwt.core.client.js.JsType;
 public interface CollaboratorJoinedEvent {
   /* The collaborator that joined. */
   Collaborator collaborator();
+
+  /* Event type. */
+  EventType type();
 }
