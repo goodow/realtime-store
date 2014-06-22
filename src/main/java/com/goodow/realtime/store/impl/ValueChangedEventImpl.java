@@ -17,7 +17,7 @@ import com.goodow.realtime.json.JsonObject;
 import com.goodow.realtime.store.EventType;
 import com.goodow.realtime.store.ValueChangedEvent;
 
-class DefaultValueChangedEvent extends DefaultBaseModelEvent implements ValueChangedEvent {
+class ValueChangedEventImpl extends BaseModelEventImpl implements ValueChangedEvent {
   /**
    * The new property value.
    */
@@ -34,7 +34,7 @@ class DefaultValueChangedEvent extends DefaultBaseModelEvent implements ValueCha
   /**
    * @param serialized The serialized event object.
    */
-  public DefaultValueChangedEvent(JsonObject serialized) {
+  public ValueChangedEventImpl(JsonObject serialized) {
     super(serialized.set("type", EventType.VALUE_CHANGED.name()).set("bubbles", false));
     this.property = serialized.getString("property");
     this.newValue = serialized.get("newValue");

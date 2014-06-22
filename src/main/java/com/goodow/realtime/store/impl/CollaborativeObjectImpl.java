@@ -23,14 +23,14 @@ import com.goodow.realtime.store.CollaborativeObject;
 import com.goodow.realtime.store.EventType;
 import com.goodow.realtime.store.ObjectChangedEvent;
 
-abstract class DefaultCollaborativeObject implements CollaborativeObject {
+abstract class CollaborativeObjectImpl implements CollaborativeObject {
   String id;
-  final DefaultModel model;
+  final ModelImpl model;
 
   /**
    * @param model The document model.
    */
-  protected DefaultCollaborativeObject(DefaultModel model) {
+  protected CollaborativeObjectImpl(ModelImpl model) {
     this.model = model;
   }
 

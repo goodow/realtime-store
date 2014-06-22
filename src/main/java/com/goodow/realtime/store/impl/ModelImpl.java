@@ -36,7 +36,7 @@ import com.goodow.realtime.store.UndoRedoStateChangedEvent;
 
 import java.util.logging.Logger;
 
-class DefaultModel implements Model {
+class ModelImpl implements Model {
   private static final String ROOT_ID = "root";
   private static final Logger log = Logger.getLogger(Model.class.getName());
   /* The mode of the document. If true, the document is readonly. If false it is editable. */
@@ -46,7 +46,7 @@ class DefaultModel implements Model {
   final JsonObject objects = Json.createObject(); // LinkedHashMap<String, CollaborativeObject>
   private final JsonObject parents = Json.createObject(); // HashMap<String, List<String>>
   private JsonObject indexReferences; // HashMap<String, List<String>>
-  final DefaultDocument document;
+  final DocumentImpl document;
   final DocumentBridge bridge;
   /* An estimate of the number of bytes used by data stored in the model. */
   double bytesUsed;
@@ -63,7 +63,7 @@ class DefaultModel implements Model {
    * @param bridge Internal utilities for the Realtime API.
    * @param document The document that this model belongs to.
    */
-  DefaultModel(DocumentBridge bridge, DefaultDocument document) {
+  ModelImpl(DocumentBridge bridge, DocumentImpl document) {
     this.bridge = bridge;
     this.document = document;
   }
@@ -272,7 +272,7 @@ class DefaultModel implements Model {
       cursors.forEach(new ListIterator<String>() {
         @Override
         public void call(int idx, String indexReferenceId) {
-          DefaultIndexReference indexReference = getObject(indexReferenceId);
+          IndexReferenceImpl indexReference = getObject(indexReferenceId);
           indexReference.setIndex(isInsert, index, length, sessionId, userId);
         }
       });

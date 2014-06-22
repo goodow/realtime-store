@@ -20,18 +20,17 @@ import com.goodow.realtime.channel.Bus;
 import com.goodow.realtime.core.Handler;
 import com.goodow.realtime.json.JsonObject;
 import com.goodow.realtime.store.Model;
-import com.goodow.realtime.store.channel.Constants.Key;
 import com.goodow.realtime.store.channel.OperationSucker;
 
 @JsNamespace("$wnd.realtime.store")
-public class DefaultStore extends SubscribeOnlyStore {
+public class StoreImpl extends SubscribeOnlyStore {
 
-  public DefaultStore(Bus bus) {
+  public StoreImpl(Bus bus) {
     super(bus);
   }
 
   @JsExport
-  public DefaultStore(String serverAddress, JsonObject options) {
+  public StoreImpl(String serverAddress, JsonObject options) {
     super(serverAddress, options);
   }
 

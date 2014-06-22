@@ -59,7 +59,7 @@ public class ServerStoreTest extends TestVerticle {
             assertNotNull("deploymentID should not be null", asyncResult.result());
 
             VertxPlatform.register(vertx);
-            store = new DefaultStore(new VertxBus(vertx.eventBus()));
+            store = new StoreImpl(new VertxBus(vertx.eventBus()));
             startTests();
           }
         });

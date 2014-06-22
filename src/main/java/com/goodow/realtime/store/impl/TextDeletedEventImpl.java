@@ -13,36 +13,34 @@
  */
 package com.goodow.realtime.store.impl;
 
-import com.goodow.realtime.json.JsonArray;
 import com.goodow.realtime.json.JsonObject;
 import com.goodow.realtime.store.EventType;
-import com.goodow.realtime.store.ValuesAddedEvent;
+import com.goodow.realtime.store.TextDeletedEvent;
 
-class DefaultValuesAddedEvent extends DefaultBaseModelEvent implements ValuesAddedEvent {
+class TextDeletedEventImpl extends BaseModelEventImpl implements TextDeletedEvent {
   /**
-   * The index of the first added value.
+   * The index of the first character that was deleted.
    */
   public final int index;
   /**
-   * The values that were added.
+   * The deleted text.
    */
-  public final JsonArray values;
+  public final String text;
 
   /**
    * @param serialized The serialized event object.
    */
-  public DefaultValuesAddedEvent(JsonObject serialized) {
-    super(serialized.set("type", EventType.VALUES_ADDED.name()).set("bubbles", false));
+  public TextDeletedEventImpl(JsonObject serialized) {
+    super(serialized.set("type", EventType.TEXT_DELETED.name()).set("bubbles", false));
     this.index = (int) serialized.getNumber("index");
-    this.values = serialized.getArray("values");
+    this.text = serialized.getString("text");
   }
 
   @Override public int index() {
     return index;
   }
 
-  @Override
-  public JsonArray values() {
-    return values;
+  @Override public String text() {
+    return text;
   }
 }

@@ -29,10 +29,10 @@ import com.goodow.realtime.store.CollaborativeObject;
 import com.goodow.realtime.store.EventType;
 import com.goodow.realtime.store.ValueChangedEvent;
 
-class DefaultCollaborativeMap extends DefaultCollaborativeObject implements CollaborativeMap {
+class CollaborativeMapImpl extends CollaborativeObjectImpl implements CollaborativeMap {
   private final JsonObject snapshot;
 
-  DefaultCollaborativeMap(DefaultModel model) {
+  CollaborativeMapImpl(ModelImpl model) {
     super(model);
     snapshot = Json.createObject();
   }
@@ -186,7 +186,7 @@ class DefaultCollaborativeMap extends DefaultCollaborativeObject implements Coll
     assert null != newValue;
     Object newObject = JsonSerializer.deserializeObject(newValue, model.objects);
     ValueChangedEvent event =
-        new DefaultValueChangedEvent(event(sessionId, userId).set("property", key).set("oldValue",
+        new ValueChangedEventImpl(event(sessionId, userId).set("property", key).set("oldValue",
             get(key)).set("newValue", newObject));
     if (snapshot.has(key)) {
       JsonArray oldValue = snapshot.getArray(key);
@@ -203,7 +203,7 @@ class DefaultCollaborativeMap extends DefaultCollaborativeObject implements Coll
     assert has(key);
     JsonArray oldValue = snapshot.getArray(key);
     ValueChangedEvent event =
-        new DefaultValueChangedEvent(event(sessionId, userId).set("property", key).set("oldValue",
+        new ValueChangedEventImpl(event(sessionId, userId).set("property", key).set("oldValue",
             get(key)).set("newValue", null));
     snapshot.remove(key);
     model.addOrRemoveParent(oldValue, id, false);

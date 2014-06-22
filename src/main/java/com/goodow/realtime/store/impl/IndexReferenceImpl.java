@@ -25,7 +25,7 @@ import com.goodow.realtime.store.EventType;
 import com.goodow.realtime.store.IndexReference;
 import com.goodow.realtime.store.ReferenceShiftedEvent;
 
-class DefaultIndexReference extends DefaultCollaborativeObject implements IndexReference {
+class IndexReferenceImpl extends CollaborativeObjectImpl implements IndexReference {
   private String referencedObjectId;
   private int index = -1;
   private boolean canBeDeleted;
@@ -33,7 +33,7 @@ class DefaultIndexReference extends DefaultCollaborativeObject implements IndexR
   /**
    * @param model The document model.
    */
-  DefaultIndexReference(DefaultModel model) {
+  IndexReferenceImpl(ModelImpl model) {
     super(model);
   }
 
@@ -80,7 +80,7 @@ class DefaultIndexReference extends DefaultCollaborativeObject implements IndexR
     canBeDeleted = op.canBeDeleted;
     if (op.oldIndex != -1) {
       ReferenceShiftedEvent event =
-          new DefaultReferenceShiftedEvent(event(sessionId, userId).set("oldIndex", op.oldIndex).set(
+          new ReferenceShiftedEventImpl(event(sessionId, userId).set("oldIndex", op.oldIndex).set(
               "newIndex", op.newIndex));
       fireEvent(event);
     }

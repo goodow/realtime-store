@@ -34,8 +34,8 @@ import com.goodow.realtime.store.EventType;
 import com.goodow.realtime.store.channel.Constants.Addr;
 import com.goodow.realtime.store.channel.Constants.Key;
 
-class DefaultDocument implements Document {
-  private final DefaultModel model;
+class DocumentImpl implements Document {
+  private final ModelImpl model;
   final Registrations handlerRegs;
   JsonArray collaborators;
 
@@ -51,9 +51,9 @@ class DefaultDocument implements Document {
       eventsToFire = null;
       isEventsScheduled = false;
       eventsById = Json.createObject();
-      evtsToFire.forEach(new ListIterator<DefaultBaseModelEvent>() {
+      evtsToFire.forEach(new ListIterator<BaseModelEventImpl>() {
         @Override
-        public void call(int index, DefaultBaseModelEvent event) {
+        public void call(int index, BaseModelEventImpl event) {
           assert !event.bubbles;
           String id = event.target;
           bubblingToAncestors(id, event, Json.createArray());
@@ -63,9 +63,9 @@ class DefaultDocument implements Document {
       eventsById.forEach(new MapIterator<JsonArray>() {
         @Override
         public void call(String key, JsonArray events) {
-          DefaultBaseModelEvent first = events.get(0);
-          DefaultObjectChangedEvent objectChangedEvent =
-              new DefaultObjectChangedEvent(Json.createObject().set("target", key).set("sessionId",
+          BaseModelEventImpl first = events.get(0);
+          ObjectChangedEventImpl objectChangedEvent =
+              new ObjectChangedEventImpl(Json.createObject().set("target", key).set("sessionId",
                   first.sessionId).set("userId", first.userId).set("isLocal",
                   model.bridge.isLocalSession(first.sessionId)).set("events", events));
           fireEvent(objectChangedEvent);
@@ -94,7 +94,7 @@ class DefaultDocument implements Document {
       });
     }
 
-    private void fireEvent(DefaultBaseModelEvent event) {
+    private void fireEvent(BaseModelEventImpl event) {
       model.bridge.store.getBus().publishLocal(
           Addr.STORE + "/" + model.bridge.id + "/" + event.target + "/" + event.type, event);
     }
@@ -104,8 +104,8 @@ class DefaultDocument implements Document {
    * @param internalApi The driver for the GWT collaborative libraries.
    * @param errorHandler The third-party error handling function.
    */
-  DefaultDocument(final DocumentBridge internalApi, final Handler<Error> errorHandler) {
-    model = new DefaultModel(internalApi, this);
+  DocumentImpl(final DocumentBridge internalApi, final Handler<Error> errorHandler) {
+    model = new ModelImpl(internalApi, this);
     handlerRegs = new Registrations();
 
     Bus bus = internalApi.store.getBus();
@@ -125,7 +125,7 @@ class DefaultDocument implements Document {
         @Override
         public void handle(Message<JsonObject> message) {
           JsonObject body = message.body().set(Key.IS_ME, false);
-          DefaultCollaborator collaborator = new DefaultCollaborator(body);
+          CollaboratorImpl collaborator = new CollaboratorImpl(body);
           int index = collaborators.indexOf(collaborator);
           boolean isJoined = !body.has(Key.IS_JOINED) || body.getBoolean(Key.IS_JOINED);
           if (isJoined) {
@@ -133,14 +133,14 @@ class DefaultDocument implements Document {
               collaborators.push(collaborator);
               model.bridge.store.getBus().publishLocal(
                   Addr.STORE + "/" + model.bridge.id + "/" + EventType.COLLABORATOR_JOINED,
-                  new DefaultCollaboratorJoinedEvent(DefaultDocument.this, collaborator));
+                  new CollaboratorJoinedEventImpl(DocumentImpl.this, collaborator));
             }
           } else {
             if (index != -1) {
               collaborators.remove(index);
               model.bridge.store.getBus().publishLocal(
                   Addr.STORE + "/" + model.bridge.id + "/" + EventType.COLLABORATOR_LEFT,
-                  new DefaultCollaboratorLeftEvent(DefaultDocument.this, collaborator));
+                  new CollaboratorLeftEventImpl(DocumentImpl.this, collaborator));
             }
           }
 
@@ -174,7 +174,7 @@ class DefaultDocument implements Document {
     return collaborators.copy();
   }
 
-  @Override public DefaultModel getModel() {
+  @Override public ModelImpl getModel() {
     return model;
   }
 

@@ -59,8 +59,8 @@ public class DocumentBridge implements OperationSink<CollaborativeOperation> {
   final Store store;
   final String id;
   private Collaborator me;
-  private final DefaultDocument document;
-  private final DefaultModel model;
+  private final DocumentImpl document;
+  private final ModelImpl model;
   private UndoManager<CollaborativeOperation> undoManager = UndoManagerFactory.getNoOp();
   OutputSink outputSink = OutputSink.VOID;
 
@@ -68,7 +68,7 @@ public class DocumentBridge implements OperationSink<CollaborativeOperation> {
       final Handler<Error> errorHandler) {
     this.store = store == null ? new SimpleStore() : store;
     this.id = id;
-    document = new DefaultDocument(this, errorHandler);
+    document = new DocumentImpl(this, errorHandler);
     model = document.getModel();
 
     final JsonArray array = Json.createArray();
@@ -78,7 +78,7 @@ public class DocumentBridge implements OperationSink<CollaborativeOperation> {
       public void call(int index, JsonObject obj) {
         boolean isMe = store.getBus().getSessionId().equals(obj.getString("sessionId"));
         obj.set(Key.IS_ME, isMe);
-        DefaultCollaborator collaborator = new DefaultCollaborator(obj);
+        CollaboratorImpl collaborator = new CollaboratorImpl(obj);
         array.push(collaborator);
         if (isMe) {
           me = collaborator;
@@ -138,9 +138,9 @@ public class DocumentBridge implements OperationSink<CollaborativeOperation> {
   public JsonArray toSnapshot() {
     final JsonArray createComponents = Json.createArray();
     final JsonArray components = Json.createArray();
-    model.objects.forEach(new MapIterator<DefaultCollaborativeObject>() {
+    model.objects.forEach(new MapIterator<CollaborativeObjectImpl>() {
       @Override
-      public void call(String key, DefaultCollaborativeObject object) {
+      public void call(String key, CollaborativeObjectImpl object) {
         OperationComponent<?>[] initializeComponents = object.toInitialization();
         boolean isCreateOp = true;
         for (OperationComponent<?> component : initializeComponents) {
@@ -194,22 +194,22 @@ public class DocumentBridge implements OperationSink<CollaborativeOperation> {
       @Override
       public void call(int index, AbstractComponent<?> component) {
         if (component.type != CreateComponent.TYPE) {
-          model.<DefaultCollaborativeObject>getObject(component.id).consume(operation.userId, operation.sessionId, component);
+          model.<CollaborativeObjectImpl>getObject(component.id).consume(operation.userId, operation.sessionId, component);
           return;
         }
-        DefaultCollaborativeObject obj;
+        CollaborativeObjectImpl obj;
         switch (((CreateComponent) component).subType) {
           case CreateComponent.MAP:
-            obj = new DefaultCollaborativeMap(model);
+            obj = new CollaborativeMapImpl(model);
             break;
           case CreateComponent.LIST:
-            obj = new DefaultCollaborativeList(model);
+            obj = new CollaborativeListImpl(model);
             break;
           case CreateComponent.STRING:
-            obj = new DefaultCollaborativeString(model);
+            obj = new CollaborativeStringImpl(model);
             break;
           case CreateComponent.INDEX_REFERENCE:
-            obj = new DefaultIndexReference(model);
+            obj = new IndexReferenceImpl(model);
             break;
           default:
             throw new RuntimeException("Shouldn't reach here!");
@@ -241,7 +241,7 @@ public class DocumentBridge implements OperationSink<CollaborativeOperation> {
       model.canUndo = canUndo;
       model.canRedo = canRedo;
       UndoRedoStateChangedEvent event =
-          new DefaultUndoRedoStateChangedEvent(model, Json.createObject().set("canUndo", canUndo)
+          new UndoRedoStateChangedEventImpl(model, Json.createObject().set("canUndo", canUndo)
               .set("canRedo", canRedo));
       store.getBus().publishLocal(Addr.STORE + "/" + id + "/" + EventType.UNDO_REDO_STATE_CHANGED,
                                   event);

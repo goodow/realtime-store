@@ -17,7 +17,7 @@ import com.goodow.realtime.json.JsonObject;
 import com.goodow.realtime.store.BaseModelEvent;
 import com.goodow.realtime.store.EventType;
 
-abstract class DefaultBaseModelEvent implements BaseModelEvent {
+abstract class BaseModelEventImpl implements BaseModelEvent {
   /**
    * Whether this event bubbles.
    */
@@ -46,7 +46,7 @@ abstract class DefaultBaseModelEvent implements BaseModelEvent {
   /**
    * @param serialized The serialized event object.
    */
-  protected DefaultBaseModelEvent(JsonObject serialized) {
+  protected BaseModelEventImpl(JsonObject serialized) {
     this.type = EventType.valueOf(serialized.getString("type"));
     this.target = serialized.getString("target");
     this.sessionId = serialized.getString("sessionId");

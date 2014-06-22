@@ -16,30 +16,25 @@ package com.goodow.realtime.store.impl;
 import com.goodow.realtime.json.JsonArray;
 import com.goodow.realtime.json.JsonObject;
 import com.goodow.realtime.store.EventType;
-import com.goodow.realtime.store.ValuesSetEvent;
+import com.goodow.realtime.store.ValuesRemovedEvent;
 
-class DefaultValuesSetEvent extends DefaultBaseModelEvent implements ValuesSetEvent {
+class ValuesRemovedEventImpl extends BaseModelEventImpl implements ValuesRemovedEvent {
   /**
-   * The index of the first value that was replaced.
+   * The index of the first removed value.
    */
   public final int index;
   /**
-   * The old values.
+   * The values that were removed.
    */
-  public final JsonArray oldValues;
-  /**
-   * The new values.
-   */
-  public final JsonArray newValues;
+  public final JsonArray values;
 
   /**
    * @param serialized The serialized event object.
    */
-  public DefaultValuesSetEvent(JsonObject serialized) {
-    super(serialized.set("type", EventType.VALUES_SET.name()).set("bubbles", false));
+  public ValuesRemovedEventImpl(JsonObject serialized) {
+    super(serialized.set("type", EventType.VALUES_REMOVED.name()).set("bubbles", false));
     this.index = (int) serialized.getNumber("index");
-    this.oldValues = serialized.getArray("oldValues");
-    this.newValues = serialized.getArray("newValues");
+    this.values = serialized.getArray("values");
   }
 
   @Override public int index() {
@@ -47,12 +42,7 @@ class DefaultValuesSetEvent extends DefaultBaseModelEvent implements ValuesSetEv
   }
 
   @Override
-  public JsonArray newValues() {
-    return newValues;
-  }
-
-  @Override
-  public JsonArray oldValues() {
-    return oldValues;
+  public JsonArray values() {
+    return values;
   }
 }

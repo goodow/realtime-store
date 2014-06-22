@@ -13,36 +13,34 @@
  */
 package com.goodow.realtime.store.impl;
 
-import com.goodow.realtime.json.JsonArray;
 import com.goodow.realtime.json.JsonObject;
 import com.goodow.realtime.store.EventType;
-import com.goodow.realtime.store.ValuesRemovedEvent;
+import com.goodow.realtime.store.ReferenceShiftedEvent;
 
-class DefaultValuesRemovedEvent extends DefaultBaseModelEvent implements ValuesRemovedEvent {
+class ReferenceShiftedEventImpl extends BaseModelEventImpl implements ReferenceShiftedEvent {
   /**
-   * The index of the first removed value.
+   * The new index.
    */
-  public final int index;
+  public final int newIndex;
   /**
-   * The values that were removed.
+   * The previous index.
    */
-  public final JsonArray values;
+  public final int oldIndex;
 
   /**
    * @param serialized The serialized event object.
    */
-  public DefaultValuesRemovedEvent(JsonObject serialized) {
-    super(serialized.set("type", EventType.VALUES_REMOVED.name()).set("bubbles", false));
-    this.index = (int) serialized.getNumber("index");
-    this.values = serialized.getArray("values");
+  public ReferenceShiftedEventImpl(JsonObject serialized) {
+    super(serialized.set("type", EventType.REFERENCE_SHIFTED.name()).set("bubbles", false));
+    this.oldIndex = (int) serialized.getNumber("oldIndex");
+    this.newIndex = (int) serialized.getNumber("newIndex");
   }
 
-  @Override public int index() {
-    return index;
+  @Override public int newIndex() {
+    return newIndex;
   }
 
-  @Override
-  public JsonArray values() {
-    return values;
+  @Override public int oldIndex() {
+    return oldIndex;
   }
 }

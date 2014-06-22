@@ -17,7 +17,7 @@ import com.goodow.realtime.json.JsonObject;
 import com.goodow.realtime.store.Document;
 import com.goodow.realtime.store.DocumentSaveStateChangedEvent;
 
-public class DefaultDocumentSaveStateChangedEvent implements DocumentSaveStateChangedEvent {
+public class DocumentSaveStateChangedEventImpl implements DocumentSaveStateChangedEvent {
   public final boolean isPending;
   public final boolean isSaving;
 
@@ -25,7 +25,7 @@ public class DefaultDocumentSaveStateChangedEvent implements DocumentSaveStateCh
    * @param document The document being saved.
    * @param serialized The serialized event object.
    */
-  public DefaultDocumentSaveStateChangedEvent(Document document, JsonObject serialized) {
+  public DocumentSaveStateChangedEventImpl(Document document, JsonObject serialized) {
     this.isSaving = serialized.getBoolean("isSaving");
     this.isPending = serialized.getBoolean("isPending");;
   }

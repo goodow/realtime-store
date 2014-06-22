@@ -17,7 +17,7 @@ import com.goodow.realtime.json.JsonObject;
 import com.goodow.realtime.store.Collaborator;
 import com.goodow.realtime.store.channel.Constants.Key;
 
-public class DefaultCollaborator implements Collaborator {
+public class CollaboratorImpl implements Collaborator {
   /**
    * The color associated with the collaborator.
    */
@@ -50,7 +50,7 @@ public class DefaultCollaborator implements Collaborator {
   /**
    * @param serialized A serialized collaborator object
    */
-  public DefaultCollaborator(JsonObject serialized) {
+  public CollaboratorImpl(JsonObject serialized) {
     this.userId = serialized.getString("userId");
     this.sessionId = serialized.getString("sessionId");
     this.displayName = serialized.getString("displayName");
@@ -60,8 +60,8 @@ public class DefaultCollaborator implements Collaborator {
     this.photoUrl = serialized.getString("photoUrl");
   }
 
-  public DefaultCollaborator(String userId, String sessionId, String displayName, String color,
-                      boolean isMe, boolean isAnonymous, String photoUrl) {
+  public CollaboratorImpl(String userId, String sessionId, String displayName, String color,
+                          boolean isMe, boolean isAnonymous, String photoUrl) {
     this.userId = userId;
     this.sessionId = sessionId;
     this.displayName = displayName;

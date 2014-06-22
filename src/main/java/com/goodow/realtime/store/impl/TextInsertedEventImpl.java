@@ -15,32 +15,32 @@ package com.goodow.realtime.store.impl;
 
 import com.goodow.realtime.json.JsonObject;
 import com.goodow.realtime.store.EventType;
-import com.goodow.realtime.store.ReferenceShiftedEvent;
+import com.goodow.realtime.store.TextInsertedEvent;
 
-class DefaultReferenceShiftedEvent extends DefaultBaseModelEvent implements ReferenceShiftedEvent {
+class TextInsertedEventImpl extends BaseModelEventImpl implements TextInsertedEvent {
   /**
-   * The new index.
+   * The index of the change.
    */
-  public final int newIndex;
+  public final int index;
   /**
-   * The previous index.
+   * The inserted text
    */
-  public final int oldIndex;
+  public final String text;
 
   /**
    * @param serialized The serialized event object.
    */
-  public DefaultReferenceShiftedEvent(JsonObject serialized) {
-    super(serialized.set("type", EventType.REFERENCE_SHIFTED.name()).set("bubbles", false));
-    this.oldIndex = (int) serialized.getNumber("oldIndex");
-    this.newIndex = (int) serialized.getNumber("newIndex");
+  public TextInsertedEventImpl(JsonObject serialized) {
+    super(serialized.set("type", EventType.TEXT_INSERTED.name()).set("bubbles", false));
+    this.index = (int) serialized.getNumber("index");
+    this.text = serialized.getString("text");
   }
 
-  @Override public int newIndex() {
-    return newIndex;
+  @Override public int index() {
+    return index;
   }
 
-  @Override public int oldIndex() {
-    return oldIndex;
+  @Override public String text() {
+    return text;
   }
 }

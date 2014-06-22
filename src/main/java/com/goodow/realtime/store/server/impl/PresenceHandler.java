@@ -22,7 +22,7 @@ import com.goodow.realtime.json.impl.JreJsonObject;
 import com.goodow.realtime.store.Collaborator;
 import com.goodow.realtime.store.channel.Constants.Addr;
 import com.goodow.realtime.store.channel.Constants.Key;
-import com.goodow.realtime.store.impl.DefaultCollaborator;
+import com.goodow.realtime.store.impl.CollaboratorImpl;
 
 import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.Handler;
@@ -115,7 +115,7 @@ public class PresenceHandler {
     if (toRtn == null) {
       String displyName = anonymousUsers.getDisplyName();
       Collaborator collaborator =
-          new DefaultCollaborator(anonymousUsers.getUserId(), sessionId, displyName,
+          new CollaboratorImpl(anonymousUsers.getUserId(), sessionId, displyName,
                                   anonymousUsers.getColor(), false, true,
                                   anonymousUsers.getPhotoUrl(displyName));
       toRtn = new JsonObject(JacksonUtil.<JreJsonObject>convert(collaborator).toNative());

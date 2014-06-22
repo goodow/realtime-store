@@ -13,9 +13,10 @@
  */
 package com.goodow.realtime.store.impl;
 
+import com.goodow.realtime.store.Error;
 import com.goodow.realtime.store.ErrorType;
 
-public class DefaultError extends RuntimeException implements com.goodow.realtime.store.Error {
+public class ErrorImpl extends RuntimeException implements Error {
   /**
    * Whether the error is fatal. Fatal errors cannot be recovered from and require the document to
    * be reloaded.
@@ -32,7 +33,7 @@ public class DefaultError extends RuntimeException implements com.goodow.realtim
    * @param message A message describing the error.
    * @param isFatal Whether the error is fatal.
    */
-  public DefaultError(ErrorType type, String message, boolean isFatal) {
+  public ErrorImpl(ErrorType type, String message, boolean isFatal) {
     super(message);
     this.type = type;
     this.message = message;

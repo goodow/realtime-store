@@ -14,20 +14,20 @@
 package com.goodow.realtime.store.impl;
 
 import com.goodow.realtime.store.Collaborator;
-import com.goodow.realtime.store.CollaboratorLeftEvent;
+import com.goodow.realtime.store.CollaboratorJoinedEvent;
 import com.goodow.realtime.store.Document;
 
-class DefaultCollaboratorLeftEvent implements CollaboratorLeftEvent {
+class CollaboratorJoinedEventImpl implements CollaboratorJoinedEvent {
   /**
-   * The collaborator that left.
+   * The collaborator that joined.
    */
   public final Collaborator collaborator;
 
   /**
-   * @param document The document the collaborator left.
-   * @param collaborator The collaborator that left.
+   * @param document The document the collaborator joined.
+   * @param collaborator The collaborator that joined.
    */
-  public DefaultCollaboratorLeftEvent(Document document, Collaborator collaborator) {
+  public CollaboratorJoinedEventImpl(Document document, Collaborator collaborator) {
     this.collaborator = collaborator;
   }
 
@@ -36,9 +36,9 @@ class DefaultCollaboratorLeftEvent implements CollaboratorLeftEvent {
    * 
    * @param source The source object.
    * @param serialized A serialized content object.
-   * @return A collaborator left event.
+   * @return A change event.
    */
-  public CollaboratorLeftEvent deserialize(Document source, Object serialized) {
+  public CollaboratorJoinedEvent deserialize(Document source, Object serialized) {
     return null;
   }
 

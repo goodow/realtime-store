@@ -29,10 +29,10 @@ import com.goodow.realtime.store.IndexReference;
 import com.goodow.realtime.store.TextDeletedEvent;
 import com.goodow.realtime.store.TextInsertedEvent;
 
-class DefaultCollaborativeString extends DefaultCollaborativeObject implements CollaborativeString {
+class CollaborativeStringImpl extends CollaborativeObjectImpl implements CollaborativeString {
   private final StringBuilder snapshot;
 
-  DefaultCollaborativeString(DefaultModel model) {
+  CollaborativeStringImpl(ModelImpl model) {
     super(model);
     snapshot = new StringBuilder();
   }
@@ -161,7 +161,7 @@ class DefaultCollaborativeString extends DefaultCollaborativeObject implements C
     assert length > 0 && endIndex <= length();
     String toDelete = snapshot.substring(startIndex, endIndex);
     TextDeletedEvent event =
-        new DefaultTextDeletedEvent(event(sessionId, userId).set("index", startIndex)
+        new TextDeletedEventImpl(event(sessionId, userId).set("index", startIndex)
             .set("text", toDelete));
     snapshot.delete(startIndex, endIndex);
     fireEvent(event);
@@ -172,7 +172,7 @@ class DefaultCollaborativeString extends DefaultCollaborativeObject implements C
   private void insertAndFireEvent(int index, String text, String sessionId, String userId) {
     assert index <= length();
     TextInsertedEvent event =
-        new DefaultTextInsertedEvent(event(sessionId, userId).set("index", index).set("text", text));
+        new TextInsertedEventImpl(event(sessionId, userId).set("index", index).set("text", text));
     snapshot.insert(index, text);
     fireEvent(event);
     model.setIndexReferenceIndex(id, true, index, text.length(), sessionId, userId);

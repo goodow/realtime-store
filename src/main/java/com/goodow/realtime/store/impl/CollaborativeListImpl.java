@@ -36,13 +36,13 @@ import com.goodow.realtime.store.ValuesSetEvent;
 
 import java.util.Comparator;
 
-class DefaultCollaborativeList extends DefaultCollaborativeObject implements CollaborativeList {
+class CollaborativeListImpl extends CollaborativeObjectImpl implements CollaborativeList {
   private final JsonArray snapshot;
 
   /**
    * @param model The document model.
    */
-  DefaultCollaborativeList(DefaultModel model) {
+  CollaborativeListImpl(ModelImpl model) {
     super(model);
     snapshot = Json.createArray();
   }
@@ -313,7 +313,7 @@ class DefaultCollaborativeList extends DefaultCollaborativeObject implements Col
       }
     });
     ValuesAddedEvent event =
-        new DefaultValuesAddedEvent(event(sessionId, userId).set("index", index).set("values", objects));
+        new ValuesAddedEventImpl(event(sessionId, userId).set("index", index).set("values", objects));
     fireEvent(event);
     model.setIndexReferenceIndex(id, true, index, values.length(), sessionId, userId);
   }
@@ -329,7 +329,7 @@ class DefaultCollaborativeList extends DefaultCollaborativeObject implements Col
       model.bytesUsed -= value.toJsonString().length();
     }
     ValuesRemovedEvent event =
-        new DefaultValuesRemovedEvent(event(sessionId, userId).set("index", index).set("values", objects));
+        new ValuesRemovedEventImpl(event(sessionId, userId).set("index", index).set("values", objects));
     fireEvent(event);
     model.setIndexReferenceIndex(id, false, index, length, sessionId, userId);
   }
@@ -354,7 +354,7 @@ class DefaultCollaborativeList extends DefaultCollaborativeObject implements Col
       }
     });
     ValuesSetEvent event =
-        new DefaultValuesSetEvent(event(sessionId, userId).set("index", index).set("oldObjects",
+        new ValuesSetEventImpl(event(sessionId, userId).set("index", index).set("oldObjects",
             oldObjects).set("newObjects", newObjects));
     fireEvent(event);
   }

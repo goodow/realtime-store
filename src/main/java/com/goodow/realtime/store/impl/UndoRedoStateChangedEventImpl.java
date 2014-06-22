@@ -17,7 +17,7 @@ import com.goodow.realtime.json.JsonObject;
 import com.goodow.realtime.store.Model;
 import com.goodow.realtime.store.UndoRedoStateChangedEvent;
 
-class DefaultUndoRedoStateChangedEvent implements UndoRedoStateChangedEvent {
+class UndoRedoStateChangedEventImpl implements UndoRedoStateChangedEvent {
   /**
    * True if you can currently redo, false otherwise.
    */
@@ -31,7 +31,7 @@ class DefaultUndoRedoStateChangedEvent implements UndoRedoStateChangedEvent {
    * @param source The source object.
    * @param canUndo A serialized undo/redo state changed event.
    */
-  public DefaultUndoRedoStateChangedEvent(Model source, JsonObject serialized) {
+  public UndoRedoStateChangedEventImpl(Model source, JsonObject serialized) {
     this.canUndo = serialized.getBoolean("canUndo");
     this.canRedo = serialized.getBoolean("canRedo");
   }

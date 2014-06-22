@@ -18,7 +18,7 @@ import com.goodow.realtime.json.JsonObject;
 import com.goodow.realtime.store.EventType;
 import com.goodow.realtime.store.ObjectChangedEvent;
 
-class DefaultObjectChangedEvent extends DefaultBaseModelEvent implements ObjectChangedEvent {
+class ObjectChangedEventImpl extends BaseModelEventImpl implements ObjectChangedEvent {
   /**
    * The specific events that document the changes that occurred on the object.
    */
@@ -27,7 +27,7 @@ class DefaultObjectChangedEvent extends DefaultBaseModelEvent implements ObjectC
   /**
    * @param serialized The serialized event object.
    */
-  public DefaultObjectChangedEvent(JsonObject serialized) {
+  public ObjectChangedEventImpl(JsonObject serialized) {
     super(serialized.set("type", EventType.OBJECT_CHANGED.name()).set("bubbles", true));
     this.events = serialized.getArray("events");
   }
