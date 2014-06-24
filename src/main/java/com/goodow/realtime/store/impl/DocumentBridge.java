@@ -35,7 +35,7 @@ import com.goodow.realtime.store.Error;
 import com.goodow.realtime.store.EventType;
 import com.goodow.realtime.store.Store;
 import com.goodow.realtime.store.UndoRedoStateChangedEvent;
-import com.goodow.realtime.store.channel.Constants.Addr;
+import com.goodow.realtime.store.channel.Constants;
 import com.goodow.realtime.store.channel.Constants.Key;
 
 /**
@@ -237,7 +237,7 @@ public class DocumentBridge implements OperationSink<CollaborativeOperation> {
       UndoRedoStateChangedEvent event =
           new UndoRedoStateChangedEventImpl(model, Json.createObject().set("canUndo", canUndo)
               .set("canRedo", canRedo));
-      store.getBus().publishLocal(Addr.STORE + "/" + id + "/" + EventType.UNDO_REDO_STATE_CHANGED,
+      store.getBus().publishLocal(Constants.Topic.STORE + "/" + id + "/" + EventType.UNDO_REDO_STATE_CHANGED,
                                   event);
     }
   }

@@ -28,7 +28,7 @@ import com.goodow.realtime.operation.impl.CollaborativeTransformer;
 import com.goodow.realtime.store.Document;
 import com.goodow.realtime.store.Error;
 import com.goodow.realtime.store.Model;
-import com.goodow.realtime.store.channel.Constants.Addr;
+import com.goodow.realtime.store.channel.Constants;
 import com.goodow.realtime.store.channel.Constants.Key;
 import com.goodow.realtime.store.impl.DocumentBridge.OutputSink;
 
@@ -37,14 +37,14 @@ public class SubscribeOnlyStore extends SimpleStore {
     super(bus);
   }
 
-  public SubscribeOnlyStore(String serverAddress, JsonObject options) {
-    this(new ReliableSubscribeBus(new ReconnectBus(serverAddress, options), options));
+  public SubscribeOnlyStore(String serverUri, JsonObject options) {
+    this(new ReliableSubscribeBus(new ReconnectBus(serverUri, options), options));
   }
 
   @Override
   public void load(final String id, final Handler<Document> onLoaded,
       final Handler<Model> opt_initializer, final Handler<Error> opt_error) {
-    bus.send(Addr.STORE, Json.createObject().set(Key.ID, id), new Handler<Message<JsonObject>>() {
+    bus.send(Constants.Topic.STORE, Json.createObject().set(Key.ID, id), new Handler<Message<JsonObject>>() {
       @Override
       public void handle(Message<JsonObject> message) {
         JsonObject body = message.body();
@@ -68,12 +68,12 @@ public class SubscribeOnlyStore extends SimpleStore {
 
   protected void onLoaded(final String id, Handler<Model> opt_initializer, double version,
       final DocumentBridge bridge) {
-    String address = Addr.STORE + "/" + id + Addr.WATCH;
+    String topic = Constants.Topic.STORE + "/" + id + Constants.Topic.WATCH;
     if (bus instanceof ReliableSubscribeBus) {
-      ((ReliableSubscribeBus) bus).synchronizeSequenceNumber(address, version - 1);
+      ((ReliableSubscribeBus) bus).synchronizeSequenceNumber(topic, version - 1);
     }
     final Registration handlerReg =
-        bus.registerHandler(address, new Handler<Message<JsonObject>>() {
+        bus.registerHandler(topic, new Handler<Message<JsonObject>>() {
           Transformer<CollaborativeOperation> transformer = new CollaborativeTransformer();
 
           @Override

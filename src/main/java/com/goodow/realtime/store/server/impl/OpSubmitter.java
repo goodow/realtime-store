@@ -90,6 +90,10 @@ public class OpSubmitter {
       public void handle(AsyncResult<Void> ar) {
         if (ar.failed()) {
           if ("Transform needed".equals(ar.cause().getMessage())) {
+            // Between our fetch and our call to atomicSubmit, another client
+            // submitted an operation. This should be pretty rare. Calling
+            // retry() here will re-fetch the snapshot again (not necessary),
+            // but its a rare enough case that its not worth optimizing.
             retrySubmit(transformedOps, docType, docId, operation, applyAt, callback);
           } else {
             callback.handle(new DefaultFutureResult<JsonObject>(ar.cause()));
@@ -161,7 +165,7 @@ public class OpSubmitter {
         final long snapshotVersion = snapshotData.getLong(Key.VERSION);
         // Get all operations that might be relevant. We'll float the snapshot and the operation up
         // to the most recent version of the document, then try submitting.
-        final long from = applyAt != null ? Math.min(snapshotVersion, applyAt) : snapshotVersion;
+        final long from = (applyAt != null && applyAt < snapshotVersion) ? applyAt : snapshotVersion;
         redis.getOps(docType, docId, from, null, new AsyncResultHandler<JsonObject>() {
           @Override
           public void handle(AsyncResult<JsonObject> ar) {
@@ -171,6 +175,9 @@ public class OpSubmitter {
             }
             final DocumentBridge snapshot = createSnapshot(docType, docId, snapshotData);
             JsonArray ops = ar.result().getArray(Key.OPS);
+            if (ops.size() > 0) {
+              log.finest("Transform Needed");
+            }
             long snapshotV = snapshotVersion;
             long opV = applyAt == null ? snapshotV + ops.size() : applyAt;
             for (Object op : ops) {

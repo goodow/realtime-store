@@ -18,7 +18,7 @@ package com.goodow.realtime.store.channel;
  */
 public interface Constants {
 
-  public interface Addr {
+  public interface Topic {
     String STORE = "realtime/store";
     String OPS = "/_ops";
     String WATCH = "/_watch";

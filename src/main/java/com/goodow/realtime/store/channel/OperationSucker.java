@@ -20,7 +20,6 @@ import com.goodow.realtime.operation.impl.CollaborativeOperation;
 import com.goodow.realtime.operation.impl.CollaborativeTransformer;
 import com.goodow.realtime.store.ErrorType;
 import com.goodow.realtime.store.EventType;
-import com.goodow.realtime.store.channel.Constants.Addr;
 import com.goodow.realtime.store.impl.DocumentBridge;
 import com.goodow.realtime.store.impl.DocumentBridge.OutputSink;
 import com.goodow.realtime.store.impl.DocumentSaveStateChangedEventImpl;
@@ -70,7 +69,7 @@ public class OperationSucker implements OperationChannel.Listener<CollaborativeO
   @Override
   public void onError(Throwable e) {
     logger.log(Level.WARNING, "Channel error occurs", e);
-    bus.publishLocal(Addr.STORE + "/" + id + "/" + Addr.DOCUMENT_ERROR,
+    bus.publishLocal(Constants.Topic.STORE + "/" + id + "/" + Constants.Topic.DOCUMENT_ERROR,
                      new ErrorImpl(ErrorType.SERVER_ERROR, "Channel error occurs", true));
   }
 
@@ -83,7 +82,7 @@ public class OperationSucker implements OperationChannel.Listener<CollaborativeO
 
   @Override
   public void onSaveStateChanged(boolean isSaving, boolean isPending) {
-    bus.publishLocal(Addr.STORE + "/" + id + "/" + EventType.DOCUMENT_SAVE_STATE_CHANGED,
+    bus.publishLocal(Constants.Topic.STORE + "/" + id + "/" + EventType.DOCUMENT_SAVE_STATE_CHANGED,
         new DocumentSaveStateChangedEventImpl(bridge.getDocument(),
             Json.createObject().set("isSaving", isSaving).set("isPending", isPending)));
   }

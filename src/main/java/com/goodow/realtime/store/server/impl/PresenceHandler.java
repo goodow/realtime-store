@@ -20,7 +20,7 @@ import com.goodow.realtime.channel.server.impl.BridgeHook;
 import com.goodow.realtime.json.impl.JacksonUtil;
 import com.goodow.realtime.json.impl.JreJsonObject;
 import com.goodow.realtime.store.Collaborator;
-import com.goodow.realtime.store.channel.Constants.Addr;
+import com.goodow.realtime.store.channel.Constants;
 import com.goodow.realtime.store.channel.Constants.Key;
 import com.goodow.realtime.store.impl.CollaboratorImpl;
 
@@ -49,11 +49,11 @@ public class PresenceHandler {
 
   public void start(final CountingCompletionHandler<Void> countDownLatch) {
     final EventBus eb = vertx.eventBus();
-    address = container.config().getString("address", Addr.STORE);
-    final Pattern pattern = Pattern.compile(address + "((/[^/]+){2})" + Addr.WATCH);
+    address = container.config().getString("address", Constants.Topic.STORE);
+    final Pattern pattern = Pattern.compile(address + "((/[^/]+){2})" + Constants.Topic.WATCH);
 
     countDownLatch.incRequired();
-    eb.registerHandler(address + Addr.PRESENCE, new Handler<Message<JsonObject>>() {
+    eb.registerHandler(address + Constants.Topic.PRESENCE, new Handler<Message<JsonObject>>() {
       @Override
       public void handle(Message<JsonObject> message) {
         JsonObject body = message.body();
@@ -63,7 +63,7 @@ public class PresenceHandler {
           return;
         }
         Set<String> sessions =
-            vertx.sharedData().getSet(BridgeHook.getSessionsKey(address + "/" + id + Addr.WATCH));
+            vertx.sharedData().getSet(BridgeHook.getSessionsKey(address + "/" + id + Constants.Topic.WATCH));
         if (body.containsField(WebSocketBus.SESSION)) {
           sessions.add(body.getString(WebSocketBus.SESSION));
         }
@@ -96,7 +96,7 @@ public class PresenceHandler {
         }
         JsonObject collaborator = getCollaborator(body.getString(WebSocketBus.SESSION));
         collaborator.putBoolean(Key.IS_JOINED, body.getBoolean(Key.IS_JOINED));
-        eb.publish(address + matcher.group(1) + Addr.PRESENCE + Addr.WATCH, collaborator);
+        eb.publish(address + matcher.group(1) + Constants.Topic.PRESENCE + Constants.Topic.WATCH, collaborator);
       }
     }, new Handler<AsyncResult<Void>>() {
       @Override

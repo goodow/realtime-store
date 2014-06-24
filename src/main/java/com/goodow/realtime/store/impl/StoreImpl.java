@@ -30,8 +30,8 @@ public class StoreImpl extends SubscribeOnlyStore {
   }
 
   @JsExport
-  public StoreImpl(String serverAddress, JsonObject options) {
-    super(serverAddress, options);
+  public StoreImpl(String serverUri, JsonObject options) {
+    super(serverUri, options);
   }
 
   @Override

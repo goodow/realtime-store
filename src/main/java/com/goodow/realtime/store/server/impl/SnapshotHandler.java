@@ -16,7 +16,7 @@ package com.goodow.realtime.store.server.impl;
 import com.google.inject.Inject;
 
 import com.goodow.realtime.channel.impl.WebSocketBus;
-import com.goodow.realtime.store.channel.Constants.Addr;
+import com.goodow.realtime.store.channel.Constants;
 import com.goodow.realtime.store.channel.Constants.Key;
 import com.goodow.realtime.store.server.StoreModule;
 
@@ -41,7 +41,7 @@ public class SnapshotHandler {
   private String address;
 
   public void start(final CountingCompletionHandler<Void> countDownLatch) {
-    address = container.config().getString("address", Addr.STORE);
+    address = container.config().getString("address", Constants.Topic.STORE);
 
     countDownLatch.incRequired();
     vertx.eventBus().registerHandler(address, new Handler<Message<JsonObject>>() {
@@ -117,7 +117,7 @@ public class SnapshotHandler {
     if (sessionId != null) {
       msg.putString(WebSocketBus.SESSION, sessionId);
     }
-    vertx.eventBus().sendWithTimeout(address + Addr.PRESENCE, msg, StoreModule.REPLY_TIMEOUT,
+    vertx.eventBus().sendWithTimeout(address + Constants.Topic.PRESENCE, msg, StoreModule.REPLY_TIMEOUT,
                                      new AsyncResultHandler<Message<JsonArray>>() {
           @Override
           public void handle(AsyncResult<Message<JsonArray>> ar) {

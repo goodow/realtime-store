@@ -13,7 +13,7 @@
  */
 package com.goodow.realtime.store.server;
 
-import com.goodow.realtime.store.channel.Constants.Addr;
+import com.goodow.realtime.store.channel.Constants;
 import com.goodow.realtime.store.channel.Constants.Key;
 
 import org.vertx.java.busmods.BusModBase;
@@ -35,14 +35,14 @@ public class RestVerticle extends BusModBase {
   @Override
   public void start(final Future<Void> result) {
     super.start();
-    address = getOptionalStringConfig("address", Addr.STORE);
+    address = getOptionalStringConfig("address", Constants.Topic.STORE);
     JsonObject rest = getOptionalObjectConfig("rest", new JsonObject());
     String path = rest.getString("prefix", "/store");
     HttpServer server = vertx.createHttpServer().setCompressionSupported(true);
     RouteMatcher matcher = new RouteMatcher();
 
     String snapshot = path + "/:docType/:docId";
-    String ops = path + "/:docType/:docId" + Addr.OPS;
+    String ops = path + "/:docType/:docId" + Constants.Topic.OPS;
     Handler<HttpServerRequest> handler = new Handler<HttpServerRequest>() {
       @Override
       public void handle(final HttpServerRequest req) {
@@ -111,7 +111,7 @@ public class RestVerticle extends BusModBase {
         if (to != null) {
           message.putNumber("to", Long.valueOf(to));
         }
-        eb.sendWithTimeout(address + Addr.OPS, message, StoreModule.REPLY_TIMEOUT,
+        eb.sendWithTimeout(address + Constants.Topic.OPS, message, StoreModule.REPLY_TIMEOUT,
             new Handler<AsyncResult<Message<JsonArray>>>() {
               @Override
               public void handle(AsyncResult<Message<JsonArray>> ar) {

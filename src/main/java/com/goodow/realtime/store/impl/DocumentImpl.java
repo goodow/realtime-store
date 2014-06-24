@@ -32,7 +32,7 @@ import com.goodow.realtime.store.Document;
 import com.goodow.realtime.store.DocumentSaveStateChangedEvent;
 import com.goodow.realtime.store.Error;
 import com.goodow.realtime.store.EventType;
-import com.goodow.realtime.store.channel.Constants.Addr;
+import com.goodow.realtime.store.channel.Constants;
 import com.goodow.realtime.store.channel.Constants.Key;
 
 class DocumentImpl implements Document {
@@ -97,7 +97,7 @@ class DocumentImpl implements Document {
 
     private void fireEvent(BaseModelEventImpl event) {
       model.bridge.store.getBus().publishLocal(
-          Addr.STORE + "/" + model.bridge.id + "/" + event.target + "/" + event.type, event);
+          Constants.Topic.STORE + "/" + model.bridge.id + "/" + event.target + "/" + event.type, event);
     }
   };
 
@@ -113,7 +113,7 @@ class DocumentImpl implements Document {
     Bus bus = internalApi.store.getBus();
     if (errorHandler != null) {
       handlerRegs.wrap(bus.registerLocalHandler(
-          Addr.STORE + "/" + internalApi.id + "/" + Addr.DOCUMENT_ERROR,
+          Constants.Topic.STORE + "/" + internalApi.id + "/" + Constants.Topic.DOCUMENT_ERROR,
           new Handler<Message<Error>>() {
             @Override
             public void handle(Message<Error> message) {
@@ -122,8 +122,9 @@ class DocumentImpl implements Document {
           }));
     }
 
-    handlerRegs.wrap(bus.registerHandler(Addr.STORE + "/" + internalApi.id + Addr.PRESENCE
-                                         + Addr.WATCH, new Handler<Message<JsonObject>>() {
+    handlerRegs.wrap(bus.registerHandler(
+        Constants.Topic.STORE + "/" + internalApi.id + Constants.Topic.PRESENCE
+                                         + Constants.Topic.WATCH, new Handler<Message<JsonObject>>() {
         @Override
         public void handle(Message<JsonObject> message) {
           JsonObject body = message.body().set(Key.IS_ME, false);
@@ -134,14 +135,14 @@ class DocumentImpl implements Document {
             if (!collaborators.has(sessionId)) {
               collaborators.set(sessionId, collaborator);
               model.bridge.store.getBus().publishLocal(
-                  Addr.STORE + "/" + model.bridge.id + "/" + EventType.COLLABORATOR_JOINED,
+                  Constants.Topic.STORE + "/" + model.bridge.id + "/" + EventType.COLLABORATOR_JOINED,
                   new CollaboratorJoinedEventImpl(DocumentImpl.this, collaborator));
             }
           } else {
             if (collaborators.has(sessionId)) {
               collaborators.remove(sessionId);
               model.bridge.store.getBus().publishLocal(
-                  Addr.STORE + "/" + model.bridge.id + "/" + EventType.COLLABORATOR_LEFT,
+                  Constants.Topic.STORE + "/" + model.bridge.id + "/" + EventType.COLLABORATOR_LEFT,
                   new CollaboratorLeftEventImpl(DocumentImpl.this, collaborator));
             }
           }
@@ -192,7 +193,7 @@ class DocumentImpl implements Document {
     if (type == null || handler == null) {
       throw new NullPointerException((type == null ? "type" : "handler") + " was null.");
     }
-    return handlerRegs.wrap(model.bridge.store.getBus().registerLocalHandler(Addr.STORE +
+    return handlerRegs.wrap(model.bridge.store.getBus().registerLocalHandler(Constants.Topic.STORE +
         "/" + model.bridge.id + "/" + (objectId == null ? "" : (objectId + "/")) + type,
         new Handler<Message<?>>() {
           @SuppressWarnings("unchecked")

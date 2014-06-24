@@ -15,7 +15,7 @@ package com.goodow.realtime.store.server.impl;
 
 import com.google.inject.Inject;
 
-import com.goodow.realtime.store.channel.Constants.Addr;
+import com.goodow.realtime.store.channel.Constants;
 import com.goodow.realtime.store.channel.Constants.Key;
 
 import org.vertx.java.core.AsyncResult;
@@ -42,7 +42,7 @@ public class OpsHandler {
   private String address;
 
   public void start(final CountingCompletionHandler<Void> countDownLatch) {
-    address = container.config().getString("address", Addr.STORE) + Addr.OPS;
+    address = container.config().getString("address", Constants.Topic.STORE) + Constants.Topic.OPS;
 
     countDownLatch.incRequired();
     vertx.eventBus().registerHandler(address, new Handler<Message<JsonObject>>() {

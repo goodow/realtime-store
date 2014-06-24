@@ -23,7 +23,6 @@ import com.goodow.realtime.json.Json;
 import com.goodow.realtime.json.JsonObject;
 import com.goodow.realtime.operation.Operation;
 import com.goodow.realtime.operation.Transformer;
-import com.goodow.realtime.store.channel.Constants.Addr;
 import com.goodow.realtime.store.channel.Constants.Key;
 
 import java.util.EnumSet;
@@ -135,7 +134,7 @@ public class OperationChannel<O extends Operation<?>> {
   public void connect(double version) {
     assert !isConnected() : "Already connected";
     assert version >= 0 : "Invalid version, " + version;
-    String addr = Addr.STORE + "/" + id + Addr.WATCH;
+    String addr = Constants.Topic.STORE + "/" + id + Constants.Topic.WATCH;
     if (bus instanceof ReliableSubscribeBus) {
       ((ReliableSubscribeBus) bus).synchronizeSequenceNumber(addr, version - 1);
     }
@@ -302,7 +301,7 @@ public class OperationChannel<O extends Operation<?>> {
     JsonObject delta =
         Json.createObject().set("action", "post").set(Key.ID, id).set(Key.OP_DATA,
             ((JsonObject) unackedClientOp.toJson()).set(Key.VERSION, queue.version()));
-    bus.send(Addr.STORE, delta, new Handler<Message<JsonObject>>() {
+    bus.send(Constants.Topic.STORE, delta, new Handler<Message<JsonObject>>() {
       @Override
       public void handle(Message<JsonObject> message) {
         if (!isConnected()) {

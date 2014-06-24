@@ -16,7 +16,7 @@ package com.goodow.realtime.store.server.impl;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import com.goodow.realtime.store.channel.Constants.Addr;
+import com.goodow.realtime.store.channel.Constants;
 import com.goodow.realtime.store.channel.Constants.Key;
 
 import org.vertx.java.core.AsyncResult;
@@ -57,7 +57,7 @@ public class RedisDriver {
   RedisDriver(Vertx vertx, final Container container) {
     this.vertx = vertx;
     eb = vertx.eventBus();
-    address = container.config().getString("address", Addr.STORE);
+    address = container.config().getString("address", Constants.Topic.STORE);
   }
 
   public void atomicSubmit(final String docType, final String docId, final JsonObject opData,
@@ -282,15 +282,15 @@ public class RedisDriver {
   }
 
   protected String getDocIdChannel(String docType, String docId) {
-    return address + "/" + docType + "/" + docId + Addr.WATCH;
+    return address + "/" + docType + "/" + docId + Constants.Topic.WATCH;
   }
 
   protected String getDocTypeChannel(String docType) {
-    return address + "/" + docType + Addr.WATCH;
+    return address + "/" + docType + Constants.Topic.WATCH;
   }
 
   protected String getOpsKey(String docType, String docId) {
-    return address + "/" + docType + "/" + docId + Addr.OPS;
+    return address + "/" + docType + "/" + docId + Constants.Topic.OPS;
   }
 
   protected String getSnapshotKey(String docType, String docId) {

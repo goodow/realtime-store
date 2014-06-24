@@ -30,7 +30,7 @@ ops: # operations by which this operation was transformed, if someone else's ope
 - *opData
 ...
   
-# address: realtime/store/_ops
+# topic: realtime/store/_ops
 --- # Get ops
 id: docType/docId
 from: 10
@@ -38,15 +38,15 @@ to: 11 # noninclusively
 --- # reply
 - *opData
 
-# address: realtime/store/docType/docId/_watch
---- # Anyone subscribed to this address will be notified as document changes
+# topic: realtime/store/docType/docId/_watch
+--- # Anyone subscribed to this topic will be notified as document changes
 --- # document change notifications
 <<: *opData
 ...
 
 
-# address: realtime/store/docType/docId/_presence/_watch
---- # Anyone subscribed to this address will be notified as clients come and go
+# topic: realtime/store/docType/docId/_presence/_watch
+--- # Anyone subscribed to this topic will be notified as clients come and go
 --- &collaborator # user presence notifications
 isJoined: false
 sessionId: sid
@@ -56,7 +56,7 @@ color: #58B442
 isAnonymous: true
 photoUrl: https://ssl.gstatic.com/docs/common/profile/slowloris_lg.png
 ...
-# address: realtime/store/_presence
+# topic: realtime/store/_presence
 --- # Get a complete list of online collaborators
 id: docType/docId
 --- # reply
@@ -64,22 +64,22 @@ id: docType/docId
 ...
 
 
---- # address: @realtime/store/docType/docId/document_error Document error event publish
+--- # topic: @realtime/store/docType/docId/document_error Document error event publish
 *com.goodow.realtime.store.Error
 ...
---- # address: @realtime/store/docType/docId/document_save_state_changed
+--- # topic: @realtime/store/docType/docId/document_save_state_changed
 *com.goodow.realtime.store.DocumentSaveStateChangedEvent
 ...
---- # address: @realtime/store/docType/docId/collaborator_joined
+--- # topic: @realtime/store/docType/docId/collaborator_joined
 *com.goodow.realtime.store.CollaboratorJoinedEvent
 ...
---- # address: @realtime/store/docType/docId/collaborator_left
+--- # topic: @realtime/store/docType/docId/collaborator_left
 *com.goodow.realtime.store.CollaboratorLeftEvent
 ...
---- # address: @realtime/store/docType/docId/undo_redo_state_changed
+--- # topic: @realtime/store/docType/docId/undo_redo_state_changed
 *com.goodow.realtime.store.UndoRedoStateChangedEvent
 ...
 
---- # address: @realtime/store/docType/docId/objectId/event_type Event publish
+--- # topic: @realtime/store/docType/docId/objectId/event_type Event publish
 *com.goodow.realtime.store.BaseModelEvent
 ...
