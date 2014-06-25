@@ -138,7 +138,7 @@ public class OperationChannel<O extends Operation<?>> {
     if (bus instanceof ReliableSubscribeBus) {
       ((ReliableSubscribeBus) bus).synchronizeSequenceNumber(addr, version - 1);
     }
-    handlerRegistration = bus.registerHandler(addr, new Handler<Message<JsonObject>>() {
+    handlerRegistration = bus.subscribe(addr, new Handler<Message<JsonObject>>() {
       @Override
       public void handle(Message<JsonObject> message) {
         if (!isConnected()) {

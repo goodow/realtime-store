@@ -112,7 +112,7 @@ class DocumentImpl implements Document {
 
     Bus bus = internalApi.store.getBus();
     if (errorHandler != null) {
-      handlerRegs.wrap(bus.registerLocalHandler(
+      handlerRegs.wrap(bus.subscribeLocal(
           Constants.Topic.STORE + "/" + internalApi.id + "/" + Constants.Topic.DOCUMENT_ERROR,
           new Handler<Message<Error>>() {
             @Override
@@ -122,32 +122,34 @@ class DocumentImpl implements Document {
           }));
     }
 
-    handlerRegs.wrap(bus.registerHandler(
+    handlerRegs.wrap(bus.subscribe(
         Constants.Topic.STORE + "/" + internalApi.id + Constants.Topic.PRESENCE
-                                         + Constants.Topic.WATCH, new Handler<Message<JsonObject>>() {
-        @Override
-        public void handle(Message<JsonObject> message) {
-          JsonObject body = message.body().set(Key.IS_ME, false);
-          Collaborator collaborator = new CollaboratorImpl(body);
-          boolean isJoined = !body.has(Key.IS_JOINED) || body.getBoolean(Key.IS_JOINED);
-          String sessionId = collaborator.sessionId();
-          if (isJoined) {
-            if (!collaborators.has(sessionId)) {
-              collaborators.set(sessionId, collaborator);
-              model.bridge.store.getBus().publishLocal(
-                  Constants.Topic.STORE + "/" + model.bridge.id + "/" + EventType.COLLABORATOR_JOINED,
-                  new CollaboratorJoinedEventImpl(DocumentImpl.this, collaborator));
-            }
-          } else {
-            if (collaborators.has(sessionId)) {
-              collaborators.remove(sessionId);
-              model.bridge.store.getBus().publishLocal(
-                  Constants.Topic.STORE + "/" + model.bridge.id + "/" + EventType.COLLABORATOR_LEFT,
-                  new CollaboratorLeftEventImpl(DocumentImpl.this, collaborator));
+        + Constants.Topic.WATCH, new Handler<Message<JsonObject>>() {
+          @Override
+          public void handle(Message<JsonObject> message) {
+            JsonObject body = message.body().set(Key.IS_ME, false);
+            Collaborator collaborator = new CollaboratorImpl(body);
+            boolean isJoined = !body.has(Key.IS_JOINED) || body.getBoolean(Key.IS_JOINED);
+            String sessionId = collaborator.sessionId();
+            if (isJoined) {
+              if (!collaborators.has(sessionId)) {
+                collaborators.set(sessionId, collaborator);
+                model.bridge.store.getBus().publishLocal(
+                    Constants.Topic.STORE + "/" + model.bridge.id + "/"
+                    + EventType.COLLABORATOR_JOINED,
+                    new CollaboratorJoinedEventImpl(DocumentImpl.this, collaborator));
+              }
+            } else {
+              if (collaborators.has(sessionId)) {
+                collaborators.remove(sessionId);
+                model.bridge.store.getBus().publishLocal(
+                    Constants.Topic.STORE + "/" + model.bridge.id + "/"
+                    + EventType.COLLABORATOR_LEFT,
+                    new CollaboratorLeftEventImpl(DocumentImpl.this, collaborator));
+              }
             }
           }
-        }
-      }));
+        }));
   }
 
   @Override
@@ -193,15 +195,16 @@ class DocumentImpl implements Document {
     if (type == null || handler == null) {
       throw new NullPointerException((type == null ? "type" : "handler") + " was null.");
     }
-    return handlerRegs.wrap(model.bridge.store.getBus().registerLocalHandler(Constants.Topic.STORE +
-        "/" + model.bridge.id + "/" + (objectId == null ? "" : (objectId + "/")) + type,
-        new Handler<Message<?>>() {
-          @SuppressWarnings("unchecked")
-          @Override
-          public void handle(Message<?> message) {
-            Platform.scheduler().handle(handler, message.body());
-          }
-        }));
+    return handlerRegs.wrap(model.bridge.store.getBus().subscribeLocal(
+        Constants.Topic.STORE + "/" + model.bridge.id + "/" +
+        (objectId == null ? "" : (objectId + "/")) + type, new Handler<Message<?>>() {
+       @SuppressWarnings(
+           "unchecked")
+       @Override
+       public void handle(Message<?> message) {
+         Platform.scheduler().handle(handler,message.body());
+       }
+     }));
   }
 
   void scheduleEvent(BaseModelEvent event) {

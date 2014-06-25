@@ -73,7 +73,7 @@ public class SubscribeOnlyStore extends SimpleStore {
       ((ReliableSubscribeBus) bus).synchronizeSequenceNumber(topic, version - 1);
     }
     final Registration handlerReg =
-        bus.registerHandler(topic, new Handler<Message<JsonObject>>() {
+        bus.subscribe(topic, new Handler<Message<JsonObject>>() {
           Transformer<CollaborativeOperation> transformer = new CollaborativeTransformer();
 
           @Override
