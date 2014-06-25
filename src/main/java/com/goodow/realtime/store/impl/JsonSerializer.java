@@ -55,18 +55,18 @@ class JsonSerializer {
       return null;
     }
     JsonArray array = Json.createArray();
-    if (obj instanceof Number) {
-      array.push(VALUE_TYPE).push(((Number) obj).doubleValue());
-    } else if (obj instanceof Boolean) {
-      array.push(VALUE_TYPE).push(((Boolean) obj).booleanValue());
-    } else if (obj instanceof CollaborativeObject) {
-      array.push(REFERENCE_TYPE).push(((CollaborativeObject) obj).id());
-    } else if (obj instanceof String) {
+    if (obj instanceof String) {
       array.push(VALUE_TYPE).push(obj);
+    } else if (obj instanceof CollaborativeObjectImpl) {
+      array.push(REFERENCE_TYPE).push(((CollaborativeObject) obj).id());
     } else if (obj instanceof JsonObject) {
       array.push(VALUE_TYPE).push(((JsonObject) obj).copy());
     } else if (obj instanceof JsonArray) {
       array.push(VALUE_TYPE).push(((JsonArray) obj).copy());
+    } else if (obj instanceof Number) {
+      array.push(VALUE_TYPE).push(((Number) obj).doubleValue());
+    } else if (obj instanceof Boolean) {
+      array.push(VALUE_TYPE).push(((Boolean) obj).booleanValue());
     } else {
       throw new IllegalArgumentException("Invalid JSON type: " + obj.getClass().getName());
     }

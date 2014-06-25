@@ -120,7 +120,7 @@ class CollaborativeMapImpl extends CollaborativeObjectImpl implements Collaborat
       @Override
       public void call(String key, JsonArray value) {
         Object val = get(key);
-        if (val instanceof CollaborativeObject) {
+        if (val instanceof CollaborativeObjectImpl) {
           json.set(key, ((CollaborativeObject) val).toJson());
         } else {
           json.set(key, snapshot.getArray(key).get(1));

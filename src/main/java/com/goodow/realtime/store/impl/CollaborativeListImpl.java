@@ -232,7 +232,7 @@ class CollaborativeListImpl extends CollaborativeObjectImpl implements Collabora
         Object val = get(index);
         if (val == null) {
           json.push(null);
-        } else if (val instanceof CollaborativeObject) {
+        } else if (val instanceof CollaborativeObjectImpl) {
           json.push(((CollaborativeObject) val).toJson());
         } else {
           json.push(snapshot.getArray(index).get(1));
