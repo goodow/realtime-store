@@ -32,7 +32,7 @@ import com.goodow.realtime.store.channel.Constants;
 import com.goodow.realtime.store.channel.Constants.Key;
 import com.goodow.realtime.store.impl.DocumentBridge.OutputSink;
 
-public class SubscribeOnlyStore extends SimpleStore {
+public class SubscribeOnlyStore extends MemoryStore {
   public SubscribeOnlyStore(Bus bus) {
     super(bus);
   }

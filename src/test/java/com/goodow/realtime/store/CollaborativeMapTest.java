@@ -18,7 +18,8 @@ import com.goodow.realtime.core.Handler;
 import com.goodow.realtime.json.Json;
 import com.goodow.realtime.json.JsonArray;
 import com.goodow.realtime.json.JsonObject;
-import com.goodow.realtime.store.impl.SimpleStore;
+import com.goodow.realtime.store.impl.MemoryStore;
+
 import org.junit.Test;
 import org.vertx.testtools.TestVerticle;
 import org.vertx.testtools.VertxAssert;
@@ -32,7 +33,7 @@ public class CollaborativeMapTest extends TestVerticle {
     initialize();
     VertxPlatform.register(vertx);
 
-    Store store = new SimpleStore();
+    Store store = new MemoryStore();
     store.load("docId", new Handler<Document>() {
       @Override
       public void handle(Document doc) {

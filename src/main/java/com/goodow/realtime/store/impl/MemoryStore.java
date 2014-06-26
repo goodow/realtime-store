@@ -22,14 +22,14 @@ import com.goodow.realtime.store.Error;
 import com.goodow.realtime.store.Model;
 import com.goodow.realtime.store.Store;
 
-public class SimpleStore implements Store {
+public class MemoryStore implements Store {
   public final Bus bus;
 
-  public SimpleStore() {
+  public MemoryStore() {
     this(new SimpleBus());
   }
 
-  public SimpleStore(Bus bus) {
+  public MemoryStore(Bus bus) {
     this.bus = bus;
   }
 

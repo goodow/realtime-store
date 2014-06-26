@@ -65,7 +65,7 @@ public class DocumentBridge implements OperationSink<CollaborativeOperation> {
 
   public DocumentBridge(final Store store, String id, JsonArray components, JsonArray collaborators,
       final Handler<Error> errorHandler) {
-    this.store = store == null ? new SimpleStore() : store;
+    this.store = store == null ? new MemoryStore() : store;
     this.id = id;
     document = new DocumentImpl(this, errorHandler);
     model = document.getModel();
