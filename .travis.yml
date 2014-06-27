@@ -1,7 +1,6 @@
 language: java
 services:
   - redis-server
-  - elasticsearch
 
 before_install:
 - git config --global user.name "Goodow Bot"
@@ -9,6 +8,10 @@ before_install:
 - cd bower-realtime-store && git pull origin gh-pages && git remote set-url origin "https://${GH_TOKEN}@github.com/goodow/bower-realtime-store.git"
 - cd ${TRAVIS_BUILD_DIR}
 - wget -P target/travis https://raw.githubusercontent.com/goodow/maven/master/settings.xml
+- curl http://packages.elasticsearch.org/GPG-KEY-elasticsearch | sudo apt-key add -
+- echo "deb http://packages.elasticsearch.org/elasticsearch/1.2/debian stable main" | sudo tee -a /etc/apt/sources.list
+- sudo apt-get update -qq
+- sudo apt-get install elasticsearch && sudo service elasticsearch start
 
 script:
 - mvn test -B

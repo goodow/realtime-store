@@ -59,6 +59,27 @@
       <artifactId>realtime-channel</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>com.goodow.realtime</groupId>
+      <artifactId>realtime-json</artifactId>
+      <version>${project.version}</version>
+      <classifier>sources</classifier>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.goodow.realtime</groupId>
+      <artifactId>realtime-operation</artifactId>
+      <version>${project.version}</version>
+      <classifier>sources</classifier>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.goodow.realtime</groupId>
+      <artifactId>realtime-channel</artifactId>
+      <version>${project.version}</version>
+      <classifier>sources</classifier>
+      <scope>provided</scope>
+    </dependency>
 
     <dependency>
       <groupId>com.goodow.vertx</groupId>
@@ -222,11 +243,11 @@
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>gwt-maven-plugin</artifactId>
         <configuration>
-          <compileSourcesArtifacts>
-            <compileSourcesArtifact>com.goodow.realtime:realtime-json</compileSourcesArtifact>
-            <compileSourcesArtifact>com.goodow.realtime:realtime-operation</compileSourcesArtifact>
-            <compileSourcesArtifact>com.goodow.realtime:realtime-channel</compileSourcesArtifact>
-          </compileSourcesArtifacts>
+          <!--<compileSourcesArtifacts>-->
+            <!--<compileSourcesArtifact>com.goodow.realtime:realtime-json</compileSourcesArtifact>-->
+            <!--<compileSourcesArtifact>com.goodow.realtime:realtime-operation</compileSourcesArtifact>-->
+            <!--<compileSourcesArtifact>com.goodow.realtime:realtime-channel</compileSourcesArtifact>-->
+          <!--</compileSourcesArtifacts>-->
           <bindAddress>0.0.0.0</bindAddress>
           <precompile>false</precompile>
           <!--<extraJvmArgs>-Xmx2048M</extraJvmArgs>-->

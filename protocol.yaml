@@ -1,4 +1,4 @@
-# address: realtime/store
+# topic: realtime/store
 --- # Fetch document
 action: get
 id: docType/docId

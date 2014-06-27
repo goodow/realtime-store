@@ -94,7 +94,7 @@ public class DocumentBridge implements OperationSink<CollaborativeOperation> {
   @Override
   public void consume(CollaborativeOperation operation) {
     applyLocally(operation);
-    nonUndoableOp(operation);
+    undoManager.nonUndoableOp(operation);
   }
 
   public void createRoot() {
@@ -167,7 +167,8 @@ public class DocumentBridge implements OperationSink<CollaborativeOperation> {
                                    Json.createArray().push(component));
     applyLocally(operation);
     undoManager.checkpoint();
-    undoableOp(operation);
+    undoManager.undoableOp(operation);
+    mayUndoRedoStateChanged();
     outputSink.consume(operation);
   }
 
@@ -240,14 +241,5 @@ public class DocumentBridge implements OperationSink<CollaborativeOperation> {
       store.getBus().publishLocal(Constants.Topic.STORE + "/" + id + "/" + EventType.UNDO_REDO_STATE_CHANGED,
                                   event);
     }
-  }
-
-  private void nonUndoableOp(CollaborativeOperation op) {
-    undoManager.nonUndoableOp(op);
-  }
-
-  private void undoableOp(CollaborativeOperation op) {
-    undoManager.undoableOp(op);
-    mayUndoRedoStateChanged();
   }
 }
