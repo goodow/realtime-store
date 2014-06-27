@@ -1,4 +1,5 @@
 language: java
+jdk: oraclejdk8
 services:
   - redis-server
 
@@ -25,5 +26,4 @@ after_success:
 
 env:
   global:
-    - secure: Rh107B0itGe9obAmRKPpaUWjy7xja13lcHiCK3vHTmKkyBZBSS5hdwBzLFWUWekTyC+vjXD0Kah3QjYNAy3Q6JqpgAVwO8qnGjorV6sBSeIka6gG+iMY5auFGhfTGTKg7sUb9c3xD2FJ5t9/uI6xO+aN5tIrYXDP6P1WXkKBbcg=
-    - secure: NbOTUwc3Lc5kDuHH9XLpyTMkhyln4E3k1MZZNiv9HtteQPpZ/zuDieZiLz5+Iy2p7kL2JVHa1zas45ooUfMx2HYj7qQfUKijmCzWi4kaMVcuQOZI5uZYdLiUulaOWxqZ2dWB2hOw5Jr2jFExxGNLu1bofcbE07SBdZ5fbgBwIy8=
+    - secure: GKYojWRCCHigM4YaccAnRjHJMm/POM615suzeNX3/Bt4y2wh9gaOvboZs4ybjtQ0TUF+OVQOI3gETqDB+HvF9qsW8LmpRu5Eo05xoDkvtWFkZOd1JOTHwGlmAHYXLoINHHB6o4KgK62BNeUvxGI/anLh+IgZzXKJKZGdz1yJd+s=
