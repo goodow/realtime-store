@@ -49,7 +49,8 @@ public class PresenceHandler {
 
   public void start(final CountingCompletionHandler<Void> countDownLatch) {
     final EventBus eb = vertx.eventBus();
-    address = container.config().getString("address", Constants.Topic.STORE);
+    address = container.config().getObject("realtime_store", new JsonObject())
+        .getString("address", Constants.Topic.STORE);
     final Pattern pattern = Pattern.compile(address + "((/[^/]+){2})" + Constants.Topic.WATCH);
 
     countDownLatch.incRequired();
@@ -62,8 +63,8 @@ public class PresenceHandler {
           message.fail(-1, "id must be specified");
           return;
         }
-        Set<String> sessions =
-            vertx.sharedData().getSet(BridgeHook.getSessionsKey(address + "/" + id + Constants.Topic.WATCH));
+        Set<String> sessions = vertx.sharedData()
+            .getSet(BridgeHook.getSessionsKey(address + "/" + id + Constants.Topic.WATCH));
         if (body.containsField(WebSocketBus.SESSION)) {
           sessions.add(body.getString(WebSocketBus.SESSION));
         }
@@ -96,7 +97,8 @@ public class PresenceHandler {
         }
         JsonObject collaborator = getCollaborator(body.getString(WebSocketBus.SESSION));
         collaborator.putBoolean(Key.IS_JOINED, body.getBoolean(Key.IS_JOINED));
-        eb.publish(address + matcher.group(1) + Constants.Topic.PRESENCE + Constants.Topic.WATCH, collaborator);
+        eb.publish(address + matcher.group(1) + Constants.Topic.PRESENCE +
+                   Constants.Topic.WATCH, collaborator);
       }
     }, new Handler<AsyncResult<Void>>() {
       @Override

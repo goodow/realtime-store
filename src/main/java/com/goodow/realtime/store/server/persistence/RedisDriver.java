@@ -11,13 +11,15 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package com.goodow.realtime.store.server.impl;
+package com.goodow.realtime.store.server.persistence;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.goodow.realtime.store.channel.Constants;
 import com.goodow.realtime.store.channel.Constants.Key;
+import com.goodow.realtime.store.server.DeltaStorage;
+import com.goodow.realtime.store.server.impl.MemoryDeltaStorage;
 
 import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.AsyncResultHandler;
@@ -41,23 +43,35 @@ import java.util.logging.Logger;
 
 import io.vertx.java.redis.RedisClient;
 
+/**
+ * Redis driver for mutation storage.
+ *
+ * This driver is used to distribute mutation storage requests across multiple frontend servers.
+ * You don't need this if you are only using one server.
+ */
 @Singleton
-public class RedisDriver {
+class RedisDriver {
   private static final Logger log = Logger.getLogger(RedisDriver.class.getName());
+  private final Vertx vertx;
+  private final EventBus eb;
+  private final Container container;
   private final String address;
+  private final RedisClient redis;
+  @Inject private DeltaStorage storage;
+  @Inject private ElasticSearchDriver elasticSearch;
   private String getOpsScript;
   private String submitScript;
   private String setExpireScript;
-  @Inject private RedisClient redis;
-  @Inject private ElasticSearchDriver persistor;
-  private final Vertx vertx;
-  private final EventBus eb;
 
   @Inject
   RedisDriver(Vertx vertx, final Container container) {
     this.vertx = vertx;
     eb = vertx.eventBus();
-    address = container.config().getString("address", Constants.Topic.STORE);
+    this.container = container;
+    address = container.config().getObject("realtime_store", new JsonObject())
+        .getString("address", Constants.Topic.STORE);
+    redis = new RedisClient(eb, container.config().getObject("redis", new JsonObject())
+        .getString("address", "realtime/redis"));
   }
 
   public void atomicSubmit(final String docType, final String docId, final JsonObject opData,
@@ -70,7 +84,7 @@ public class RedisDriver {
       public void handle(AsyncResult<Void> ar) {
         if (ar.succeeded()) {
           // Great success. Before calling back, update the persistant oplog.
-          eb.publish(getDocIdChannel(docType, docId), opData);
+          eb.publish(MemoryDeltaStorage.getDocIdChannel(address, docType, docId), opData);
           writeOpToPersistence(docType, docId, opData, callback);
           return;
         }
@@ -96,7 +110,7 @@ public class RedisDriver {
         // from oplog redis and retry.
 
         // The data in redis has been dumped. Fill redis with data from the oplog and retry.
-        persistor.getVersion(docType, docId, new AsyncResultHandler<Long>() {
+        elasticSearch.getVersion(docType, docId, new AsyncResultHandler<Long>() {
           @Override
           public void handle(AsyncResult<Long> ar) {
             if (ar.failed()) {
@@ -123,14 +137,8 @@ public class RedisDriver {
     });
   }
 
-  /**
-   * Non inclusive - gets ops from [from, to). Ie, all relevant ops. If to is not defined (null or
-   * undefined) then it returns all ops. Due to certain race conditions, its possible that this
-   * misses operations at the end of the range. Callers have to deal with this case (semantically it
-   * should be the same as an operation being submitted right after a getOps call)
-   */
   public void getOps(final String docType, final String docId, final Long from, final Long to,
-      final AsyncResultHandler<JsonObject> callback) {
+                     final AsyncResultHandler<JsonObject> callback) {
     // First try to get the ops from redis.
     redisGetOps(docType, docId, from, to, new AsyncResultHandler<JsonObject>() {
       @Override
@@ -186,7 +194,7 @@ public class RedisDriver {
               }
               if (docVersion == null && to == null) {
                 // I'm going to do a sneaky cache here if its not in redis.
-                persistor.getVersion(docType, docId, new AsyncResultHandler<Long>() {
+                elasticSearch.getVersion(docType, docId, new AsyncResultHandler<Long>() {
                   @Override
                   public void handle(AsyncResult<Long> ar) {
                     if (ar.succeeded()) {
@@ -205,7 +213,7 @@ public class RedisDriver {
   }
 
   public void getVersion(final String docType, final String docId,
-      final AsyncResultHandler<Long> callback) {
+                         final AsyncResultHandler<Long> callback) {
     redis.get(getVersionKey(docType, docId), new Handler<Message<JsonObject>>() {
       @Override
       public void handle(Message<JsonObject> reply) {
@@ -220,7 +228,7 @@ public class RedisDriver {
           callback.handle(new DefaultFutureResult<Long>(Long.valueOf(docVersion)));
           return;
         }
-        persistor.getVersion(docType, docId, callback);
+        elasticSearch.getVersion(docType, docId, callback);
       }
     });
   }
@@ -228,7 +236,7 @@ public class RedisDriver {
   public void postSubmit(final String docType, String docId, final JsonObject opData,
       final JsonObject snapshot) {
     // Publish the change to the type name (not the docId!) for queries.
-    eb.publish(getDocTypeChannel(docType), opData);
+    eb.publish(MemoryDeltaStorage.getDocTypeChannel(address, docType), opData);
 
     // Set the TTL on the document now that it has been written to the oplog.
     redisSetExpire(docType, docId, opData.getLong(Key.VERSION), new AsyncResultHandler<Void>() {
@@ -242,7 +250,33 @@ public class RedisDriver {
     });
   }
 
-  public void start(final CountingCompletionHandler<Void> countDownLatch) {
+  protected String getOpsKey(String docType, String docId) {
+    return address + "/" + docType + "/" + docId + Constants.Topic.OPS;
+  }
+
+  protected String getSnapshotKey(String docType, String docId) {
+    return address + "/" + docType + "/" + docId;
+  }
+
+  protected String getVersionKey(String docType, String docId) {
+    return address + "/" + docType + "/" + docId + "/_v";
+  }
+
+  void start(final CountingCompletionHandler<Void> countDownLatch) {
+    countDownLatch.incRequired();
+    JsonObject config = container.config().getObject("redis", new JsonObject());
+    config.putString("address", config.getString("address", "realtime/redis"));
+    redis.deployModule(container, config, new AsyncResultHandler<String>() {
+      @Override
+      public void handle(AsyncResult<String> ar) {
+        if (ar.failed()) {
+          countDownLatch.failed(ar.cause());
+        } else {
+          countDownLatch.complete();
+        }
+      }
+    });
+
     countDownLatch.incRequired();
     vertx.fileSystem().readFile("scripts/getOps.lua", new Handler<AsyncResult<Buffer>>() {
       @Override
@@ -281,46 +315,28 @@ public class RedisDriver {
     });
   }
 
-  protected String getDocIdChannel(String docType, String docId) {
-    return address + "/" + docType + "/" + docId + Constants.Topic.WATCH;
-  }
-
-  protected String getDocTypeChannel(String docType) {
-    return address + "/" + docType + Constants.Topic.WATCH;
-  }
-
-  protected String getOpsKey(String docType, String docId) {
-    return address + "/" + docType + "/" + docId + Constants.Topic.OPS;
-  }
-
-  protected String getSnapshotKey(String docType, String docId) {
-    return address + "/" + docType + "/" + docId;
-  }
-
-  protected String getVersionKey(String docType, String docId) {
-    return address + "/" + docType + "/" + docId + "/_v";
-  }
-
   private void persistenceGetOps(String docType, String docId, final Long from, Long to,
       final AsyncResultHandler<JsonArray> callback) {
     if (to != null && to <= from) {
       callback.handle(new DefaultFutureResult<JsonArray>(new JsonArray()));
       return;
     }
-    persistor.getOps(docType, docId, from == null ? 0 : from, to == null ? -1 : to,
-        new AsyncResultHandler<JsonArray>() {
-          @Override
-          public void handle(AsyncResult<JsonArray> ar) {
-            if (ar.succeeded()) {
-              JsonArray ops = ar.result();
-              if (ops.size() > 0
-                  && ops.<JsonObject> get(0).getLong(Key.VERSION).longValue() != from) {
-                throw new RuntimeException("Oplog is returning incorrect ops");
-              }
-            }
-            callback.handle(ar);
-          }
-        });
+    elasticSearch.getOps(docType, docId, from == null ? 0 : from, to == null ? -1 : to,
+                               new AsyncResultHandler<JsonArray>() {
+                                 @Override
+                                 public void handle(AsyncResult<JsonArray> ar) {
+                                   if (ar.succeeded()) {
+                                     JsonArray ops = ar.result();
+                                     if (ops.size() > 0
+                                         && ops.<JsonObject>get(0).getLong(Key.VERSION).longValue()
+                                            != from) {
+                                       throw new RuntimeException(
+                                           "Oplog is returning incorrect ops");
+                                     }
+                                   }
+                                   callback.handle(ar);
+                                 }
+                               });
   }
 
   /**
@@ -471,7 +487,7 @@ public class RedisDriver {
    */
   private void writeOpToPersistence(final String docType, final String docId,
       final JsonObject opData, final AsyncResultHandler<Void> callback) {
-    persistor.getVersion(docType, docId, new AsyncResultHandler<Long>() {
+    elasticSearch.getVersion(docType, docId, new AsyncResultHandler<Long>() {
       @Override
       public void handle(AsyncResult<Long> ar) {
         if (ar.failed()) {
@@ -481,7 +497,7 @@ public class RedisDriver {
         long docVersion = ar.result().longValue();
         long opVersion = opData.getLong(Key.VERSION).longValue();
         if (docVersion == opVersion) {
-          persistor.writeOp(docType, docId, opData, callback);
+          storage.writeOp(docType, docId, opData, callback);
         } else {
           assert docVersion < opVersion;
           // Its possible (though unlikely) that ops will be missing from the oplog if the redis
@@ -500,16 +516,17 @@ public class RedisDriver {
                   new CountingCompletionHandler<Void>((VertxInternal) vertx, ops.size());
               countDownLatch.setHandler(callback);
               for (Object op : ops) {
-                persistor.writeOp(docType, docId, (JsonObject) op, new AsyncResultHandler<Void>() {
-                  @Override
-                  public void handle(AsyncResult<Void> ar) {
-                    if (ar.failed()) {
-                      countDownLatch.failed(ar.cause());
-                    } else {
-                      countDownLatch.complete();
-                    }
-                  }
-                });
+                storage.writeOp(docType, docId, (JsonObject) op,
+                                            new AsyncResultHandler<Void>() {
+                                              @Override
+                                              public void handle(AsyncResult<Void> ar) {
+                                                if (ar.failed()) {
+                                                  countDownLatch.failed(ar.cause());
+                                                } else {
+                                                  countDownLatch.complete();
+                                                }
+                                              }
+                                            });
               }
             }
           });

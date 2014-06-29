@@ -18,6 +18,7 @@ import com.google.inject.Inject;
 import com.goodow.realtime.channel.impl.WebSocketBus;
 import com.goodow.realtime.store.channel.Constants;
 import com.goodow.realtime.store.channel.Constants.Key;
+import com.goodow.realtime.store.server.DeltaStorage;
 import com.goodow.realtime.store.server.StoreModule;
 
 import org.vertx.java.core.AsyncResult;
@@ -33,15 +34,15 @@ import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.platform.Container;
 
 public class SnapshotHandler {
-  @Inject private ElasticSearchDriver persistor;
-  @Inject private RedisDriver redis;
-  @Inject private OpSubmitter opSubmitter;
   @Inject private Vertx vertx;
   @Inject private Container container;
+  @Inject private DeltaStorage storage;
+  @Inject private OperationProcessor processor;
   private String address;
 
   public void start(final CountingCompletionHandler<Void> countDownLatch) {
-    address = container.config().getString("address", Constants.Topic.STORE);
+    address = container.config().getObject("realtime_store", new JsonObject())
+        .getString("address", Constants.Topic.STORE);
 
     countDownLatch.incRequired();
     vertx.eventBus().registerHandler(address, new Handler<Message<JsonObject>>() {
@@ -53,7 +54,7 @@ public class SnapshotHandler {
           message.fail(-1, "id must be specified");
           return;
         }
-        String[] typeAndId = OpsHandler.getTypeAndId(id);
+        String[] typeAndId = OperationHandler.getTypeAndId(id);
         String docType = typeAndId[0];
         String docId = typeAndId[1];
         String action = body.getString("action", "get");
@@ -102,7 +103,7 @@ public class SnapshotHandler {
         resp.reply(toRtn.putArray(Key.COLLABORATORS, (JsonArray)results[1]));
       }
     });
-    persistor.getSnapshot(docType, docId, new AsyncResultHandler<JsonObject>() {
+    storage.getSnapshot(docType, docId, new AsyncResultHandler<JsonObject>() {
       @Override
       public void handle(AsyncResult<JsonObject> ar) {
         if (ar.failed()) {
@@ -117,8 +118,8 @@ public class SnapshotHandler {
     if (sessionId != null) {
       msg.putString(WebSocketBus.SESSION, sessionId);
     }
-    vertx.eventBus().sendWithTimeout(address + Constants.Topic.PRESENCE, msg, StoreModule.REPLY_TIMEOUT,
-                                     new AsyncResultHandler<Message<JsonArray>>() {
+    vertx.eventBus().sendWithTimeout(address + Constants.Topic.PRESENCE, msg,
+        StoreModule.REPLY_TIMEOUT, new AsyncResultHandler<Message<JsonArray>>() {
           @Override
           public void handle(AsyncResult<Message<JsonArray>> ar) {
             if (ar.failed()) {
@@ -132,7 +133,7 @@ public class SnapshotHandler {
   }
 
   private void doHead(String docType, String docId, final Message<JsonObject> resp) {
-    redis.getVersion(docType, docId, new AsyncResultHandler<Long>() {
+    storage.getVersion(docType, docId, new AsyncResultHandler<Long>() {
       @Override
       public void handle(AsyncResult<Long> ar) {
         if (ar.failed()) {
@@ -147,7 +148,7 @@ public class SnapshotHandler {
 
   private void doPost(String docType, String docId, JsonObject opData,
       final Message<JsonObject> resp) {
-    opSubmitter.submit(docType, docId, opData, new AsyncResultHandler<JsonObject>() {
+    processor.submit(docType, docId, opData, new AsyncResultHandler<JsonObject>() {
       @Override
       public void handle(AsyncResult<JsonObject> ar) {
         if (ar.failed()) {

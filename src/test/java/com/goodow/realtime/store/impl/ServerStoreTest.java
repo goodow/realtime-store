@@ -44,13 +44,13 @@ public class ServerStoreTest extends TestVerticle {
   public void start() {
     initialize();
 
-    JsonObject config =
-        new JsonObject().putObject(
-            "realtime_search",
-            new JsonObject().putArray("transportAddresses",
-                new JsonArray().add(new JsonObject().putString("host", "localhost"))).putBoolean(
-                "client_transport_sniff", false)).putObject("redis",
-            new JsonObject().putString("host", "localhost"));
+    JsonObject realtimeStore = new JsonObject().putString("storage", "redis-elasticsearch");
+    JsonObject elasticsearch = new JsonObject().putArray("transportAddresses",
+        new JsonArray().add(new JsonObject().putString("host", "localhost")))
+            .putBoolean("client_transport_sniff", false);
+    JsonObject redis = new JsonObject().putString("host", "localhost");
+    JsonObject config = new JsonObject().putObject("realtime_store", realtimeStore)
+        .putObject("realtime_search", elasticsearch).putObject("redis", redis);
     container.deployModule(System.getProperty("vertx.modulename"), config,
         new AsyncResultHandler<String>() {
           @Override

@@ -52,7 +52,7 @@ isJoined: false
 sessionId: sid
 userId: ANONYMOUS_uid
 displayName: Anonymous Slow loris
-color: #58B442
+color: "#58B442"
 isAnonymous: true
 photoUrl: https://ssl.gstatic.com/docs/common/profile/slowloris_lg.png
 ...

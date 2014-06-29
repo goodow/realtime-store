@@ -3,18 +3,22 @@ realtime-store [![Build Status](https://travis-ci.org/goodow/realtime-store.svg?
 
 Google Docs–style collaboration via the use of operational transforms
 
+**See [Wiki](https://github.com/goodow/realtime-store/wiki) for more information.**
+
+**Visit [Google groups](https://groups.google.com/forum/#!forum/goodow-realtime) for discussions and announcements**
+
+**Check out the [playground live instance](http://realtimeplayground.goodow.com/).**
+
+Credits:
+
+[LIVE DB](https://github.com/share/livedb) for implementation and documents of database api.
+
 ## Build from source and launch server
 
 ### Pre-requisites
 - [JDK 8+](https://jdk8.java.net/download.html)
 - [Apache Maven](http://maven.apache.org/download.html)
 - [Git](https://help.github.com/articles/set-up-git)
-- [ElasticSearch](http://www.elasticsearch.org/download/)
-- [Redis](http://redis.io/download)
-
-### Installation
-- Install [ElasticSearch](http://www.elasticsearch.org/download/) with default configuration
-- Install [Redis](http://redis.io/download) with default configuration
 
 ### Check out sources and run the server with Maven
 ```bash
@@ -26,7 +30,6 @@ mvn clean package vertx:runMod
 ### Configuration
 https://github.com/goodow/realtime-store/blob/master/src/main/resources/store.conf
 
-**See https://github.com/goodow/realtime-store/wiki for more information.**
 
 ## Clients
 
