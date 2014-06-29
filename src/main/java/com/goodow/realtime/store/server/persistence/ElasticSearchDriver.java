@@ -11,9 +11,10 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package com.goodow.realtime.store.server.impl;
+package com.goodow.realtime.store.server.persistence;
 
 import com.goodow.realtime.store.channel.Constants.Key;
+import com.goodow.realtime.store.server.DeltaStorage;
 import com.goodow.realtime.store.server.StoreModule;
 
 import org.vertx.java.core.AsyncResult;
@@ -22,6 +23,7 @@ import org.vertx.java.core.Handler;
 import org.vertx.java.core.Vertx;
 import org.vertx.java.core.eventbus.EventBus;
 import org.vertx.java.core.eventbus.Message;
+import org.vertx.java.core.impl.CountingCompletionHandler;
 import org.vertx.java.core.impl.DefaultFutureResult;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
@@ -31,21 +33,23 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-public class ElasticSearchDriver {
+class ElasticSearchDriver {
   private static final String DEFAULT_SEARCH_ADDRESS = "realtime/search";
   private static final String INDEX = "realtime";
   private static final String _SNAPSHOT = "_snapshot";
   private static final String _OP = "_op";
   private static final String DOC_ID = "docId";
-  static final String ROOT = "root";
 
   private final String address;
   private final EventBus eb;
+  private final Container container;
 
   @Inject
   ElasticSearchDriver(Vertx vertx, final Container container) {
     eb = vertx.eventBus();
-    address = container.config().getString("persistor_address", DEFAULT_SEARCH_ADDRESS);
+    this.container = container;
+    address = container.config().getObject("realtime_search", new JsonObject())
+        .getString("address", DEFAULT_SEARCH_ADDRESS);
   }
 
   public void getOps(String docType, String docId, long from, long to,
@@ -92,9 +96,6 @@ public class ElasticSearchDriver {
         });
   }
 
-  /**
-   * callback called with {v:, snapshot:[], root:{}} or null
-   */
   public void getSnapshot(String docType, final String docId,
       final AsyncResultHandler<JsonObject> callback) {
     JsonObject get =
@@ -170,13 +171,10 @@ public class ElasticSearchDriver {
         });
   }
 
-  /**
-   * @param snapshotData {v:, snapshot:[], root:{}}
-   */
   public void writeSnapshot(String docType, String docId, JsonObject snapshotData,
       final AsyncResultHandler<Void> callback) {
-    JsonObject source =
-        snapshotData.getObject(ROOT).putArray(_SNAPSHOT, snapshotData.getArray("snapshot"));
+    JsonObject source = snapshotData.getObject(DeltaStorage.ROOT)
+        .putArray(_SNAPSHOT, snapshotData.getArray("snapshot"));
     JsonObject index =
         new JsonObject().putString("action", "index").putString("_index", INDEX).putString("_type",
             docType).putString("_id", docId).putString("version_type", "external").putNumber(
@@ -198,12 +196,29 @@ public class ElasticSearchDriver {
     return docType + "_ops";
   }
 
+  void start(final CountingCompletionHandler<Void> countDownLatch) {
+    countDownLatch.incRequired();
+    container.deployModule("com.goodow.realtime~realtime-search~0.5.5-SNAPSHOT",
+                           container.config().getObject("realtime_search", new JsonObject()),
+                           new AsyncResultHandler<String>() {
+      @Override
+      public void handle(AsyncResult<String> ar) {
+        if (ar.failed()) {
+          countDownLatch.failed(ar.cause());
+        } else {
+          countDownLatch.complete();
+        }
+      }
+    });
+  }
+
   @SuppressWarnings("unchecked")
   private JsonObject castToSnapshotData(JsonObject body) {
     JsonObject source = body.getObject("_source");
-    return !body.getBoolean("found") ? null : new JsonObject().putNumber(Key.VERSION,
-        body.getLong("_version")).putArray("snapshot",
-        new JsonArray((List<Object>) source.removeField(_SNAPSHOT))).putObject(ROOT, source);
+    return !body.getBoolean("found") ? null :
+        new JsonObject().putNumber(Key.VERSION, body.getLong("_version"))
+        .putArray("snapshot", new JsonArray((List<Object>) source.removeField(_SNAPSHOT)))
+        .putObject(DeltaStorage.ROOT, source);
   }
 
   private void handleVoidCallback(final AsyncResultHandler<Void> callback,

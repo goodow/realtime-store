@@ -15,8 +15,9 @@ package com.goodow.realtime.store.server.impl;
 
 import com.google.inject.Inject;
 
-import com.goodow.realtime.store.channel.Constants;
 import com.goodow.realtime.store.channel.Constants.Key;
+import com.goodow.realtime.store.channel.Constants.Topic;
+import com.goodow.realtime.store.server.DeltaStorage;
 
 import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.AsyncResultHandler;
@@ -28,7 +29,7 @@ import org.vertx.java.core.impl.CountingCompletionHandler;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.platform.Container;
 
-public class OpsHandler {
+public class OperationHandler {
   static String[] getTypeAndId(String id) {
     int idx = id.indexOf('/');
     boolean hasType = idx != -1 && idx != id.length() - 1;
@@ -36,13 +37,14 @@ public class OpsHandler {
         "test", id};
   }
 
-  @Inject private RedisDriver redis;
   @Inject private Vertx vertx;
   @Inject private Container container;
+  @Inject private DeltaStorage storage;
   private String address;
 
   public void start(final CountingCompletionHandler<Void> countDownLatch) {
-    address = container.config().getString("address", Constants.Topic.STORE) + Constants.Topic.OPS;
+    address = container.config().getObject("realtime_store", new JsonObject())
+                  .getString("address", Topic.STORE) + Topic.OPS;
 
     countDownLatch.incRequired();
     vertx.eventBus().registerHandler(address, new Handler<Message<JsonObject>>() {
@@ -79,7 +81,7 @@ public class OpsHandler {
       resp.fail(-1, "Invalid from field in getOps");
       return;
     }
-    redis.getOps(docType, docId, from, to, new AsyncResultHandler<JsonObject>() {
+    storage.getOps(docType, docId, from, to, new AsyncResultHandler<JsonObject>() {
       @Override
       public void handle(AsyncResult<JsonObject> ar) {
         if (ar.failed()) {

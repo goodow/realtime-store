@@ -17,9 +17,8 @@ import com.google.inject.Inject;
 
 import com.alienos.guice.GuiceVerticleHelper;
 import com.alienos.guice.GuiceVertxBinding;
-import com.goodow.realtime.store.server.impl.OpsHandler;
+import com.goodow.realtime.store.server.impl.OperationHandler;
 import com.goodow.realtime.store.server.impl.PresenceHandler;
-import com.goodow.realtime.store.server.impl.RedisDriver;
 import com.goodow.realtime.store.server.impl.SnapshotHandler;
 
 import org.vertx.java.busmods.BusModBase;
@@ -29,12 +28,13 @@ import org.vertx.java.core.Future;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.impl.CountingCompletionHandler;
 import org.vertx.java.core.impl.VertxInternal;
+import org.vertx.java.core.json.JsonObject;
 
 @GuiceVertxBinding(modules = {StoreModule.class})
 public class StoreVerticle extends BusModBase {
-  @Inject private RedisDriver redisDriver;
+  @Inject private DeltaStorage storage;
   @Inject private SnapshotHandler snapshotHandler;
-  @Inject private OpsHandler opsHandler;
+  @Inject private OperationHandler operationHandler;
   @Inject private PresenceHandler presenceHandler;
 
   @Override
@@ -43,7 +43,7 @@ public class StoreVerticle extends BusModBase {
     super.start();
 
     final CountingCompletionHandler<Void> countDownLatch =
-        new CountingCompletionHandler<Void>((VertxInternal) vertx, 1);
+        new CountingCompletionHandler<Void>((VertxInternal) vertx, 2);
     countDownLatch.setHandler(new Handler<AsyncResult<Void>>() {
       @Override
       public void handle(AsyncResult<Void> ar) {
@@ -65,10 +65,14 @@ public class StoreVerticle extends BusModBase {
       }
     };
 
-    redisDriver.start(countDownLatch);
+    storage.start(countDownLatch);
     snapshotHandler.start(countDownLatch);
-    opsHandler.start(countDownLatch);
+    operationHandler.start(countDownLatch);
     presenceHandler.start(countDownLatch);
-    container.deployVerticle(RestVerticle.class.getName(), config, doneHandler);
+    container.deployVerticle(RestVerticle.class.getName(),
+        getOptionalObjectConfig("realtime_store", new JsonObject()), doneHandler);
+
+    container.deployModule("com.goodow.realtime~realtime-channel~0.5.5-SNAPSHOT",
+        getOptionalObjectConfig("realtime_channel", new JsonObject()), doneHandler);
   }
 }

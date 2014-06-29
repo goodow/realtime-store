@@ -85,6 +85,10 @@
       <groupId>com.goodow.vertx</groupId>
       <artifactId>mod-guice</artifactId>
     </dependency>
+    <dependency>
+      <groupId>com.google.inject.extensions</groupId>
+      <artifactId>guice-multibindings</artifactId>
+    </dependency>
     
     <!-- Allow vertx to use these mods in local maven repository -->
     <dependency>

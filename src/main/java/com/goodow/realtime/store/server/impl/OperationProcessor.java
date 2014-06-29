@@ -1,11 +1,11 @@
 /*
  * Copyright 2014 Goodow.com
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License
  * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
  * or implied. See the License for the specific language governing permissions and limitations under
@@ -21,6 +21,7 @@ import com.goodow.realtime.operation.Transformer;
 import com.goodow.realtime.operation.impl.CollaborativeOperation;
 import com.goodow.realtime.store.channel.Constants.Key;
 import com.goodow.realtime.store.impl.DocumentBridge;
+import com.goodow.realtime.store.server.DeltaStorage;
 
 import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.AsyncResultHandler;
@@ -33,19 +34,20 @@ import org.vertx.java.core.json.JsonObject;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class OpSubmitter {
-  private static final Logger log  = Logger.getLogger(OpSubmitter.class.getName());
-  @Inject private RedisDriver redis;
-  @Inject private ElasticSearchDriver persistor;
+public class OperationProcessor {
+  private static final Logger log  = Logger.getLogger(OperationProcessor.class.getName());
   @Inject private Transformer<CollaborativeOperation> transformer;
+  @Inject private DeltaStorage storage;
 
   /**
-   * opData should probably contain a v: field (if it doesn't, it defaults to the current version).
-   * 
-   * callback called with {v:, ops:, snapshot:}
+   * Submit an operation on the named docType/docId document.
+   *
+   * @param opData should probably contain a v: field (if it doesn't, it defaults to the current
+   *               version).
+   * @param callback called with {v:, ops:[], snapshot:{}}
    */
   public void submit(String docType, String docId, final JsonObject opData,
-      final AsyncResultHandler<JsonObject> callback) {
+                     final AsyncResultHandler<JsonObject> callback) {
     retrySubmit(new JsonArray(), docType, docId, createOperation(opData), opData
         .getLong(Key.VERSION), callback);
   }
@@ -64,7 +66,7 @@ public class OpSubmitter {
 
   @SuppressWarnings("unchecked")
   private DocumentBridge createSnapshot(final String docType, final String docId,
-      JsonObject snapshotData) {
+                                        JsonObject snapshotData) {
     JreJsonArray snapshot =
         snapshotData.containsField(Key.SNAPSHOT) ? new JreJsonArray(snapshotData.getArray(
             Key.SNAPSHOT).toList()) : null;
@@ -80,12 +82,12 @@ public class OpSubmitter {
    * transform data on the server at this point.
    */
   private void doSubmit(final JsonArray transformedOps, final String docType,
-      final String docId, final CollaborativeOperation operation, final long applyAt,
-      final DocumentBridge snapshot, final AsyncResultHandler<JsonObject> callback) {
+                        final String docId, final CollaborativeOperation operation, final long applyAt,
+                        final DocumentBridge snapshot, final AsyncResultHandler<JsonObject> callback) {
     final JsonObject opData =
         new JsonObject(((JreJsonObject) operation.toJson()).toNative()).putNumber(Key.VERSION,
-            applyAt);
-    redis.atomicSubmit(docType, docId, opData, new AsyncResultHandler<Void>() {
+                                                                                  applyAt);
+    storage.atomicSubmit(docType, docId, opData, new AsyncResultHandler<Void>() {
       @Override
       public void handle(AsyncResult<Void> ar) {
         if (ar.failed()) {
@@ -104,8 +106,8 @@ public class OpSubmitter {
         final JsonObject root = new JsonObject(((JreJsonObject) snapshot.toJson()).toNative());
         JsonObject snapData =
             new JsonObject().putNumber(Key.VERSION, applyAt + 1).putObject(
-                ElasticSearchDriver.ROOT, root).putArray(Key.SNAPSHOT,
-                new JsonArray(((JreJsonArray) snapshot.toSnapshot()).toNative()));
+                DeltaStorage.ROOT, root).putArray(Key.SNAPSHOT,
+                    new JsonArray(((JreJsonArray) snapshot.toSnapshot()).toNative()));
         writeSnapshotAfterSubmit(docType, docId, snapData, opData, new AsyncResultHandler<Void>() {
           @Override
           public void handle(AsyncResult<Void> ar) {
@@ -119,7 +121,7 @@ public class OpSubmitter {
 
             // postSubmit is for things like publishing the operation over pubsub. We should
             // probably make this asyncronous.
-            redis.postSubmit(docType, docId, opData, root);
+            storage.postSubmit(docType, docId, opData, root);
             log.finest("Wrote snapshot @" + (applyAt + 1));
             callback.handle(new DefaultFutureResult<JsonObject>(new JsonObject().putNumber(
                 Key.VERSION, applyAt).putArray(Key.OPS, transformedOps).putObject(
@@ -136,7 +138,7 @@ public class OpSubmitter {
    */
   private void lazyFetch(String docType, String docId,
                          final AsyncResultHandler<JsonObject> callback) {
-    persistor.getSnapshot(docType, docId, new AsyncResultHandler<JsonObject>() {
+    storage.getSnapshot(docType, docId, new AsyncResultHandler<JsonObject>() {
       @Override
       public void handle(AsyncResult<JsonObject> ar) {
         if (ar.succeeded() && ar.result() == null) {
@@ -150,8 +152,8 @@ public class OpSubmitter {
   }
 
   private void retrySubmit(final JsonArray transformedOps, final String docType,
-      final String docId, final CollaborativeOperation operation, final Long applyAt,
-      final AsyncResultHandler<JsonObject> callback) {
+                           final String docId, final CollaborativeOperation operation, final Long applyAt,
+                           final AsyncResultHandler<JsonObject> callback) {
     // First we'll get a doc snapshot. This wouldn't be necessary except that we need to check that
     // the operation is valid against the current document before accepting it.
     lazyFetch(docType, docId, new AsyncResultHandler<JsonObject>() {
@@ -166,7 +168,7 @@ public class OpSubmitter {
         // Get all operations that might be relevant. We'll float the snapshot and the operation up
         // to the most recent version of the document, then try submitting.
         final long from = (applyAt != null && applyAt < snapshotVersion) ? applyAt : snapshotVersion;
-        redis.getOps(docType, docId, from, null, new AsyncResultHandler<JsonObject>() {
+        storage.getOps(docType, docId, from, null, new AsyncResultHandler<JsonObject>() {
           @Override
           public void handle(AsyncResult<JsonObject> ar) {
             if (ar.failed()) {
@@ -217,11 +219,11 @@ public class OpSubmitter {
             }
             CollaborativeOperation transformed = operation;
             if (applyAt != null && ops.size() > 0
-                && applyAt <= ops.<JsonObject> get(ops.size() - 1).getLong(Key.VERSION)) {
+                && applyAt <= ops.<JsonObject>get(ops.size() - 1).getLong(Key.VERSION)) {
               try {
                 CollaborativeOperation applied =
                     transformer.compose(createOperations(ops, (int) (applyAt - ops
-                        .<JsonObject> get(0).getLong(Key.VERSION)), ops.size()));
+                        .<JsonObject>get(0).getLong(Key.VERSION)), ops.size()));
                 transformed = operation.transform(applied, false);
               } catch (Exception e) {
                 log.log(Level.WARNING, "Failed to transform operation", e);
@@ -248,7 +250,7 @@ public class OpSubmitter {
   }
 
   private void writeSnapshotAfterSubmit(String docType, String docId, JsonObject snapshotData,
-      JsonObject opData, AsyncResultHandler<Void> callback) {
-    persistor.writeSnapshot(docType, docId, snapshotData, callback);
+                                        JsonObject opData, AsyncResultHandler<Void> callback) {
+    storage.writeSnapshot(docType, docId, snapshotData, callback);
   }
 }

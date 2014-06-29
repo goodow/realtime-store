@@ -17,17 +17,23 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
+import com.google.inject.multibindings.MapBinder;
 
 import com.alienos.guice.VertxModule;
 import com.goodow.realtime.channel.server.impl.VertxPlatform;
 import com.goodow.realtime.operation.Transformer;
 import com.goodow.realtime.operation.impl.CollaborativeOperation;
 import com.goodow.realtime.operation.impl.CollaborativeTransformer;
+import com.goodow.realtime.store.server.impl.MemoryDeltaStorage;
+import com.goodow.realtime.store.server.persistence.RedisElasticSearchStorage;
 
 import org.vertx.java.core.Vertx;
+import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.platform.Container;
 
-import io.vertx.java.redis.RedisClient;
+import java.util.Map;
+
+import javax.inject.Provider;
 
 public class StoreModule extends AbstractModule implements VertxModule {
   public static final long REPLY_TIMEOUT = 15 * 1000;
@@ -50,14 +56,18 @@ public class StoreModule extends AbstractModule implements VertxModule {
 
     bind(new TypeLiteral<Transformer<CollaborativeOperation>>() {
     }).to(CollaborativeTransformer.class);
+
+    MapBinder<String, DeltaStorage> storages =
+        MapBinder.newMapBinder(binder(), String.class, DeltaStorage.class);
+    storages.addBinding("memory").to(MemoryDeltaStorage.class);
+    storages.addBinding("redis-elasticsearch").to(RedisElasticSearchStorage.class);
   }
 
   @Provides
   @Singleton
-  RedisClient provideRedisClient() {
-    RedisClient redis =
-        new RedisClient(vertx.eventBus(), container.config().getString("redis_address",
-            "realtime/redis"));
-    return redis;
+  DeltaStorage provideMutationStorage (Map<String, Provider<DeltaStorage>> storages) {
+    String storage = container.config().getObject("realtime_store", new JsonObject())
+            .getString("storage", "memory");
+    return storages.get(storage).get();
   }
 }
