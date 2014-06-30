@@ -102,4 +102,5 @@ Model.root:
 --- # Map type
 Model.root:
   - fieldName:
-      - mapKey: mapValue...
+      - mapKey: mapValue
+...
