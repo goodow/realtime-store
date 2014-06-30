@@ -95,7 +95,7 @@ Model.root:
   - fieldName: listValue
     cursor:
       id: gdeDx5fqBF7DF4cX6
-      referencedObjectId: gdeJpnNvUPfDk9-Qs
+      referencedObjectId: gdeJpnNvUPfDk9
       index: 1
       canBeDeleted: true
 
