@@ -88,6 +88,7 @@
     <dependency>
       <groupId>com.google.inject.extensions</groupId>
       <artifactId>guice-multibindings</artifactId>
+      <optional>true</optional>
     </dependency>
     
     <!-- Allow vertx to use these mods in local maven repository -->

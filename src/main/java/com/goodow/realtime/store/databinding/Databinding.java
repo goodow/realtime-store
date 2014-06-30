@@ -31,8 +31,8 @@ public class Databinding {
    * @return A binding registration that can be later used to remove the binding.
    * @throws AlreadyBoundError
    */
-  public static Binding bindString(CollaborativeString string, Object textInputElement) {
-    // throws AlreadyBoundError {
+  public static Binding bindString(CollaborativeString string, Object textInputElement)
+    throws AlreadyBoundError {
     return null;
   }
 }

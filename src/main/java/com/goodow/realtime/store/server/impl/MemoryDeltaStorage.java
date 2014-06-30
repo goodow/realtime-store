@@ -40,9 +40,9 @@ import java.util.Map;
  * This is an in-memory delta storage.
  *
  * Its main use is as an API example for people implementing storage adaptors.
- * This storage is fully functional, except it stores all documents & operations forever in memory.
- * As such, memory usage will grow without bound, it doesn't scale across multiple node processes
- * and you'll lose all your data if the server restarts. Use with care.
+ * This storage is fully functional, except it stores all documents and operations forever in
+ * memory. As such, memory usage will grow without bound, it doesn't scale across multiple node
+ * processes and you'll lose all your data if the server restarts. Use with care.
  */
 public class MemoryDeltaStorage implements DeltaStorage {
   public static String getDocIdChannel(String prefix, String docType, String docId) {

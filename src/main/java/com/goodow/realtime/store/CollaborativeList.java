@@ -174,14 +174,14 @@ public interface CollaborativeList extends CollaborativeObject {
   void set(int index, Object value);
 
   /**
-   * @return The number of entries in the list. Assign to this field to reduce the size of the list.
-   *         Note that the length given must be < or equal to the current size. The length of a list
-   *         cannot be extended in this way.
+   * @return The number of entries in the list.
    */
   int length();
 
   /**
-   * @see #length()
+   * Assign to this field to reduce the size of the list. Note that the length given must be less
+   * than or equal to the current size. The length of a list cannot be extended in this way.
+   *
    * @param length the new length of the array
    * @exception ArrayIndexOutOfBoundsException
    */

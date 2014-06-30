@@ -17,9 +17,13 @@ package com.goodow.realtime.store.databinding;
  * An error that is thrown when attempting to bind a DOM element which has already been bound to a
  * collaborative value.
  */
-public class AlreadyBoundError {
+public class AlreadyBoundError extends Error {
   private final Object domElement;
   private String name;
+
+  public AlreadyBoundError() {
+    this(null);
+  }
 
   /**
    * @param domElement The DOM element that was already bound.
