@@ -83,3 +83,23 @@ id: docType/docId
 --- # topic: @realtime/store/docType/docId/objectId/event_type Event publish
 *com.goodow.realtime.store.BaseModelEvent
 ...
+
+
+# id: docType/docId
+--- # String type
+Model.root:
+  - fieldName: stringValue
+
+--- # List type
+Model.root:
+  - fieldName: listValue
+    cursor:
+      id: gdeDx5fqBF7DF4cX6
+      referencedObjectId: gdeJpnNvUPfDk9-Qs
+      index: 1
+      canBeDeleted: true
+
+--- # Map type
+Model.root:
+  - fieldName:
+      - mapKey: mapValue
