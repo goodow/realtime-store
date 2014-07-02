@@ -74,40 +74,16 @@ class IndexReferenceImpl extends CollaborativeObjectImpl implements IndexReferen
   protected void consume(final String userId, final String sessionId,
       OperationComponent<?> component) {
     ReferenceShiftedComponent op = (ReferenceShiftedComponent) component;
-    assert op.oldIndex == index();
+    assert op.oldIndex == index() || index() == -1;
     referencedObjectId = op.referencedObjectId;
     index = op.newIndex;
     canBeDeleted = op.canBeDeleted;
-    if (op.oldIndex != -1) {
+    if (op.oldIndex != -1 && op.oldIndex != op.newIndex) {
       ReferenceShiftedEvent event =
           new ReferenceShiftedEventImpl(event(sessionId, userId).set("oldIndex", op.oldIndex).set(
               "newIndex", op.newIndex));
       fireEvent(event);
     }
-  }
-
-  void setIndex(boolean isInsert, int index, int length, String sessionId, String userId) {
-    int cursor = index();
-    if (cursor < index) {
-      return;
-    }
-    int newIndex = -2;
-    if (isInsert) {
-      newIndex = cursor + length;
-    } else {
-      if (cursor < index + length) {
-        if (canBeDeleted) {
-          newIndex = -1;
-        } else {
-          newIndex = index;
-        }
-      } else {
-        newIndex = cursor - length;
-      }
-    }
-    ReferenceShiftedComponent op =
-        new ReferenceShiftedComponent(id, referencedObjectId, newIndex, canBeDeleted, cursor);
-    consume(userId, sessionId, op);
   }
 
   @Override

@@ -22,6 +22,7 @@ import com.goodow.realtime.json.JsonArray.ListIterator;
 import com.goodow.realtime.json.JsonObject;
 import com.goodow.realtime.operation.create.CreateComponent;
 import com.goodow.realtime.operation.cursor.ReferenceShiftedComponent;
+import com.goodow.realtime.operation.list.AbstractListComponent;
 import com.goodow.realtime.operation.list.json.JsonInsertComponent;
 import com.goodow.realtime.operation.list.string.StringInsertComponent;
 import com.goodow.realtime.operation.map.json.JsonMapComponent;
@@ -262,18 +263,24 @@ class ModelImpl implements Model {
     endCompoundOperation();
   }
 
-  void setIndexReferenceIndex(String referencedObject, final boolean isInsert, final int index,
-      final int length, final String sessionId, final String userId) {
+  void transformCursor(final AbstractListComponent op, final String userId,
+                       final String sessionId) {
     if (indexReferences == null) {
       return;
     }
-    JsonArray cursors = indexReferences.getArray(referencedObject);
+    JsonArray cursors = indexReferences.getArray(op.id);
     if (cursors != null) {
       cursors.forEach(new ListIterator<String>() {
         @Override
         public void call(int idx, String indexReferenceId) {
           IndexReferenceImpl indexReference = getObject(indexReferenceId);
-          indexReference.setIndex(isInsert, index, length, sessionId, userId);
+          int currentIndex = indexReference.index();
+          int newIndex = op.transformIndexReference(currentIndex, true,
+                                                    indexReference.canBeDeleted());
+          if (newIndex != currentIndex) {
+            indexReference.consume(userId, sessionId, new ReferenceShiftedComponent(
+                indexReferenceId, op.id, newIndex, indexReference.canBeDeleted(), currentIndex));
+          }
         }
       });
     }

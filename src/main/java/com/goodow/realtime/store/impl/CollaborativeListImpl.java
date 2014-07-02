@@ -18,9 +18,9 @@ import com.goodow.realtime.core.Registration;
 import com.goodow.realtime.json.Json;
 import com.goodow.realtime.json.JsonArray;
 import com.goodow.realtime.json.JsonArray.ListIterator;
-import com.goodow.realtime.operation.Operation;
 import com.goodow.realtime.operation.OperationComponent;
 import com.goodow.realtime.operation.create.CreateComponent;
+import com.goodow.realtime.operation.list.AbstractListComponent;
 import com.goodow.realtime.operation.list.ListTarget;
 import com.goodow.realtime.operation.list.json.JsonDeleteComponent;
 import com.goodow.realtime.operation.list.json.JsonInsertComponent;
@@ -246,15 +246,18 @@ class CollaborativeListImpl extends CollaborativeObjectImpl implements Collabora
   @Override
   protected void consume(final String userId, final String sessionId,
       OperationComponent<?> component) {
-    ((Operation<ListTarget<JsonArray>>) component).apply(new ListTarget<JsonArray>() {
+    final AbstractListComponent<JsonArray> op = (AbstractListComponent<JsonArray>) component;
+    op.apply(new ListTarget<JsonArray>() {
       @Override
       public void delete(int startIndex, int length) {
         removeAndFireEvent(startIndex, length, sessionId, userId);
+        model.transformCursor(op, userId, sessionId);
       }
 
       @Override
       public void insert(int startIndex, JsonArray values) {
         insertAndFireEvent(startIndex, values, sessionId, userId);
+        model.transformCursor(op, userId, sessionId);
       }
 
       @Override
@@ -315,7 +318,6 @@ class CollaborativeListImpl extends CollaborativeObjectImpl implements Collabora
     ValuesAddedEvent event =
         new ValuesAddedEventImpl(event(sessionId, userId).set("index", index).set("values", objects));
     fireEvent(event);
-    model.setIndexReferenceIndex(id, true, index, values.length(), sessionId, userId);
   }
 
   private void removeAndFireEvent(int index, int length, String sessionId, String userId) {
@@ -331,7 +333,6 @@ class CollaborativeListImpl extends CollaborativeObjectImpl implements Collabora
     ValuesRemovedEvent event =
         new ValuesRemovedEventImpl(event(sessionId, userId).set("index", index).set("values", objects));
     fireEvent(event);
-    model.setIndexReferenceIndex(id, false, index, length, sessionId, userId);
   }
 
   private void replaceAndFireEvent(final int index, JsonArray values, String sessionId,

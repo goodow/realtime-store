@@ -17,9 +17,9 @@ import com.goodow.realtime.core.Diff;
 import com.goodow.realtime.core.Handler;
 import com.goodow.realtime.core.Platform;
 import com.goodow.realtime.core.Registration;
-import com.goodow.realtime.operation.Operation;
 import com.goodow.realtime.operation.OperationComponent;
 import com.goodow.realtime.operation.create.CreateComponent;
+import com.goodow.realtime.operation.list.AbstractListComponent;
 import com.goodow.realtime.operation.list.ListTarget;
 import com.goodow.realtime.operation.list.string.StringDeleteComponent;
 import com.goodow.realtime.operation.list.string.StringInsertComponent;
@@ -120,16 +120,19 @@ class CollaborativeStringImpl extends CollaborativeObjectImpl implements Collabo
   @SuppressWarnings("unchecked")
   @Override
   protected void consume(final String userId, final String sessionId,
-      OperationComponent<?> component) {
-    ((Operation<ListTarget<String>>) component).apply(new ListTarget<String>() {
+      final OperationComponent<?> component) {
+    final AbstractListComponent<String> op = (AbstractListComponent<String>) component;
+    op.apply(new ListTarget<String>() {
       @Override
       public void delete(int startIndex, int length) {
         deleteAndFireEvent(startIndex, length, sessionId, userId);
+        model.transformCursor(op, userId, sessionId);
       }
 
       @Override
       public void insert(int startIndex, String values) {
         insertAndFireEvent(startIndex, values, sessionId, userId);
+        model.transformCursor(op, userId, sessionId);
       }
 
       @Override
@@ -165,7 +168,6 @@ class CollaborativeStringImpl extends CollaborativeObjectImpl implements Collabo
             .set("text", toDelete));
     snapshot.delete(startIndex, endIndex);
     fireEvent(event);
-    model.setIndexReferenceIndex(id, false, startIndex, length, sessionId, userId);
     model.bytesUsed -= length;
   }
 
@@ -175,7 +177,6 @@ class CollaborativeStringImpl extends CollaborativeObjectImpl implements Collabo
         new TextInsertedEventImpl(event(sessionId, userId).set("index", index).set("text", text));
     snapshot.insert(index, text);
     fireEvent(event);
-    model.setIndexReferenceIndex(id, true, index, text.length(), sessionId, userId);
     model.bytesUsed += text.length();
   }
 }

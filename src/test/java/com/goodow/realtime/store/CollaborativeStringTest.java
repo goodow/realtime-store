@@ -192,6 +192,7 @@ public class CollaborativeStringTest extends TestVerticle {
       @Override
       public void handle(ObjectChangedEvent event) {
         assertArraySame(events, event.events());
+        VertxAssert.assertEquals(3, events.length());
         VertxAssert.assertEquals(1, events.<ReferenceShiftedEvent>get(0).oldIndex());
         VertxAssert.assertEquals(2, events.<ReferenceShiftedEvent>get(0).newIndex());
         VertxAssert.assertEquals(2, events.<ReferenceShiftedEvent>get(1).oldIndex());
@@ -224,12 +225,11 @@ public class CollaborativeStringTest extends TestVerticle {
       @Override
       public void handle(ObjectChangedEvent event) {
         assertArraySame(events, event.events());
+        VertxAssert.assertEquals(2, events.length());
         VertxAssert.assertEquals(1, events.<ReferenceShiftedEvent>get(0).oldIndex());
         VertxAssert.assertEquals(2, events.<ReferenceShiftedEvent>get(0).newIndex());
         VertxAssert.assertEquals(2, events.<ReferenceShiftedEvent>get(1).oldIndex());
         VertxAssert.assertEquals(1, events.<ReferenceShiftedEvent>get(1).newIndex());
-        VertxAssert.assertEquals(1, events.<ReferenceShiftedEvent>get(2).oldIndex());
-        VertxAssert.assertEquals(1, events.<ReferenceShiftedEvent>get(2).newIndex());
 
         VertxAssert.testComplete();
       }
