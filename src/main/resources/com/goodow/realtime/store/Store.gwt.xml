@@ -24,4 +24,6 @@
   <super-source path="super" />
 
   <set-property name="compiler.useSourceMaps" value="true"/>
+
+  <entry-point class="com.goodow.realtime.store.impl.HtmlStoreEntryPoint"/>
 </module>

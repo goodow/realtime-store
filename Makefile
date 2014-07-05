@@ -5,7 +5,7 @@ include ../resources/make/common.mk
 # J2OBJC_DIST = GDStore/Project/Pods/J2ObjC/dist
 
 STORE_GEN_DIR = GDStore/Classes/generated
-MAIN_SOURCES = $(subst $(MAIN_SRC_DIR)/,,$(shell find $(MAIN_SRC_DIR) -name *.java ! -path "*/server/*"))
+MAIN_SOURCES = $(subst $(MAIN_SRC_DIR)/,,$(shell find $(MAIN_SRC_DIR) -name *.java ! -path "*/Html*" ! -path "*/server/*"))
 MAIN_TEMP_SOURCES = $(subst $(MAIN_SRC_DIR), $(STORE_GEN_DIR), $(MAIN_SOURCES))
 MAIN_GEN_SOURCES = $(MAIN_SOURCES:%.java=$(STORE_GEN_DIR)/%.m)
 

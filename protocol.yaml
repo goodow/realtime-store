@@ -65,21 +65,21 @@ id: docType/docId
 
 
 --- # topic: @realtime/store/docType/docId/document_error Document error event publish
-*com.goodow.realtime.store.Error
+!realtime.store.Error {}
 ...
 --- # topic: @realtime/store/docType/docId/document_save_state_changed
-*com.goodow.realtime.store.DocumentSaveStateChangedEvent
+!realtime.store.DocumentSaveStateChangedEvent {}
 ...
 --- # topic: @realtime/store/docType/docId/collaborator_joined
-*com.goodow.realtime.store.CollaboratorJoinedEvent
+!realtime.store.CollaboratorJoinedEvent {}
 ...
 --- # topic: @realtime/store/docType/docId/collaborator_left
-*com.goodow.realtime.store.CollaboratorLeftEvent
+!realtime.store.CollaboratorLeftEvent {}
 ...
 --- # topic: @realtime/store/docType/docId/undo_redo_state_changed
-*com.goodow.realtime.store.UndoRedoStateChangedEvent
+!realtime.store.UndoRedoStateChangedEvent {}
 ...
 
 --- # topic: @realtime/store/docType/docId/objectId/event_type Event publish
-*com.goodow.realtime.store.BaseModelEvent
+!realtime.store.BaseModelEvent {}
 ...
