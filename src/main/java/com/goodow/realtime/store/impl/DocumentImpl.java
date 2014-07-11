@@ -58,7 +58,6 @@ class DocumentImpl implements Document {
           assert !event.bubbles;
           String id = event.target;
           bubblingToAncestors(id, event, Json.createArray());
-          fireEvent(event);
         }
       });
       eventsById.forEach(new MapIterator<JsonArray>() {
@@ -93,11 +92,6 @@ class DocumentImpl implements Document {
           bubblingToAncestors(parent, event, seen);
         }
       });
-    }
-
-    private void fireEvent(BaseModelEventImpl event) {
-      model.bridge.store.getBus().publishLocal(
-          Constants.Topic.STORE + "/" + model.bridge.id + "/" + event.target + "/" + event.type, event);
     }
   };
 
@@ -213,9 +207,15 @@ class DocumentImpl implements Document {
       eventsToFire = Json.createArray();
     }
     eventsToFire.push(event);
+    fireEvent((BaseModelEventImpl) event);
     if (!isEventsScheduled) {
       isEventsScheduled = true;
       Platform.scheduler().scheduleDeferred(eventsTask);
     }
+  }
+
+  private void fireEvent(BaseModelEventImpl event) {
+    model.bridge.store.getBus().publishLocal(
+        Constants.Topic.STORE + "/" + model.bridge.id + "/" + event.target + "/" + event.type, event);
   }
 }

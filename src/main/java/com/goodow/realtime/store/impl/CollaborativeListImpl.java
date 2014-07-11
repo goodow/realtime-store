@@ -328,7 +328,7 @@ class CollaborativeListImpl extends CollaborativeObjectImpl implements Collabora
       JsonArray value = snapshot.getArray(index);
       snapshot.remove(index);
       model.addOrRemoveParent(value, id, false);
-      model.bytesUsed -= value.toJsonString().length();
+      model.bytesUsed -= (value == null ? "null" : value.toJsonString()).length();
     }
     ValuesRemovedEvent event =
         new ValuesRemovedEventImpl(event(sessionId, userId).set("index", index).set("values", objects));
@@ -350,8 +350,8 @@ class CollaborativeListImpl extends CollaborativeObjectImpl implements Collabora
         snapshot.insert(index + idx++, newValue);
         model.addOrRemoveParent(oldValue, id, false);
         model.addOrRemoveParent(newValue, id, true);
-        model.bytesUsed -= oldValue.toJsonString().length();
-        model.bytesUsed += newValue.toJsonString().length();
+        model.bytesUsed -= (oldValue == null ? "null" : oldValue.toJsonString()).length();
+        model.bytesUsed += (newValue == null ? "null" : newValue.toJsonString()).length();
       }
     });
     ValuesSetEvent event =

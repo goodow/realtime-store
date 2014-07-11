@@ -36,9 +36,12 @@ public class RedisElasticSearchStorage implements DeltaStorage {
   }
 
   @Override
-  public void getSnapshot(String docType, String docId,
+  public void getSnapshot(String docType, String docId, Long version,
                           AsyncResultHandler<JsonObject> callback) {
-    elasticSearch.getSnapshot(docType, docId, callback);
+    if (version == null) {
+      elasticSearch.getSnapshot(docType, docId, callback);
+      return;
+    }
   }
 
   @Override

@@ -36,6 +36,16 @@ import java.util.logging.Logger;
 
 public class OperationProcessor {
   private static final Logger log  = Logger.getLogger(OperationProcessor.class.getName());
+
+  @SuppressWarnings("unchecked")
+  public static DocumentBridge createSnapshot(final String docType, final String docId,
+                                              JsonObject snapshotData) {
+    JreJsonArray snapshot = snapshotData.containsField(Key.SNAPSHOT)
+                            ? new JreJsonArray(snapshotData.getArray(Key.SNAPSHOT).toList()) : null;
+    DocumentBridge bridge = new DocumentBridge(null, docType + "/" + docId, snapshot, null, null);
+    return bridge;
+  }
+
   @Inject private Transformer<CollaborativeOperation> transformer;
   @Inject private DeltaStorage storage;
 
@@ -62,16 +72,6 @@ public class OperationProcessor {
       operations.push(createOperation(opDatas.<JsonObject> get(from)));
     }
     return operations;
-  }
-
-  @SuppressWarnings("unchecked")
-  private DocumentBridge createSnapshot(final String docType, final String docId,
-                                        JsonObject snapshotData) {
-    JreJsonArray snapshot =
-        snapshotData.containsField(Key.SNAPSHOT) ? new JreJsonArray(snapshotData.getArray(
-            Key.SNAPSHOT).toList()) : null;
-    DocumentBridge bridge = new DocumentBridge(null, docType + "/" + docId, snapshot, null, null);
-    return bridge;
   }
 
   /**
@@ -104,11 +104,11 @@ public class OperationProcessor {
         }
         log.finest("Wrote op @" + applyAt);
         final JsonObject root = new JsonObject(((JreJsonObject) snapshot.toJson()).toNative());
-        JsonObject snapData =
-            new JsonObject().putNumber(Key.VERSION, applyAt + 1).putObject(
-                DeltaStorage.ROOT, root).putArray(Key.SNAPSHOT,
-                    new JsonArray(((JreJsonArray) snapshot.toSnapshot()).toNative()));
-        writeSnapshotAfterSubmit(docType, docId, snapData, opData, new AsyncResultHandler<Void>() {
+        JsonObject snapshotData = new JsonObject().putNumber(Key.VERSION, applyAt + 1)
+            .putObject(DeltaStorage.ROOT, root).putArray(
+                Key.SNAPSHOT, new JsonArray(((JreJsonArray) snapshot.toSnapshot()).toNative()));
+        writeSnapshotAfterSubmit(docType, docId, snapshotData, opData,
+                                 new AsyncResultHandler<Void>() {
           @Override
           public void handle(AsyncResult<Void> ar) {
             // What do we do if the snapshot write fails? We've already committed the operation -
@@ -138,7 +138,7 @@ public class OperationProcessor {
    */
   private void lazyFetch(String docType, String docId,
                          final AsyncResultHandler<JsonObject> callback) {
-    storage.getSnapshot(docType, docId, new AsyncResultHandler<JsonObject>() {
+    storage.getSnapshot(docType, docId, null, new AsyncResultHandler<JsonObject>() {
       @Override
       public void handle(AsyncResult<JsonObject> ar) {
         if (ar.succeeded() && ar.result() == null) {

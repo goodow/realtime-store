@@ -34,7 +34,8 @@ public interface DeltaStorage {
    * @param callback called with {v:, snapshot:[], root:{}} or null if the document has never been
    *                 created in the storage.
    */
-  void getSnapshot(String docType, String docId, AsyncResultHandler<JsonObject> callback);
+  void getSnapshot(String docType, String docId, Long version,
+                   AsyncResultHandler<JsonObject> callback);
 
   /**
    * @param snapshotData {v:, snapshot:[], root:{}}

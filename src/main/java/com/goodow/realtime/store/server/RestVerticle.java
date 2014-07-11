@@ -103,14 +103,19 @@ public class RestVerticle extends BusModBase {
       @Override
       public void handle(final HttpServerRequest req) {
         final JsonObject message = parseRequest(req);
-        String from = req.params().get("from");
-        if (from != null) {
-          message.putNumber("from", Long.valueOf(from));
+        Long from = null;
+        Long to = null;
+        if (req.params().contains("from")) {
+          from = Long.valueOf(req.params().get("from"));
         }
-        String to = req.params().get("to");
-        if (to != null) {
-          message.putNumber("to", Long.valueOf(to));
+        if (req.params().contains("to")) {
+          to = Long.valueOf(req.params().get("to"));
         }
+        if (req.params().contains(Key.VERSION)) {
+          from = Long.valueOf(req.params().get(Key.VERSION));
+          to = from + 1;
+        }
+        message.putNumber("from", from).putNumber("to", to);
         eb.sendWithTimeout(address + Topic.OPS, message, StoreModule.REPLY_TIMEOUT,
             new Handler<AsyncResult<Message<JsonArray>>>() {
               @Override
@@ -143,6 +148,9 @@ public class RestVerticle extends BusModBase {
     String id = req.params().get("docType") + "/" + req.params().get("docId");
     JsonObject message = new JsonObject().putString("action", req.method().toLowerCase())
         .putString(Key.ID, id);
+    if (req.params().contains(Key.VERSION)) {
+      message.putNumber(Key.VERSION, Long.valueOf(req.params().get(Key.VERSION)));
+    }
     return message;
   }
 }

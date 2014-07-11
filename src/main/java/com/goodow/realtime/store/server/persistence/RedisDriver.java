@@ -108,7 +108,6 @@ class RedisDriver {
         // - 'Missing data': Redis is not populated for this document
         // - 'Version from the future': Probably an error. Data in redis has been dumped. Reload
         // from oplog redis and retry.
-
         // The data in redis has been dumped. Fill redis with data from the oplog and retry.
         elasticSearch.getVersion(docType, docId, new AsyncResultHandler<Long>() {
           @Override

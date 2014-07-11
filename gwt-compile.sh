@@ -12,4 +12,4 @@ java -cp ./target/classes:./src/main/java:$HOME/.m2/repository/com/google/gwt/gw
     -XnoclassMetadata -XnocheckCasts -XjsInteropMode JS -XclosureCompiler -draftCompile \
     com.goodow.realtime.store.StoreProd
 
-cp target/realtime-store-0.5.5-SNAPSHOT/store/store.nocache.js bower-realtime-store/realtime-store.js
+cp target/realtime-store-0.5.5-SNAPSHOT/store/store.nocache.js bower-realtime-store/realtime.store.js

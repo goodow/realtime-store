@@ -95,14 +95,14 @@ public class CollaborativeMapTest extends TestVerticle {
 
     CollaborativeMap map2 = mod.createMap(null);
     CollaborativeList list = mod.createList(null);
-    list.push(map2);
-    map.set("c", list);
     list.onValuesAdded(new Handler<ValuesAddedEvent>() {
       @Override
       public void handle(ValuesAddedEvent event) {
         events.push(event);
       }
     });
+    list.push(map2);
+    map.set("c", list);
     map2.onValueChanged(new Handler<ValueChangedEvent>() {
       @Override
       public void handle(ValueChangedEvent event) {

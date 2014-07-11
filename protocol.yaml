@@ -2,7 +2,7 @@
 --- # Fetch document
 action: get
 id: docType/docId
-accessToken: token
+v: 1 # optional
 --- &snapshotData # reply
 v: 0
 snapshot: []

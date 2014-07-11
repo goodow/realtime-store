@@ -15,8 +15,13 @@ package com.goodow.realtime.store.server.impl;
 
 import com.google.inject.Inject;
 
+import com.goodow.realtime.json.impl.JreJsonArray;
+import com.goodow.realtime.json.impl.JreJsonObject;
+import com.goodow.realtime.operation.Transformer;
+import com.goodow.realtime.operation.impl.CollaborativeOperation;
 import com.goodow.realtime.store.channel.Constants.Key;
 import com.goodow.realtime.store.channel.Constants.Topic;
+import com.goodow.realtime.store.impl.DocumentBridge;
 import com.goodow.realtime.store.server.DeltaStorage;
 
 import org.vertx.java.core.AsyncResult;
@@ -35,6 +40,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * This is an in-memory delta storage.
@@ -53,14 +60,17 @@ public class MemoryDeltaStorage implements DeltaStorage {
     return prefix + "/" + docType + Topic.WATCH;
   }
 
+  private static final Logger log  = Logger.getLogger(MemoryDeltaStorage.class.getName());
+
   private final EventBus eb;
   private final String address;
-  // Map from collection docType -> docId -> snapshot ({v:, data:})
-  private Map<String, Map<String, JsonObject>> types =
+  @Inject private Transformer<CollaborativeOperation> transformer;
+  // Map from collection docType -> docId -> snapshotData ({v:, snapshot:[], root:{}})
+  private Map<String, Map<String, JsonObject>> snapshotDatas =
       new HashMap<String, Map<String, JsonObject>>();
-  // Map from collection docType -> docId -> list of opData.
+  // Map from collection docType -> docId -> list of opData ({v:, op:[], sid:, uid:}).
   // Operations' version is simply the index in the list.
-  private Map<String, Map<String, List<JsonObject>>> ops =
+  private Map<String, Map<String, List<JsonObject>>> opDatas =
       new HashMap<String, Map<String, List<JsonObject>>>();
 
   // Cache of docType/docId -> current doc version. This is needed because there's a potential race
@@ -82,18 +92,54 @@ public class MemoryDeltaStorage implements DeltaStorage {
   }
 
   @Override
-  public void getSnapshot(String docType, String docId, AsyncResultHandler<JsonObject> callback) {
-    JsonObject snapshot = types.containsKey(docType) ? types.get(docType).get(docId) : null;
-    callback.handle(new DefaultFutureResult<JsonObject>(snapshot));
+  public void getSnapshot(final String docType, final String docId, final Long version,
+                          final AsyncResultHandler<JsonObject> callback) {
+    if (version == null) {
+      JsonObject snapshotData = snapshotDatas.containsKey(docType)
+                                ? snapshotDatas.get(docType).get(docId) : null;
+      callback.handle(new DefaultFutureResult<JsonObject>(snapshotData));
+      return;
+    }
+
+    getOps(docType, docId, 0L, Math.min(version, getSnapshotVersion(docType, docId))
+        , new AsyncResultHandler<JsonObject>() {
+      @Override
+      public void handle(AsyncResult<JsonObject> ar) {
+        if (ar.failed()) {
+          callback.handle(ar);
+          return;
+        }
+        JsonObject snapshotData = new JsonObject().putNumber(Key.VERSION, 0);
+        DocumentBridge snapshot = OperationProcessor.createSnapshot(docType, docId, snapshotData);
+        JsonArray ops = ar.result().getArray(Key.OPS);
+        Long opVersion = null;
+        for (Object op : ops) {
+          JsonObject opData = (JsonObject) op;
+          opVersion = opData.getLong(Key.VERSION);
+          try {
+            snapshot.consume(transformer.createOperation(new JreJsonObject(opData.toMap())));
+          } catch (Exception e) {
+            log.log(Level.WARNING, "Failed to consume operation", e);
+            callback.handle(new DefaultFutureResult<JsonObject>(new ReplyException(
+                ReplyFailure.RECIPIENT_FAILURE, e.getMessage())));
+            return;
+          }
+        }
+        JsonObject root = new JsonObject(((JreJsonObject) snapshot.toJson()).toNative());
+        snapshotData.putNumber(Key.VERSION, opVersion + 1).putObject(DeltaStorage.ROOT, root).
+           putArray(Key.SNAPSHOT, new JsonArray(((JreJsonArray) snapshot.toSnapshot()).toNative()));
+        callback.handle(new DefaultFutureResult<JsonObject>(snapshotData));
+      }
+    });
   }
 
   @Override
   public void writeSnapshot(String docType, String docId, JsonObject snapshotData,
                             AsyncResultHandler<Void> callback) {
-    Map<String, JsonObject> type = types.get(docType);
+    Map<String, JsonObject> type = snapshotDatas.get(docType);
     if (type == null) {
       type = new HashMap<String, JsonObject>();
-      types.put(docType, type);
+      snapshotDatas.put(docType, type);
     }
     type.put(docId, snapshotData);
     callback.handle(new DefaultFutureResult<Void>().setResult(null));
@@ -145,7 +191,7 @@ public class MemoryDeltaStorage implements DeltaStorage {
     // synchronously is safe.
 
     long opVersion = opData.getNumber(Key.VERSION).longValue();
-    Long docVersion = versions.get(docType + "/" + docId);
+    Long docVersion = getSnapshotVersion(docType, docId);
     if (docVersion != null && opVersion < docVersion) {
       callback.handle(new DefaultFutureResult<Void>(
           new ReplyException(ReplyFailure.RECIPIENT_FAILURE, "Transform needed")));
@@ -171,16 +217,20 @@ public class MemoryDeltaStorage implements DeltaStorage {
   }
 
   private List<JsonObject> getOpLog(String docType, String docId) {
-    Map<String, List<JsonObject>> type = ops.get(docType);
+    Map<String, List<JsonObject>> type = opDatas.get(docType);
     if (type == null) {
       type = new HashMap<String, List<JsonObject>>();
-      ops.put(docType, type);
+      opDatas.put(docType, type);
     }
-    List<JsonObject> list = type.get(docId);
-    if (list == null) {
-      list = new ArrayList<JsonObject>();
-      type.put(docId, list);
+    List<JsonObject> ops = type.get(docId);
+    if (ops == null) {
+      ops = new ArrayList<JsonObject>();
+      type.put(docId, ops);
     }
-    return list;
+    return ops;
+  }
+
+  private Long getSnapshotVersion(String docType, String docId) {
+    return versions.get(docType + "/" + docId);
   }
 }

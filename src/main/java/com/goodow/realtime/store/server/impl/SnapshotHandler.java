@@ -68,7 +68,8 @@ public class SnapshotHandler {
           }
           doPost(docType, docId, opData, message);
         } else { // get
-          doGet(docType, docId, body.getString(WebSocketBus.SESSION), message);
+          doGet(docType, docId, body.getLong(Key.VERSION), body.getString(WebSocketBus.SESSION),
+                message);
         }
       }
     }, new Handler<AsyncResult<Void>>() {
@@ -83,7 +84,7 @@ public class SnapshotHandler {
     });
   }
 
-  private void doGet(String docType, String docId, String sessionId,
+  private void doGet(String docType, String docId, Long version, String sessionId,
                      final Message<JsonObject> resp) {
     final CountingCompletionHandler<Void> completionHandler =
         new CountingCompletionHandler<Void>((VertxInternal) vertx, 2);
@@ -103,7 +104,7 @@ public class SnapshotHandler {
         resp.reply(toRtn.putArray(Key.COLLABORATORS, (JsonArray)results[1]));
       }
     });
-    storage.getSnapshot(docType, docId, new AsyncResultHandler<JsonObject>() {
+    storage.getSnapshot(docType, docId, version, new AsyncResultHandler<JsonObject>() {
       @Override
       public void handle(AsyncResult<JsonObject> ar) {
         if (ar.failed()) {
