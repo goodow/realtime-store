@@ -14,6 +14,8 @@
 package com.goodow.realtime.store.channel;
 
 import com.goodow.realtime.channel.Bus;
+import com.goodow.realtime.core.Handler;
+import com.goodow.realtime.core.Platform;
 import com.goodow.realtime.json.Json;
 import com.goodow.realtime.operation.Transformer;
 import com.goodow.realtime.operation.impl.CollaborativeOperation;
@@ -75,9 +77,7 @@ public class OperationSucker implements OperationChannel.Listener<CollaborativeO
 
   @Override
   public void onRemoteOp(CollaborativeOperation serverHistoryOp) {
-    while (channel.peek() != null) {
-      bridge.consume(channel.receive());
-    }
+    nextTick();
   }
 
   @Override
@@ -85,5 +85,19 @@ public class OperationSucker implements OperationChannel.Listener<CollaborativeO
     bus.publishLocal(Constants.Topic.STORE + "/" + id + "/" + EventType.DOCUMENT_SAVE_STATE_CHANGED,
         new DocumentSaveStateChangedEventImpl(bridge.getDocument(),
             Json.createObject().set("isSaving", isSaving).set("isPending", isPending)));
+  }
+
+  private void nextTick() {
+    Platform.scheduler().scheduleDeferred(new Handler<Void>() {
+      @Override
+      public void handle(Void event) {
+        if (channel.peek() != null) {
+          bridge.consume(channel.receive());
+        }
+        if (channel.peek() != null) {
+          nextTick();
+        }
+      }
+    });
   }
 }
