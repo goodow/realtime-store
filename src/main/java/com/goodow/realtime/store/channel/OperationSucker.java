@@ -13,6 +13,8 @@
  */
 package com.goodow.realtime.store.channel;
 
+import com.google.gwt.core.client.Scheduler;
+
 import com.goodow.realtime.channel.Bus;
 import com.goodow.realtime.core.Handler;
 import com.goodow.realtime.core.Platform;
@@ -77,7 +79,16 @@ public class OperationSucker implements OperationChannel.Listener<CollaborativeO
 
   @Override
   public void onRemoteOp(CollaborativeOperation serverHistoryOp) {
-    nextTick();
+//    Scheduler.get().scheduleIncremental(new Scheduler.RepeatingCommand() {
+//      @Override
+//      public boolean execute() {
+//        if (channel.peek() != null) {
+//          bridge.consume(channel.receive());
+//        }
+//        return channel.peek() != null;
+//      }
+//    });
+    nextTick(5);
   }
 
   @Override
@@ -87,15 +98,15 @@ public class OperationSucker implements OperationChannel.Listener<CollaborativeO
             Json.createObject().set("isSaving", isSaving).set("isPending", isPending)));
   }
 
-  private void nextTick() {
-    Platform.scheduler().scheduleDeferred(new Handler<Void>() {
+  private void nextTick(int delayMs) {
+    Platform.scheduler().scheduleDelay(delayMs, new Handler<Void>() {
       @Override
       public void handle(Void event) {
         if (channel.peek() != null) {
           bridge.consume(channel.receive());
         }
         if (channel.peek() != null) {
-          nextTick();
+          nextTick(5);
         }
       }
     });
