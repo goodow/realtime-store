@@ -18,6 +18,7 @@
   <inherits name='com.goodow.realtime.store.Store'/>
   
   <set-configuration-property name="devModeRedirectEnabled" value="false"/>
+  <set-property name="gwt.logging.enabled" value="FALSE" />
 
   <add-linker name="sso"/>
   <set-property name="compiler.useSourceMaps" value="false"/>

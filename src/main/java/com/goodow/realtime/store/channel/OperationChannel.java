@@ -285,7 +285,7 @@ public class OperationChannel<O extends Operation<?>> {
   }
 
   private void onIncomingOperation(double appliedAt, O operation) {
-    logger.log(Level.INFO, "Incoming applied @" + appliedAt + " " + state);
+    logger.log(Level.FINE, "Incoming applied @" + appliedAt + " " + state);
     queue.serverOp(appliedAt, operation);
     listener.onRemoteOp(operation);
   }
@@ -296,7 +296,7 @@ public class OperationChannel<O extends Operation<?>> {
   private void sendUnackedOps() {
     O unackedClientOp = queue.unackedClientOp();
     assert unackedClientOp != null;
-    logger.log(Level.INFO, "Sending " + unackedClientOp + " @" + queue.version());
+    logger.log(Level.FINE, "Sending " + unackedClientOp + " @" + queue.version());
 
     JsonObject delta =
         Json.createObject().set("action", "post").set(Key.ID, id).set(Key.OP_DATA,
