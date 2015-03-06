@@ -2,7 +2,7 @@
   "main":"com.goodow.realtime.store.server.StoreVerticle",
   "auto-redeploy": true,
   
-  "includes": "com.goodow.vertx~vertx-mod-guice~1.0.0-beta4, com.goodow.realtime~realtime-json~0.5.5-SNAPSHOT, io.vertx~mod-redis-client~1.1.4",
+  "includes": "com.goodow.vertx~vertx-mod-guice~4.0-beta5, com.goodow.realtime~realtime-json~0.5.5-SNAPSHOT, io.vertx~mod-redis-client~1.1.4",
   "deploys": "com.goodow.realtime~realtime-search~0.5.5-SNAPSHOT, io.vertx~mod-redis~1.1.4",
 
   "description":"Google Docs–style collaboration via the use of operational transforms",

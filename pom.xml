@@ -34,17 +34,6 @@
         <enabled>true</enabled>
       </snapshots>
     </repository>
-    <repository>
-      <id>sonatype-google-snapshots</id>
-      <name>Sonatype Google Snapshots</name>
-      <url>https://oss.sonatype.org/content/repositories/google-snapshots</url>
-      <releases>
-        <enabled>false</enabled>
-      </releases>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-    </repository>
   </repositories>
   
   <dependencies>
@@ -104,7 +93,7 @@
     <dependency>
       <groupId>com.goodow.vertx</groupId>
       <artifactId>vertx-mod-guice</artifactId>
-      <version>1.0.0-beta4</version>
+      <version>${guice.version}</version>
       <scope>test</scope>
       <classifier>mod</classifier>
       <type>zip</type>

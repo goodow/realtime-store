@@ -10,7 +10,7 @@ before_install:
 - cd ${TRAVIS_BUILD_DIR}
 - wget -P target/travis https://raw.githubusercontent.com/goodow/maven/master/settings.xml
 - curl http://packages.elasticsearch.org/GPG-KEY-elasticsearch | sudo apt-key add -
-- echo "deb http://packages.elasticsearch.org/elasticsearch/1.2/debian stable main" | sudo tee -a /etc/apt/sources.list
+- echo "deb http://packages.elasticsearch.org/elasticsearch/1.4/debian stable main" | sudo tee -a /etc/apt/sources.list
 - sudo apt-get update -qq
 - sudo apt-get install elasticsearch && sudo service elasticsearch start
 
